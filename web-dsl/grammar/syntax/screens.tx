@@ -1,0 +1,29 @@
+// Root: A webpage consists of multiple screens
+WebPage:
+    'webpage' name=ID screens+=Screen
+;
+
+// Each screen has a name, title, URL, optional description, and nested structure
+Screen:
+    'Screen' name=ID
+    'title:' title=STRING
+    'url:' url=STRING
+    ('description:' description=STRING)?
+    elements*=StructuralElement
+    'end'
+;
+
+// Rows and columns, which can contain more structural elements
+StructuralElement:
+    Row | Column
+;
+
+// A row contains multiple structural elements
+Row:
+    'row' elements*=StructuralElement 'endrow'
+;
+
+// A column contains multiple structural elements
+Column:
+    'col' elements*=StructuralElement 'endcol'
+;
