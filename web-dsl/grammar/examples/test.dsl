@@ -14,6 +14,8 @@ webpage MyHomePage
         endrow
         row
         endrow
+        row
+        endrow
     end
 
     Screen ProfilePage
@@ -23,6 +25,69 @@ webpage MyHomePage
 
         row
         endrow
+    end
+
+    Screen ComplexLayout
+        title: "Complex Layout"
+        url: "/complex"
+        description: "A more complex layout screen"
+
         row
+            col
+            endcol
+            col
+                row
+                endrow               
+                row
+                    col
+                        row
+                        endrow
+                        row
+                        endrow
+                        row
+                        endrow
+                    endcol
+                    col
+                    endcol
+                endrow
+                row
+                endrow
+            endcol
+        endrow
+        row
+            col
+                row
+                endrow
+                row
+                    col
+                    endcol
+                    col
+                    endcol
+                    col
+                    endcol
+                    col
+                    endcol
+                    col
+                    endcol                    
+                    col
+                    endcol                    
+                    col
+                    endcol
+                endrow
+                row
+                endrow
+                row
+                endrow
+            endcol
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
         endrow
     end
