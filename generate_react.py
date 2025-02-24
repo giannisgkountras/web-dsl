@@ -3,6 +3,7 @@ from jinja2 import Environment, FileSystemLoader
 import subprocess
 
 base_path = "./web-dsl/"
+generated_path = "./generated/frontend/"
 # Load the grammar
 webpage_mm = metamodel_from_file(base_path + "grammar/syntax/screens.tx", debug=False)
 
@@ -21,21 +22,21 @@ try:
         html_content = screen_template.render(screen=screen)
 
         # Create output filename (e.g.: "MainScreen.jsx")
-        output_file = f"generated/react/{screen.name}.jsx"
+        output_file = f"{generated_path}src/screens/{screen.name}.jsx"
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"Generated: {output_file}")
 
     # Generate the App.jsx file that contains links to all pages
     app_content = app_template.render(screens=model.screens)
-    app_output_file = "generated/react/App.jsx"
+    app_output_file = f"{generated_path}src/App.jsx"
     with open(app_output_file, "w", encoding="utf-8") as f:
         f.write(app_content)
     print(f"Generated: {app_output_file}")
 
     # Format the generated files
     print("Formatting the generated files...")
-    subprocess.run(["npx", "prettier", "--write", "generated/react/*.jsx"])
+    subprocess.run(["npx", "prettier", "--write", f"{generated_path}*/*.jsx"])
 
 except Exception as e:
     print(f"Error: {e}")

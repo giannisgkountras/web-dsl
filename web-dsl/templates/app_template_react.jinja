@@ -1,7 +1,6 @@
-import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 {% for screen in screens %}
-import {{ screen.name }} from './{{ screen.name }}';
+import {{ screen.name }} from './screens/{{ screen.name }}';
 {% endfor %}
 
 const App = () => {
