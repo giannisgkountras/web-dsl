@@ -1,6 +1,6 @@
 const MainScreen = () => {
   return (
-    <>
+    <div className="screen-container">
       <h1>Welcome to Our Site</h1>
 
       <p>Primary landing area</p>
@@ -16,7 +16,7 @@ const MainScreen = () => {
       <div className="row"></div>
 
       <div className="row"></div>
-    </>
+    </div>
   );
 };
 

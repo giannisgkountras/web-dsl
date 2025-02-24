@@ -16,7 +16,7 @@
 
 const {{screen.name}} = () => {
     return (
-        <>
+        <div className="screen-container">
             <h1>{{ screen.title }}</h1>
             {% if screen.description %}
             <p>{{ screen.description }}</p>
@@ -24,7 +24,7 @@ const {{screen.name}} = () => {
             {% for element in screen.elements %}
                 {{ render_element(element) }}
             {% endfor %}
-        </>
+        </div>
     )
 }
 

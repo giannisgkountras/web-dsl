@@ -1,6 +1,6 @@
 const ComplexLayout = () => {
   return (
-    <>
+    <div className="screen-container">
       <h1>Complex Layout</h1>
 
       <p>A more complex layout screen</p>
@@ -62,7 +62,7 @@ const ComplexLayout = () => {
 
         <div className="col"></div>
       </div>
-    </>
+    </div>
   );
 };
 

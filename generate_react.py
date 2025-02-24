@@ -8,7 +8,8 @@ webpage_mm = metamodel_from_file(base_path + "grammar/syntax/screens.tx", debug=
 
 # Set up Jinja environment
 env = Environment(loader=FileSystemLoader(base_path + "templates"))
-template = env.get_template("screen_template_react.jinja")
+screen_template = env.get_template("screen_template_react.jinja")
+app_template = env.get_template("app_template_react.jinja")
 
 # Read and parse the model
 try:
@@ -17,13 +18,20 @@ try:
 
     # Generate JSX for each screen
     for screen in model.screens:
-        html_content = template.render(screen=screen)
+        html_content = screen_template.render(screen=screen)
 
         # Create output filename (e.g.: "MainScreen.jsx")
         output_file = f"generated/react/{screen.name}.jsx"
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"Generated: {output_file}")
+
+    # Generate the App.jsx file that contains links to all pages
+    app_content = app_template.render(screens=model.screens)
+    app_output_file = "generated/react/App.jsx"
+    with open(app_output_file, "w", encoding="utf-8") as f:
+        f.write(app_content)
+    print(f"Generated: {app_output_file}")
 
     # Format the generated files
     print("Formatting the generated files...")
