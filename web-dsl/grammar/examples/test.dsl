@@ -18,15 +18,6 @@ webpage MyHomePage
         endrow
     end
 
-    Screen ProfilePage
-        title: "Your profile"
-        url: "/profile"
-        description: "Page to view user's profile"
-
-        row
-        endrow
-    end
-
     Screen ComplexLayout
         title: "Complex Layout"
         url: "/complex"
@@ -83,6 +74,37 @@ webpage MyHomePage
             endcol
             col
             endcol
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+    end
+
+    Screen Dashboard
+        title: "Main Dashboard"
+        url: "/dashboard"
+        description: "The dashboard of the application"
+
+        row
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+        row
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+        row
             col
             endcol
             col
