@@ -11,6 +11,10 @@
         {{ render_element(child) }}
         {% endfor %}
     </div>
+    {% elif element.__class__.__name__ == 'Button' %}
+        <button class="btn">
+            {{ element.text }}
+        </button>
     {% endif %}
 {%- endmacro %}
 

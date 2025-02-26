@@ -33,12 +33,15 @@ p {
 .row {
     flex: 1;
     display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 10px;
     background-color: #3c3836;
     border: 1px solid #7daea3;
     padding: 5px;
     min-height: 0;
     height: 100%;
+    width: 100%;
 }
 
 .col {
@@ -48,5 +51,17 @@ p {
     padding: 10px;
     display: flex;
     flex-direction: column;
+    justify-content: center;
+    align-items: center;
     height: 100%;
+    width: 100%;
+}
+
+.btn {
+    background-color: #b16286;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    height: fit-content;
 }

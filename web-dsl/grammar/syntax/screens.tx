@@ -1,3 +1,5 @@
+import components
+
 // Root: A webpage consists of multiple screens
 WebPage:
     'webpage' name=ID screens+=Screen
@@ -15,7 +17,7 @@ Screen:
 
 // Rows and columns, which can contain more structural elements
 StructuralElement:
-    Row | Column
+    Row | Column | Component
 ;
 
 // A row contains multiple structural elements

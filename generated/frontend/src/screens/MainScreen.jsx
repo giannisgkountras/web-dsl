@@ -14,8 +14,32 @@ const MainScreen = () => {
         
     <div className="col">
         
+        
+        <button class="btn">
+            Hello
+        </button>
+    
+        
     </div>
     
+        
+        
+    <div className="col">
+        
+        
+        <button class="btn">
+            World
+        </button>
+    
+        
+    </div>
+    
+        
+    </div>
+    
+            
+                
+    <div className="row">
         
         
     <div className="col">
@@ -29,17 +53,29 @@ const MainScreen = () => {
     </div>
     
         
-    </div>
-    
-            
-                
+        
+    <div className="col">
+        
+        
     <div className="row">
         
     </div>
     
-            
-                
+        
+        
     <div className="row">
+        
+        
+        <button class="btn">
+            Button Hi!
+        </button>
+    
+        
+    </div>
+    
+        
+    </div>
+    
         
     </div>
     

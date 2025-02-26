@@ -6,15 +6,27 @@ webpage MyHomePage
 
         row
             col
+                Button TestBTN
+                    text: "Hello"
             endcol
+            col
+                Button WorldBTN
+                text: "World"
+            endcol
+        endrow
+        row
             col
             endcol
             col
             endcol
-        endrow
-        row
-        endrow
-        row
+            col
+                row
+                endrow
+                row
+                    Button NestedBtn
+                    text: "Button Hi!"
+                endrow
+            endcol
         endrow
     end
 
