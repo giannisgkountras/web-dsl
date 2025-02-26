@@ -73,6 +73,10 @@ const MainScreen = () => {
         
     <div className="col">
         
+        
+        <img width="100%" height="100%" src="https://images.hdqwalls.com/wallpapers/mountain-scenery-morning-sun-rays-4k-kf.jpg"/>
+    
+        
     </div>
     
         

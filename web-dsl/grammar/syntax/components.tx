@@ -1,6 +1,6 @@
 // Define a generic Component that can be one of several types
 Component:
-    Button | Form
+    Button | Form | Image
 ;
 
 // A button with a name and text label
@@ -30,6 +30,13 @@ Form:
     'endform'
 ;
 
+// A form element that can be either an input or a label
 FormElement:
     Input | Label
+;
+
+
+// An image with a name and source URL
+Image:
+    'Image' name=ID 'source:' source=STRING
 ;

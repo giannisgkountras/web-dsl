@@ -1,7 +1,7 @@
 webpage MyCoolWebsite
     Screen MainScreen
         title: "Welcome to Our Site"
-        url: "/home"
+        url: "/"
         description: "Primary landing area"
 
         row
@@ -32,6 +32,8 @@ webpage MyCoolWebsite
                 endform
             endcol
             col
+                Image TestImg
+                    source:"https://images.hdqwalls.com/wallpapers/mountain-scenery-morning-sun-rays-4k-kf.jpg"
             endcol
             col
                 row

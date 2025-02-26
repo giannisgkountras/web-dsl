@@ -12,7 +12,7 @@ const App = () => {
       <nav>
         <ul>
           <li>
-            <Link to="/home">Welcome to Our Site</Link>
+            <Link to="/">Welcome to Our Site</Link>
           </li>
 
           <li>
@@ -25,7 +25,7 @@ const App = () => {
         </ul>
       </nav>
       <Routes>
-        <Route path="/home" element={<MainScreen />} />
+        <Route path="/" element={<MainScreen />} />
 
         <Route path="/complex" element={<ComplexLayout />} />
 
