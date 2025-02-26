@@ -1,0 +1,10 @@
+// Define a generic Component that can be one of several types
+Component:
+    Button 
+;
+
+// A button with a name and text label
+Button:
+    'Button' name=ID 'text:' text=STRING
+;
+

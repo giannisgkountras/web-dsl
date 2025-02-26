@@ -6,24 +6,27 @@ webpage MyHomePage
 
         row
             col
+                Button TestBTN
+                    text: "Hello"
             endcol
+            col
+                Button WorldBTN
+                text: "World"
+            endcol
+        endrow
+        row
             col
             endcol
             col
             endcol
-        endrow
-        row
-        endrow
-        row
-        endrow
-    end
-
-    Screen ProfilePage
-        title: "Your profile"
-        url: "/profile"
-        description: "Page to view user's profile"
-
-        row
+            col
+                row
+                endrow
+                row
+                    Button NestedBtn
+                    text: "Button Hi!"
+                endrow
+            endcol
         endrow
     end
 
@@ -83,6 +86,37 @@ webpage MyHomePage
             endcol
             col
             endcol
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+    end
+
+    Screen Dashboard
+        title: "Main Dashboard"
+        url: "/dashboard"
+        description: "The dashboard of the application"
+
+        row
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+        row
+            col
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+        row
             col
             endcol
             col

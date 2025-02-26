@@ -1,0 +1,35 @@
+{% macro render_element(element) -%}
+    {% if element.__class__.__name__ == 'Row' %}
+    <div className="row">
+        {% for child in element.elements %}
+        {{ render_element(child) }}
+        {% endfor %}
+    </div>
+    {% elif element.__class__.__name__ == 'Column' %}
+    <div className="col">
+        {% for child in element.elements %}
+        {{ render_element(child) }}
+        {% endfor %}
+    </div>
+    {% elif element.__class__.__name__ == 'Button' %}
+        <button class="btn">
+            {{ element.text }}
+        </button>
+    {% endif %}
+{%- endmacro %}
+
+const {{screen.name}} = () => {
+    return (
+        <div className="screen-container">
+            <h1>{{ screen.title }}</h1>
+            {% if screen.description %}
+            <p>{{ screen.description }}</p>
+            {% endif %}
+            {% for element in screen.elements %}
+                {{ render_element(element) }}
+            {% endfor %}
+        </div>
+    )
+}
+
+export default {{screen.name}}

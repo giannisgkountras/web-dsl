@@ -19,7 +19,7 @@ try:
         html_content = template.render(screen=screen)
 
         # Create output filename (e.g.: "MainScreen.html")
-        output_file = f"generated/{screen.name}.html"
+        output_file = f"generated/html/{screen.name}.html"
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"Generated: {output_file}")
