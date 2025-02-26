@@ -1,4 +1,4 @@
-webpage MyHomePage
+webpage MyCoolWebsite
     Screen MainScreen
         title: "Welcome to Our Site"
         url: "/home"

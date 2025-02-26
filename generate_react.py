@@ -11,7 +11,7 @@ webpage_mm = metamodel_from_file(base_path + "grammar/syntax/screens.tx", debug=
 env = Environment(loader=FileSystemLoader(base_path + "templates"))
 screen_template = env.get_template("screen_template_react.jinja")
 app_template = env.get_template("app_template_react.jinja")
-
+index_html_template = env.get_template("index_html_template.jinja")
 # Read and parse the model
 try:
     with open(base_path + "grammar/examples/test.dsl", "r", encoding="utf-8") as f:
@@ -33,6 +33,13 @@ try:
     with open(app_output_file, "w", encoding="utf-8") as f:
         f.write(app_content)
     print(f"Generated: {app_output_file}")
+
+    # Generate the index.html file for the app
+    index_html_content = index_html_template.render(webpage=model)
+    index_html_output_file = f"{generated_path}index.html"
+    with open(index_html_output_file, "w", encoding="utf-8") as f:
+        f.write(index_html_content)
+    print(f"Generated: {index_html_output_file}")
 
     # Format the generated files
     print("Formatting the generated files...")
