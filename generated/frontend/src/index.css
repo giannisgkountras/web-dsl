@@ -65,3 +65,9 @@ p {
     border-radius: 5px;
     height: fit-content;
 }
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

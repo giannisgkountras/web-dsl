@@ -12,9 +12,20 @@
         {% endfor %}
     </div>
     {% elif element.__class__.__name__ == 'Button' %}
-        <button class="btn">
+        <button className="btn">
             {{ element.text }}
         </button>
+    {% elif element.__class__.__name__ == 'Form' %}
+        <form name="{{ element.name }}">
+            {% for child in element.elements %}
+                {{ render_element(child) }}
+            {% endfor %}
+            <input type="submit"/>
+        </form>
+    {% elif element.__class__.__name__ == 'Label' %}
+        <label htmlFor="{{ element.name }}">{{ element.content }}</label>
+    {% elif element.__class__.__name__ == 'Input' %}
+        <input type="{{element.type}}" name="{{ element.name }}" placeholder="{{ element.placeholder }}" required="{{element.required}}"/>
     {% endif %}
 {%- endmacro %}
 

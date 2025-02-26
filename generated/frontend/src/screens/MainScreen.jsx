@@ -15,7 +15,7 @@ const MainScreen = () => {
     <div className="col">
         
         
-        <button class="btn">
+        <button className="btn">
             Hello
         </button>
     
@@ -27,7 +27,7 @@ const MainScreen = () => {
     <div className="col">
         
         
-        <button class="btn">
+        <button className="btn">
             World
         </button>
     
@@ -44,6 +44,29 @@ const MainScreen = () => {
         
     <div className="col">
         
+        
+        <form name="MyForm">
+            
+                
+        <label htmlFor="username">Username</label>
+    
+            
+                
+        <input type="text" name="username" placeholder="Username" required="True"/>
+    
+            
+                
+        <label htmlFor="password">Password</label>
+    
+            
+                
+        <input type="password" name="password" placeholder="Password" required="True"/>
+    
+            
+            <input type="submit"/>
+        </form>
+    
+        
     </div>
     
         
@@ -66,7 +89,7 @@ const MainScreen = () => {
     <div className="row">
         
         
-        <button class="btn">
+        <button className="btn">
             Button Hi!
         </button>
     

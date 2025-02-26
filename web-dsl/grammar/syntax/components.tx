@@ -1,6 +1,6 @@
 // Define a generic Component that can be one of several types
 Component:
-    Button 
+    Button | Form
 ;
 
 // A button with a name and text label
@@ -8,3 +8,28 @@ Button:
     'Button' name=ID 'text:' text=STRING
 ;
 
+// A text field with a name and placeholder text
+Input:
+    'Input' name=ID 
+    'type:' type=STRING
+    'placeholder:' placeholder=STRING
+    'required:' required=BOOL
+
+
+;
+
+// A label with a name and content
+Label:
+    'Label' name=ID 'content:' content=STRING
+;
+
+// A form component with an action, method, and nested structural elements
+Form:
+    'Form' name=ID
+    elements*=FormElement
+    'endform'
+;
+
+FormElement:
+    Input | Label
+;

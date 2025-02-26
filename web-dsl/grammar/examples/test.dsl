@@ -16,6 +16,20 @@ webpage MyHomePage
         endrow
         row
             col
+                Form MyForm
+                    Label username
+                        content: "Username"
+                    Input username
+                        type: "text"
+                        placeholder: "Username"
+                        required: true
+                    Label password
+                        content: "Password"
+                    Input password
+                        type: "password"
+                        placeholder: "Password"
+                        required: true
+                endform
             endcol
             col
             endcol
