@@ -3,14 +3,16 @@ const MainScreen = () => {
     <div className="screen-container">
       <div className="row">
         <div className="col">
-          <button className="btn">Hello</button>
-
           <h1 className="text-3xl font-bold">Welcome to our Site</h1>
 
           <p>Primary landing area</p>
+
+          <button className="btn">Hello</button>
         </div>
 
         <div className="col">
+          <h1 className="text-xl font-bold">Hello to the</h1>
+
           <button className="btn">World</button>
         </div>
       </div>

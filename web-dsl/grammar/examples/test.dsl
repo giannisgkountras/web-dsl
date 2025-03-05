@@ -10,14 +10,13 @@ Screen MainScreen
 
     row
         col
-            Button TestBTN
-                text: "Hello"
             h1 "Welcome to our Site"
             p "Primary landing area"
+            Button "Hello"
         endcol
         col
-            Button WorldBTN
-            text: "World"
+            h2 "Hello to the"
+            Button "World"
         endcol
     endrow
     row
@@ -45,8 +44,7 @@ Screen MainScreen
             row
             endrow
             row
-                Button NestedBtn
-                text: "Button Hi!"
+                Button "Button Hi!"
             endrow
         endcol
     endrow
@@ -146,4 +144,16 @@ Screen Dashboard
         col
         endcol
     endrow
+end
+
+Screen Games
+    title: "Games"
+    url: "/games"
+
+    col
+        h1 "This is the games screen"
+        h2 "This is the games screen"
+        p "This is the games screen"
+        Button "Games Button"
+    endcol
 end

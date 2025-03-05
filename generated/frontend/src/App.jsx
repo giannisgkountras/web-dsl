@@ -6,6 +6,8 @@ import ComplexLayout from "./screens/ComplexLayout";
 
 import Dashboard from "./screens/Dashboard";
 
+import Games from "./screens/Games";
+
 import NavBar from "./components/NavBar";
 
 const App = () => {
@@ -19,6 +21,8 @@ const App = () => {
             { url: "/complex", title: "Complex Layout" },
 
             { url: "/dashboard", title: "Main Dashboard" },
+
+            { url: "/games", title: "Games" },
           ]}
         />
 
@@ -28,6 +32,8 @@ const App = () => {
           <Route path="/complex" element={<ComplexLayout />} />
 
           <Route path="/dashboard" element={<Dashboard />} />
+
+          <Route path="/games" element={<Games />} />
         </Routes>
       </Router>
     </div>

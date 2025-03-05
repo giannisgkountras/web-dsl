@@ -1,11 +1,11 @@
 // Define a generic Component that can be one of several types
 Component:
-    Button | Form | Image | h1 | p
+    Button | Form | Image | h1 | h2 | p
 ;
 
 // A button with a name and text label
 Button:
-    'Button' name=ID 'text:' text=STRING
+    'Button' (name=ID)? text=STRING
 ;
 
 // A text field with a name and placeholder text
