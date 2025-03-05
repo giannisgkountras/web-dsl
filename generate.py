@@ -1,6 +1,7 @@
 from textx import metamodel_from_file
 from jinja2 import Environment, FileSystemLoader
 import subprocess
+import glob
 
 base_path = "./web-dsl"
 generated_path = "./generated/frontend"
@@ -32,7 +33,7 @@ try:
         print(f"Generated: {output_file}")
 
     # Generate the App.jsx file that contains links to all pages
-    app_content = app_template.render(screens=model.screens)
+    app_content = app_template.render(webpage=model, screens=model.screens)
     app_output_file = f"{generated_path}/src/App.jsx"
     with open(app_output_file, "w", encoding="utf-8") as f:
         f.write(app_content)
@@ -47,7 +48,14 @@ try:
 
     # Format the generated files
     print("Formatting the generated files...")
-    subprocess.run(["npx", "prettier", "--write", f"{generated_path}/*/*.jsx"])
+    # Find all .jsx files recursively
+    jsx_files = glob.glob(f"{generated_path}/**/*.jsx", recursive=True)
+
+    # Run Prettier only if files exist
+    if jsx_files:
+        subprocess.run(["npx", "prettier", "--write", *jsx_files])
+    else:
+        print("No .jsx files found to format.")
 
 except Exception as e:
     print(f"Error: {e}")

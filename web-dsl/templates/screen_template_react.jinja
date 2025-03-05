@@ -28,16 +28,18 @@
         <input type="{{element.type}}" name="{{ element.name }}" placeholder="{{ element.placeholder }}" required="{{element.required}}"/>
     {% elif element.__class__.__name__ == 'Image' %}
         <img width="100%" height="100%" src="{{element.source}}"/>
+    {% elif element.__class__.__name__ == 'h1' %}
+        <h1 className="text-3xl font-bold">{{element.content}}</h1>
+    {% elif element.__class__.__name__ == 'h2' %}
+        <h1 className="text-xl font-bold">{{element.content}}</h1>
+    {% elif element.__class__.__name__ == 'p' %}
+        <p>{{element.content}}</p>
     {% endif %}
 {%- endmacro %}
 
 const {{screen.name}} = () => {
     return (
         <div className="screen-container">
-            <h1>{{ screen.title }}</h1>
-            {% if screen.description %}
-            <p>{{ screen.description }}</p>
-            {% endif %}
             {% for element in screen.elements %}
                 {{ render_element(element) }}
             {% endfor %}

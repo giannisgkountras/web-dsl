@@ -13,3 +13,4 @@ def validate_grammar(grammar_file):
 
 # Usage:
 validate_grammar(base_path + "screens.tx")
+validate_grammar(base_path + "components.tx")

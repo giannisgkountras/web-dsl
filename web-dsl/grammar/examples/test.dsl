@@ -2,7 +2,7 @@ webpage MyCoolWebsite
     author: "Giannis"
     version: "1.0.0"
     description: "My very cool website"
-    
+    navbar: true
 Screen MainScreen
     title: "Welcome to Our Site"
     url: "/"
@@ -12,6 +12,8 @@ Screen MainScreen
         col
             Button TestBTN
                 text: "Hello"
+            h1 "Welcome to our Site"
+            p "Primary landing area"
         endcol
         col
             Button WorldBTN

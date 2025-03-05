@@ -1,6 +1,6 @@
 // Define a generic Component that can be one of several types
 Component:
-    Button | Form | Image
+    Button | Form | Image | h1 | p
 ;
 
 // A button with a name and text label
@@ -39,4 +39,19 @@ FormElement:
 // An image with a name and source URL
 Image:
     'Image' name=ID 'source:' source=STRING
+;
+
+// A header with content
+h1:
+    'h1' (name=ID)? content=STRING
+;
+
+// A smaller header with content
+h2:
+    'h2' (name=ID)? content=STRING
+;
+
+// A text with content
+p:
+    'p' (name=ID)? content=STRING
 ;

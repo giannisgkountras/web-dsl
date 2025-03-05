@@ -6,32 +6,31 @@ import ComplexLayout from "./screens/ComplexLayout";
 
 import Dashboard from "./screens/Dashboard";
 
+import NavBar from "./components/NavBar";
+
 const App = () => {
   return (
-    <Router>
-      <nav>
-        <ul>
-          <li>
-            <Link to="/">Welcome to Our Site</Link>
-          </li>
+    <div className="screen-container">
+      <Router>
+        <NavBar
+          screens={[
+            { url: "/", title: "Welcome to Our Site" },
 
-          <li>
-            <Link to="/complex">Complex Layout</Link>
-          </li>
+            { url: "/complex", title: "Complex Layout" },
 
-          <li>
-            <Link to="/dashboard">Main Dashboard</Link>
-          </li>
-        </ul>
-      </nav>
-      <Routes>
-        <Route path="/" element={<MainScreen />} />
+            { url: "/dashboard", title: "Main Dashboard" },
+          ]}
+        />
 
-        <Route path="/complex" element={<ComplexLayout />} />
+        <Routes>
+          <Route path="/" element={<MainScreen />} />
 
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </Router>
+          <Route path="/complex" element={<ComplexLayout />} />
+
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </Router>
+    </div>
   );
 };
 

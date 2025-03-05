@@ -1,26 +1,33 @@
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+
 {% for screen in screens %}
 import {{ screen.name }} from './screens/{{ screen.name }}';
 {% endfor %}
 
+{% if webpage.navbar %}
+import NavBar from "./components/NavBar";
+{% endif %}
+
 const App = () => {
   return (
-    <Router>
-        <nav>
-          <ul>
-          {% for screen in screens %}
-            <li>
-              <Link to="{{ screen.url | lower }}">{{ screen.title }}</Link>
-            </li>
-          {% endfor %}
-          </ul>
-        </nav>
-        <Routes>
-          {% for screen in screens %}
-          <Route path="{{ screen.url | lower }}" element={<{{ screen.name }} />} />
-          {% endfor %}
-        </Routes>
-    </Router>
+    <div className="screen-container">
+      <Router>
+          {% if webpage.navbar %}
+            <NavBar
+              screens={[
+                {% for screen in screens %}
+                {url: "{{screen.url}}", title: "{{screen.title}}" },
+                {% endfor %}
+              ]}/>
+          {% endif %}
+          
+          <Routes>
+            {% for screen in screens %}
+            <Route path="{{ screen.url | lower }}" element={<{{ screen.name }} />} />
+            {% endfor %}
+          </Routes>
+      </Router>
+    </div>
   );
 }
 
