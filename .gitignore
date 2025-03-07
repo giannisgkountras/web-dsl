@@ -1,7 +1,10 @@
 env
+.env
 node_modules
 *.dot
 .vite
+tmp
+__pycache__
 
 # Logs
 logs

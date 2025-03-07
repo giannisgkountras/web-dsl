@@ -1,15 +1,5 @@
 import components
 
-// Root: A webpage consists of multiple screens
-WebPage:
-    'webpage' name=ID 
-    ('author:' author=STRING)?
-    ('version:' version=STRING)?
-    ('description:' description=STRING)?
-    ('navbar:'  navbar=BOOL)?
-    screens+=Screen
-;
-
 // Each screen has a name, title, URL, optional description, and nested structure
 Screen:
     'Screen' name=ID
