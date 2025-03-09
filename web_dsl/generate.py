@@ -21,7 +21,7 @@ def generate_frontend(model_path, gen_path):
 
     # Copy the base frontend project contents to the output directory
     print(f"Copying frontend base contents to: {gen_path}")
-    subprocess.run(["rsync", "-a", f"{frontend_base_dir}/", gen_path])
+    subprocess.run(["cp", "-r", f"{frontend_base_dir}/.", gen_path])
 
     # Prepare the output directories
     screens_dir = os.path.join(gen_path, "src", "screens")
@@ -51,11 +51,14 @@ def generate_frontend(model_path, gen_path):
     print(f"Generated: {index_html_output_file}")
 
     # Optionally run Prettier to format the generated files
-    print("Formatting the generated files...")
-    jsx_files = glob.glob(os.path.join(gen_path, "**", "*.jsx"), recursive=True)
-    if jsx_files:
-        subprocess.run(["npx", "prettier", "--write", *jsx_files])
-    else:
-        print("No .jsx files found to format.")
+
+    # DOCKER DOES NOT HAVE NPM INSTALLED
+
+    # print("Formatting the generated files...")
+    # jsx_files = glob.glob(os.path.join(gen_path, "**", "*.jsx"), recursive=True)
+    # if jsx_files:
+    #     subprocess.run(["npx", "prettier", "--write", *jsx_files])
+    # else:
+    #     print("No .jsx files found to format.")
 
     return gen_path

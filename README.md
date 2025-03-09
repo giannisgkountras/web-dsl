@@ -1,11 +1,13 @@
-# web-dsl
+# Textual DSL for web applications
 
-## Frontend
+## How to setup
 
-Frontend is generated inside `generated/frontend` folder. It is a React application. To run the frontend, you need to have Node.js installed. Then, run the following commands:
+### Pre-requisites
 
-```
-cd generated/frontend
-npm install
-npm run dev
-```
+-   Docker
+
+### Steps
+
+1. Clone the repository
+2. Run `docker-compose up`
+3. Access the application at `http://localhost:8082`

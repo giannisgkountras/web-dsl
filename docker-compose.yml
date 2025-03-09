@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+    webdsl:
+        build: ./
+        command: uvicorn web_dsl.api:api --host 0.0.0.0 --port 8080 --root-path ${ROOT_PATH:-/} --workers ${WORKERS:-1}
+        ports:
+            - ${PORT:-8082}:8080
+        environment:
+            - API_KEY=${API_KEY:-mykey}
+            - WORKERS=${WORKERS:-1}
+            - ROOT_PATH=${ROOT_PATH:-/}

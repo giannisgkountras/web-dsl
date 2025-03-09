@@ -75,7 +75,6 @@ async def validate(model: ValidationModel, api_key: str = Security(get_api_key))
     try:
         model = build_model(fpath)
         print("Model validation success!!")
-        print(model)
         resp["message"] = "Model validation success"
     except Exception as e:
         print("Exception while validating model. Validation failed!!")
@@ -97,11 +96,12 @@ async def validate_file(
     resp = {"status": 200, "message": ""}
     fd = file.file
     u_id = uuid.uuid4().hex[0:8]
-    fpath = os.path.join(TMP_DIR, f"model_for_validation-{u_id}.goal")
+    fpath = os.path.join(TMP_DIR, f"model_for_validation-{u_id}.dsl")
     with open(fpath, "w") as f:
         f.write(fd.read().decode("utf8"))
     try:
         model = build_model(fpath)
+        resp["message"] = "Model validation success"
     except Exception as e:
         resp["status"] = 404
         resp["message"] = e
@@ -115,11 +115,13 @@ async def validate_b64(fenc: str = "", api_key: str = Security(get_api_key)):
     resp = {"status": 200, "message": ""}
     fdec = base64.b64decode(fenc)
     u_id = uuid.uuid4().hex[0:8]
-    fpath = os.path.join(TMP_DIR, "model_for_validation-{}.goal".format(u_id))
+    fpath = os.path.join(TMP_DIR, "model_for_validation-{}.dsl".format(u_id))
     with open(fpath, "wb") as f:
         f.write(fdec)
     try:
         model = build_model(fpath)
+        resp["message"] = "Model validation success"
+
     except Exception as e:
         resp["status"] = 404
         resp["message"] = e
