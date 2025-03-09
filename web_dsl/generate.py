@@ -29,16 +29,13 @@ def generate_frontend(model_path, gen_path):
         subprocess.run(["rm", "-rf", screens_dir])
     os.makedirs(screens_dir, exist_ok=True)
 
-    # Process each screen (similar to processing scenarios/entities)
+    # Generate the screen components
     for screen in model.screens:
-        # You could add additional processing of 'screen' if needed (e.g., extracting properties)
         html_content = screen_template.render(screen=screen)
         output_file = os.path.join(screens_dir, f"{screen.name}.jsx")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"Generated: {output_file}")
-        # # Optional: set file permissions similar to chmod in your first snippet
-        # os.chmod(output_file, 0o755)
 
     # Generate additional files like App.jsx and index.html
     app_content = app_template.render(webpage=model, screens=model.screens)

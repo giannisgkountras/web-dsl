@@ -157,3 +157,34 @@ async def gen_from_model(
         raise HTTPException(
             status_code=400, detail=f"Codintxt.Transformation error: {e}"
         )
+
+
+@api.post("/generate/file")
+async def gen_from_file(
+    model_file: UploadFile = File(...), api_key: str = Security(get_api_key)
+):
+    print(
+        f"Generate for request: file=<{model_file.filename}>,"
+        + f" descriptor=<{model_file.file}>"
+    )
+    resp = {"status": 200, "message": ""}
+    fd = model_file.file
+    u_id = uuid.uuid4().hex[0:8]
+    model_path = os.path.join(TMP_DIR, f"model-{u_id}.dsl")
+    tarball_path = os.path.join(TMP_DIR, f"{u_id}.tar.gz")
+    gen_path = os.path.join(TMP_DIR, f"gen-{u_id}")
+    with open(model_path, "w") as f:
+        f.write(fd.read().decode("utf8"))
+    try:
+        out_dir = generate_frontend(model_path, gen_path)
+        make_tarball(tarball_path, out_dir)
+        print(f"Sending tarball {tarball_path}")
+        return FileResponse(
+            tarball_path,
+            filename=os.path.basename(tarball_path),
+            media_type="application/x-tar",
+        )
+    except Exception as e:
+        print(e)
+        resp["status"] = 404
+        return resp
