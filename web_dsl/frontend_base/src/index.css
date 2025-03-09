@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+* {
+    box-sizing: border-box;
+}
+
+#root {
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    background-color: #252423;
+    color: #ddc7a1;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.screen-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-height: 0;
+    height: 100vh;
+}
+
+h1,
+p {
+    margin: 0 0 10px 0;
+}
+
+.row {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    background-color: #3c3836;
+    border: 1px solid #7daea3;
+    padding: 5px;
+    min-height: 0;
+    height: 100%;
+    width: 100%;
+}
+
+.col {
+    flex: 1;
+    min-width: 0;
+    border: 1px solid #ea6962;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+}
+
+.btn {
+    background-color: #b16286;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    height: fit-content;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}

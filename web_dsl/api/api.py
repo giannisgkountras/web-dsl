@@ -10,10 +10,11 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
 from web_dsl.language import build_model
+from web_dsl.generate import generate_frontend
 
 API_KEY = os.getenv("API_KEY", "API_KEY")
 
-TMP_DIR = "/tmp/goaldsl"
+TMP_DIR = "/tmp/webdsl"
 
 if not os.path.exists(TMP_DIR):
     os.mkdir(TMP_DIR)
@@ -125,34 +126,34 @@ async def validate_b64(fenc: str = "", api_key: str = Security(get_api_key)):
     return resp
 
 
-# @api.post("/generate")
-# async def gen_from_model(
-#     gen_auto_model: TransformationModel = Body(...),
-#     api_key: str = Security(get_api_key),
-# ):
-#     resp = {"status": 200, "message": "", "model_json": ""}
-#     model = gen_auto_model.model
-#     u_id = uuid.uuid4().hex[0:8]
-#     model_path = os.path.join(TMP_DIR, f"model-{u_id}.auto")
-#     gen_path = os.path.join(TMP_DIR, f"gen-{u_id}")
+@api.post("/generate")
+async def gen_from_model(
+    gen_model: TransformationModel = Body(...),
+    api_key: str = Security(get_api_key),
+):
+    resp = {"status": 200, "message": "", "model_json": ""}
+    model = gen_model.model
+    u_id = uuid.uuid4().hex[0:8]
+    model_path = os.path.join(TMP_DIR, f"model-{u_id}.dsl")
+    gen_path = os.path.join(TMP_DIR, f"gen-{u_id}")
 
-#     if not os.path.exists(gen_path):
-#         os.mkdir(gen_path)
-#     with open(model_path, "w") as f:
-#         f.write(model)
+    if not os.path.exists(gen_path):
+        os.mkdir(gen_path)
+    with open(model_path, "w") as f:
+        f.write(model)
 
-#     tarball_path = os.path.join(TMP_DIR, f"{u_id}.tar.gz")
-#     gen_path = os.path.join(TMP_DIR, f"gen-{u_id}")
+    tarball_path = os.path.join(TMP_DIR, f"{u_id}.tar.gz")
+    gen_path = os.path.join(TMP_DIR, f"gen-{u_id}")
 
-#     try:
-#         out_dir = generate_model(model_path, gen_path)
-#         make_tarball(tarball_path, out_dir)
-#         return FileResponse(
-#             tarball_path,
-#             filename=os.path.basename(tarball_path),
-#             media_type="application/x-tar",
-#         )
-#     except Exception as e:
-#         raise HTTPException(
-#             status_code=400, detail=f"Codintxt.Transformation error: {e}"
-#         )
+    try:
+        out_dir = generate_frontend(model_path, gen_path)
+        make_tarball(tarball_path, out_dir)
+        return FileResponse(
+            tarball_path,
+            filename=os.path.basename(tarball_path),
+            media_type="application/x-tar",
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Codintxt.Transformation error: {e}"
+        )

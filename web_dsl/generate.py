@@ -1,61 +1,64 @@
-from textx import metamodel_from_file
-from jinja2 import Environment, FileSystemLoader
+import os
 import subprocess
 import glob
+from textx import metamodel_from_file
+from jinja2 import Environment, FileSystemLoader
+from .language import build_model
 
-base_path = "./web-dsl"
-generated_path = "./generated/frontend"
-# Load the grammar
-webpage_mm = metamodel_from_file(f"{base_path}/grammar/syntax/screens.tx", debug=False)
-
-# Set up Jinja environment
-env = Environment(loader=FileSystemLoader(f"{base_path}/templates"))
+# Set up the Jinja2 environment and load templates
+env = Environment(loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates"))
 screen_template = env.get_template("screen_template_react.jinja")
 app_template = env.get_template("app_template_react.jinja")
 index_html_template = env.get_template("index_html_template.jinja")
-# Read and parse the model
-try:
-    with open(f"{base_path}/grammar/examples/test.dsl", "r", encoding="utf-8") as f:
-        model = webpage_mm.model_from_str(f.read())
 
-    # Clear the directory before generating the files
-    subprocess.run(["rm", "-rf", f"{generated_path}/src/screens"])
-    subprocess.run(["mkdir", "-p", f"{generated_path}/src/screens"])
+frontend_base_dir = os.path.join(os.path.dirname(__file__), "frontend_base")
 
-    # Generate JSX for each screen
+
+def generate_frontend(model_path, gen_path):
+    # Read and parse the DSL model
+    print(f"Reading model from: {model_path}")
+    model = build_model(model_path)
+
+    # Copy the base frontend project contents to the output directory
+    print(f"Copying frontend base contents to: {gen_path}")
+    subprocess.run(["rsync", "-a", f"{frontend_base_dir}/", gen_path])
+
+    # Prepare the output directories
+    screens_dir = os.path.join(gen_path, "src", "screens")
+    if os.path.exists(screens_dir):
+        subprocess.run(["rm", "-rf", screens_dir])
+    os.makedirs(screens_dir, exist_ok=True)
+
+    # Process each screen (similar to processing scenarios/entities)
     for screen in model.screens:
+        # You could add additional processing of 'screen' if needed (e.g., extracting properties)
         html_content = screen_template.render(screen=screen)
-
-        # Create output filename (e.g.: "MainScreen.jsx")
-        output_file = f"{generated_path}/src/screens/{screen.name}.jsx"
+        output_file = os.path.join(screens_dir, f"{screen.name}.jsx")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
         print(f"Generated: {output_file}")
+        # # Optional: set file permissions similar to chmod in your first snippet
+        # os.chmod(output_file, 0o755)
 
-    # Generate the App.jsx file that contains links to all pages
+    # Generate additional files like App.jsx and index.html
     app_content = app_template.render(webpage=model, screens=model.screens)
-    app_output_file = f"{generated_path}/src/App.jsx"
+    app_output_file = os.path.join(gen_path, "src", "App.jsx")
     with open(app_output_file, "w", encoding="utf-8") as f:
         f.write(app_content)
     print(f"Generated: {app_output_file}")
 
-    # Generate the index.html file for the app
     index_html_content = index_html_template.render(webpage=model)
-    index_html_output_file = f"{generated_path}/index.html"
+    index_html_output_file = os.path.join(gen_path, "index.html")
     with open(index_html_output_file, "w", encoding="utf-8") as f:
         f.write(index_html_content)
     print(f"Generated: {index_html_output_file}")
 
-    # Format the generated files
+    # Optionally run Prettier to format the generated files
     print("Formatting the generated files...")
-    # Find all .jsx files recursively
-    jsx_files = glob.glob(f"{generated_path}/**/*.jsx", recursive=True)
-
-    # Run Prettier only if files exist
+    jsx_files = glob.glob(os.path.join(gen_path, "**", "*.jsx"), recursive=True)
     if jsx_files:
         subprocess.run(["npx", "prettier", "--write", *jsx_files])
     else:
         print("No .jsx files found to format.")
 
-except Exception as e:
-    print(f"Error: {e}")
+    return gen_path
