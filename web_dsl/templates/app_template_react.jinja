@@ -8,10 +8,12 @@ import {{ screen.name }} from './screens/{{ screen.name }}';
 import NavBar from "./components/NavBar";
 {% endif %}
 
+const basePath = window.__BASE_PATH__ || "/";
+
 const App = () => {
   return (
     <div className="screen-container">
-      <Router>
+      <Router basename={basePath}>
           {% if webpage.navbar %}
             <NavBar
               screens={[
