@@ -1,6 +1,6 @@
 FROM python:3.10
 
-WORKDIR /
+WORKDIR /app
 
 # Install system dependencies (including npm)
 RUN apt-get update && apt-get install -y \
@@ -10,4 +10,4 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
-CMD ["uvicorn", "web_dsl.api:api", "--host", "0.0.0.0", "--port", "8000"]%
+CMD ["uvicorn", "web_dsl.api:app", "--host", "0.0.0.0", "--port", "8000"]%

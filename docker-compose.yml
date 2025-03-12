@@ -1,7 +1,7 @@
 services:
     webdsl:
         build: ./
-        command: uvicorn web_dsl.api:api --host 0.0.0.0 --port 8080 --root-path ${ROOT_PATH:-/} --workers ${WORKERS:-1}
+        command: uvicorn web_dsl.api:app --host 0.0.0.0 --port 8080 --root-path ${ROOT_PATH:-/} --workers ${WORKERS:-1}
         ports:
             - ${PORT:-8082}:8080
         environment:
