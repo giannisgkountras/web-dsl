@@ -137,7 +137,7 @@ async def validate_model(model: ValidationModel, api_key: str = Security(get_api
     if not model.model:
         raise HTTPException(status_code=404, detail="Empty model content")
     uid = get_unique_id()
-    file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.dsl")
+    file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.wdsl")
     save_text_to_file(model.model, file_path)
     try:
         build_model(file_path)
@@ -151,7 +151,7 @@ async def validate_model_file(
     file: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     uid = get_unique_id()
-    file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.dsl")
+    file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.wdsl")
     save_upload_file(file, file_path)
     try:
         build_model(file_path)
@@ -165,7 +165,7 @@ async def validate_model_base64(fenc: str = "", api_key: str = Security(get_api_
     if not fenc:
         raise HTTPException(status_code=404, detail="Empty base64 string")
     uid = get_unique_id()
-    file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.dsl")
+    file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.wdsl")
     save_base64_to_file(fenc, file_path)
     try:
         build_model(file_path)
@@ -180,7 +180,7 @@ async def generate_from_model(
     gen_model: TransformationModel = Body(...), api_key: str = Security(get_api_key)
 ):
     uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.dsl")
+    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
     os.makedirs(gen_dir, exist_ok=True)
     save_text_to_file(gen_model.model, model_path)
@@ -202,7 +202,7 @@ async def generate_from_file(
     model_file: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.dsl")
+    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
     os.makedirs(gen_dir, exist_ok=True)
     save_upload_file(model_file, model_path)
@@ -227,7 +227,7 @@ async def generate_preview_from_model(
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.dsl")
+    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
     os.makedirs(gen_dir, exist_ok=True)
     save_text_to_file(gen_model.model, model_path)
@@ -254,7 +254,7 @@ async def generate_preview_from_file(
     background_tasks: BackgroundTasks = BackgroundTasks(),
 ):
     uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.dsl")
+    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
     os.makedirs(gen_dir, exist_ok=True)
     save_upload_file(model_file, model_path)
