@@ -6,7 +6,12 @@ from jinja2 import Environment, FileSystemLoader
 from .language import build_model
 
 # Set up the Jinja2 environment and load templates
-env = Environment(loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates"))
+env = Environment(
+    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates"),
+    trim_blocks=True,
+    lstrip_blocks=True,
+)
+
 screen_template = env.get_template("screen_template_react.jinja")
 app_template = env.get_template("app_template_react.jinja")
 index_html_template = env.get_template("index_html_template.jinja")

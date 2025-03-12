@@ -1,47 +1,10 @@
-{% macro render_element(element) -%}
-    {% if element.__class__.__name__ == 'Row' %}
-    <div className="row">
-        {% for child in element.elements %}
-        {{ render_element(child) }}
-        {% endfor %}
-    </div>
-    {% elif element.__class__.__name__ == 'Column' %}
-    <div className="col">
-        {% for child in element.elements %}
-        {{ render_element(child) }}
-        {% endfor %}
-    </div>
-    {% elif element.__class__.__name__ == 'Button' %}
-        <button className="btn">
-            {{ element.text }}
-        </button>
-    {% elif element.__class__.__name__ == 'Form' %}
-        <form name="{{ element.name }}">
-            {% for child in element.elements %}
-                {{ render_element(child) }}
-            {% endfor %}
-            <input type="submit"/>
-        </form>
-    {% elif element.__class__.__name__ == 'Label' %}
-        <label htmlFor="{{ element.name }}">{{ element.content }}</label>
-    {% elif element.__class__.__name__ == 'Input' %}
-        <input type="{{element.type}}" name="{{ element.name }}" placeholder="{{ element.placeholder }}" required="{{element.required}}"/>
-    {% elif element.__class__.__name__ == 'Image' %}
-        <img width="100%" height="100%" src="{{element.source}}"/>
-    {% elif element.__class__.__name__ == 'h1' %}
-        <h1 className="text-3xl font-bold">{{element.content}}</h1>
-    {% elif element.__class__.__name__ == 'h2' %}
-        <h1 className="text-xl font-bold">{{element.content}}</h1>
-    {% elif element.__class__.__name__ == 'p' %}
-        <p>{{element.content}}</p>
-    {% endif %}
-{%- endmacro %}
+{%import 'component_macros.jijna' as component_macros%}
 
 const {{screen.name}} = () => {
     return (
         <div className="screen-container">
             {% for element in screen.elements %}
-                {{ render_element(element) }}
+                {{ component_macros.render_element(element) }}
             {% endfor %}
         </div>
     )
