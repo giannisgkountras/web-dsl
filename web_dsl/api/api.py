@@ -61,7 +61,7 @@ class TransformationModel(BaseModel):
     model: str
 
 
-@api.post("/validate")
+@api.post("/validate", tags=["Validation"])
 async def validate(model: ValidationModel, api_key: str = Security(get_api_key)):
     text = model.model
     name = model.name
@@ -88,7 +88,7 @@ async def validate(model: ValidationModel, api_key: str = Security(get_api_key))
     return resp
 
 
-@api.post("/validate/file")
+@api.post("/validate/file", tags=["Validation"])
 async def validate_file(
     file: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
@@ -111,7 +111,7 @@ async def validate_file(
     return resp
 
 
-@api.get("/validate/base64")
+@api.get("/validate/base64", tags=["Validation"])
 async def validate_b64(fenc: str = "", api_key: str = Security(get_api_key)):
     if len(fenc) == 0:
         return 404
@@ -131,7 +131,7 @@ async def validate_b64(fenc: str = "", api_key: str = Security(get_api_key)):
     return resp
 
 
-@api.post("/generate")
+@api.post("/generate", tags=["Generation"])
 async def gen_from_model(
     gen_model: TransformationModel = Body(...),
     api_key: str = Security(get_api_key),
@@ -164,7 +164,7 @@ async def gen_from_model(
         )
 
 
-@api.post("/generate/file")
+@api.post("/generate/file", tags=["Generation"])
 async def gen_from_file(
     model_file: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
@@ -195,8 +195,54 @@ async def gen_from_file(
         return resp
 
 
-@api.post("/generate/preview")
-async def gen_from_file(
+@api.post("/generate/preview", tags=["Preview"])
+async def gen_from_file_preview(
+    gen_model: TransformationModel = Body(...), api_key: str = Security(get_api_key)
+):
+    model = gen_model.model
+    resp = {"status": 200, "message": ""}
+    u_id = uuid.uuid4().hex[0:8]
+    model_path = os.path.join(TMP_DIR, f"model-{u_id}.dsl")
+    gen_path = os.path.join(TMP_DIR, f"gen-{u_id}")
+
+    if not os.path.exists(gen_path):
+        os.mkdir(gen_path)
+    with open(model_path, "w") as f:
+        f.write(model)
+
+    with open(model_path, "w") as f:
+        f.write(model)
+    try:
+        out_dir = generate_frontend(model_path, gen_path)
+        print("Generated frontend at:", out_dir)
+    except Exception as e:
+        print(e)
+        resp["status"] = 404
+        return resp
+    try:
+        # Install dependencies.
+        print("Installing dependencies...")
+        subprocess.run(["npm", "install"], cwd=out_dir, check=True)
+        # Build the app.
+        print("Building the app...")
+        subprocess.run(["npm", "run", "build"], cwd=out_dir, check=True)
+
+        build_dir = os.path.join(out_dir, "dist")
+        base_url = f"/generated/gen-{u_id}/dist/"
+        inject_base_href(build_dir, base_url)
+        frontend_url = f"/generated/gen-{u_id}/dist/"
+        return JSONResponse(
+            content={"frontend_url": frontend_url},
+            status_code=200,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Codintxt.Transformation error: {e}"
+        )
+
+
+@api.post("/generate/file/preview", tags=["Preview"])
+async def gen_from_file_preview(
     model_file: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     print(
