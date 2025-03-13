@@ -22,5 +22,5 @@ Row:
 
 // A column contains multiple structural elements
 Column:
-    'col' elements*=StructuralElement 'endcol'
+    'col' ('width:' width=INT)? elements*=StructuralElement 'endcol'
 ;

@@ -8,7 +8,9 @@
         {% endfor %}
     </div>
     {% elif element.__class__.__name__ == 'Column' %}
-    <div className="col">
+    <div className="col" style={% raw %}{{{% endraw %} 
+      "width": "{% if element.width <= 0 %}100%{% else %}{{ element.width }}px{% endif %}" 
+    {% raw %}}}{% endraw %}>
         {% for child in element.elements %}
         {{ render_element(child) }}
         {% endfor %}
