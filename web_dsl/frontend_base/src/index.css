@@ -17,13 +17,22 @@ body {
     margin: 0;
 }
 
-.screen-container {
-    flex: 1;
+.app-container {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    min-height: 0;
-    height: 100vh;
+    min-height: 100vh;
+    height: fit-content;
+}
+
+.screen-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: calc(
+        100vh - (56px + 10px)
+    ); /* 60px is the height of the nav + 10 of the gap */
+    overflow: auto;
 }
 
 h1,
@@ -39,12 +48,11 @@ p {
     background-color: #3c3836;
     border: 1px solid #7daea3;
     padding: 5px;
-    min-height: 0;
     width: 100%;
+    height: auto;
 }
 
 .col {
-    min-width: 0;
     border: 1px solid #ea6962;
     padding: 10px;
     display: flex;
@@ -52,6 +60,7 @@ p {
     justify-content: center;
     align-items: center;
     height: 100%;
+    width: 100%;
 }
 
 .btn {

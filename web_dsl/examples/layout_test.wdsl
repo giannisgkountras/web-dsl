@@ -1,0 +1,23 @@
+webpage LayoutTest
+    author: "Giannis"
+    version: "1.0.0"
+    description: "My very cool website"
+    navbar: true
+
+Screen MainScreen
+    title: "Layout Testing"
+    url: "/"
+    description: "Test rows and columns"
+    row height:50
+    	col width:200
+    	endcol
+    endrow
+    row height: 150
+    	col width:400
+    	endcol
+    endrow
+    row
+    	col
+    	endcol
+    endrow
+end	
