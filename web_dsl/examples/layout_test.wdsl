@@ -9,11 +9,15 @@ Screen MainScreen
     url: "/"
     description: "Test rows and columns"
     row height:50
+    	col
+    	endcol
     	col width:200
     	endcol
     endrow
     row height: 150
     	col width:400
+    	endcol
+    	col width:50
     	endcol
     endrow
     row
