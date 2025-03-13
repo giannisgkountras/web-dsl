@@ -1,6 +1,8 @@
 {% macro render_element(element) -%}
     {% if element.__class__.__name__ == 'Row' %}
-    <div className="row">
+    <div className="row" style={% raw %}{{{% endraw %} 
+      "height": "{% if element.height <= 0 %}100%{% else %}{{ element.height }}px{% endif %}" 
+    {% raw %}}}{% endraw %}>
         {% for child in element.elements %}
         {{ render_element(child) }}
         {% endfor %}

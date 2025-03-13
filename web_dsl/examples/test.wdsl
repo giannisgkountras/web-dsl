@@ -1,0 +1,15 @@
+webpage WebApp
+    author: "Giannis"
+    version: "1.0.0"
+    description: "My very cool website"
+    navbar: true
+
+Screen MainScreen
+    title: "Welcome to Our Site"
+    url: "/"
+    description: "Primary landing area"
+    fixed-size: true
+
+    row height: 50
+    endrow
+end	

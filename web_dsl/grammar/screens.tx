@@ -17,7 +17,7 @@ StructuralElement:
 
 // A row contains multiple structural elements
 Row:
-    'row' elements*=StructuralElement 'endrow'
+    'row' ('height:' height=INT)? elements*=StructuralElement 'endrow'
 ;
 
 // A column contains multiple structural elements
