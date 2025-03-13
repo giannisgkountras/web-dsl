@@ -1,8 +1,9 @@
 {% macro render_element(element) -%}
     {% if element.__class__.__name__ == 'Row' %}
-    <div className="row" style={% raw %}{{{% endraw %} 
-      "height": "{% if element.height <= 0 %}100%{% else %}{{ element.height }}px{% endif %}" 
-    {% raw %}}}{% endraw %}>
+    <div className="row {% if element.height <= 0 %}flex-1{% endif %}" 
+        {% if element.height > 0 %}
+        style={% raw %}{{{% endraw %} "height": "{{ element.height }}px"{% raw %}}}{% endraw %}
+        {% endif %}>
         {% for child in element.elements %}
         {{ render_element(child) }}
         {% endfor %}
