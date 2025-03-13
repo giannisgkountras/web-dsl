@@ -29,7 +29,7 @@ body {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    height: calc(
+    min-height: calc(
         100vh - (56px + 10px)
     ); /* 60px is the height of the nav + 10 of the gap */
     overflow: auto;
