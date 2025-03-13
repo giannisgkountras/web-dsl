@@ -1,6 +1,14 @@
 // Define a generic Component that can be one of several types
-Component:
+BasicComponent:
     Button | Form | Image | h1 | h2 | p
+;
+
+ReusableComponentDefinition:
+    'DefineComponent' name=ID 'as' definition = BasicComponent
+;
+
+ReusableComponent:
+    'useComponent' ref=[ReusableComponentDefinition|ID]
 ;
 
 // A button with a name and text label

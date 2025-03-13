@@ -12,7 +12,7 @@ Screen:
 
 // Rows and columns, which can contain more structural elements
 StructuralElement:
-    Row | Column | Component
+    Row | Column | BasicComponent | ReusableComponent
 ;
 
 // A row contains multiple structural elements

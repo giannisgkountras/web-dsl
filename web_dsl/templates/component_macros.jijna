@@ -39,5 +39,7 @@
         <h1 className="text-xl font-bold">{{element.content}}</h1>
     {% elif element.__class__.__name__ == 'p' %}
         <p>{{element.content}}</p>
+    {% elif element.__class__.__name__ == 'ReusableComponent' %}
+    {{ render_element(element.ref.definition) }}
     {% endif %}
 {%- endmacro %}

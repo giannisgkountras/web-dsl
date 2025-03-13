@@ -2,7 +2,7 @@ import os
 from textx import metamodel_from_file
 from textx.export import metamodel_export
 
-entity_mm = metamodel_from_file("./web-dsl/grammar/syntax/screens.tx")
+entity_mm = metamodel_from_file("./grammar/webpage.tx")
 
 metamodel_export(entity_mm, "entity.dot")
 
