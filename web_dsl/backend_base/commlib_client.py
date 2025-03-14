@@ -1,61 +1,58 @@
 from commlib.node import Node
-from commlib.transports.redis import ConnectionParameters as RedisConn
-from commlib.transports.mqtt import ConnectionParameters as MQTTConn
-import asyncio
-import os
+from commlib.transports.mqtt import ConnectionParameters
 
 
 class CommlibClient:
     def __init__(self):
 
-        redis_pass = os.getenv("REDIS_PASSWORD")
-
         broker_config = {
             "host": "localhost",
             "port": 1883,
-            "username": "",
-            "password": "",
         }
 
-        # FOR USE WITH JUNIOR CAR
-        # self.mqtt_conn_params = MQTTConn()
+        self.connection_params = ConnectionParameters()
 
-        self.mqtt_gui_conn_params = MQTTConn()
+        self.mqtt_node = Node(
+            node_name="mqtt_node", connection_params=self.connection_params
+        )
+
+        self.subscribers = {}
+        self.publishers = {}
 
     def subscribe(self, topic, callback):
         """Subscribe to a topic using the active node."""
         if topic in self.subscribers:
-            self.logger.warning(f"Already subscribed to {topic}")
+            print(f"Already subscribed to {topic}")
             return
 
-        subscriber = self.active_receive_node.create_subscriber(
-            topic=topic, on_message=callback
-        )
+        subscriber = self.mqtt_node.create_subscriber(topic=topic, on_message=callback)
         self.subscribers[topic] = subscriber
         subscriber.run()
-        self.logger.info(f"Subscribed to {topic} using {self.active_receive_source}.")
+        print(f"Subscribed to {topic}.")
 
     def publish(self, topic, message):
         """Publish a message to the given topic."""
         # Ensure message is not None or empty
         if not message:
-            self.logger.warning(f"Attempted to publish an empty message to {topic}")
+            print(f"Attempted to publish an empty message to {topic}")
             return
 
         if topic not in self.publishers:
-            publisher = self.mqtt_gui_node.create_publisher(topic=topic)
+            publisher = self.mqtt_node.create_publisher(topic=topic)
             self.publishers[topic] = publisher
         else:
             publisher = self.publishers[topic]
 
         try:
             publisher.publish(message)
-            self.logger.info(f"Published message to {topic} using MQTT.")
+            print(f"Published message to {topic}.")
         except Exception as e:
-            self.logger.error(f"Failed to publish message to {topic}: {e}")
+            print(f"Failed to publish message to {topic}: {e}")
 
-    def start_listener(self):
-        """Starts background listeners for all subscribed topics."""
-        for topic, subscriber in self.subscribers.items():
-            subscriber.run()
-            self.logger.info(f"Listening for messages on {topic}")
+
+if __name__ == "__main__":
+    client = CommlibClient()
+    client.publish("test", {"message": "Hello, world!"})
+    client.subscribe("test", lambda message: print(f"Received message: {message}"))
+    while True:
+        pass
