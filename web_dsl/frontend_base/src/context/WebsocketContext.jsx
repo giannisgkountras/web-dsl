@@ -1,4 +1,5 @@
 import { createContext, useEffect, useState } from "react";
+import config from "./websocketConfig.json";
 
 // Create a context for the WebSocket
 export const WebsocketContext = createContext(null);
@@ -6,8 +7,8 @@ export const WebsocketContext = createContext(null);
 // Provider component to establish and provide the WebSocket connection
 export const WebsocketProvider = ({ children }) => {
     const [ws, setWs] = useState(null);
-    const host = "localhost";
-    const port = 8765;
+    const host = config.host;
+    const port = config.port;
 
     useEffect(() => {
         const websocket = new WebSocket(`ws://${host}:${port}`);

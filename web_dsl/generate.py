@@ -23,6 +23,9 @@ backend_base_dir = os.path.join(os.path.dirname(__file__), "backend_base")
 screen_template = frontend_env.get_template("screen_template_react.jinja")
 app_template = frontend_env.get_template("app_template_react.jinja")
 index_html_template = frontend_env.get_template("index_html_template.jinja")
+websocket_context_config_template = frontend_env.get_template(
+    "websocket_context_config.jinja"
+)
 
 config_template = backend_env.get_template("config_template.jinja")
 
@@ -77,6 +80,17 @@ def generate(model_path, gen_path):
     with open(index_html_output_file, "w", encoding="utf-8") as f:
         f.write(index_html_content)
     print(f"Generated: {index_html_output_file}")
+
+    # Generate websocket context config file
+    websocket_context_config_content = websocket_context_config_template.render(
+        websocket=model.websocket
+    )
+    websocket_context_config_output_file = os.path.join(
+        gen_path, "frontend", "src", "context", "websocketConfig.json"
+    )
+    with open(websocket_context_config_output_file, "w", encoding="utf-8") as f:
+        f.write(websocket_context_config_content)
+    print(f"Generated: {websocket_context_config_output_file}")
 
     # ========= Generate backend files============
     config_dir = os.path.join(gen_path, "backend")
