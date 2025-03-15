@@ -24,7 +24,7 @@ from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
 from web_dsl.language import build_model
-from web_dsl.generate import generate_frontend
+from web_dsl.generate import generate
 
 
 API_KEY = os.getenv("API_KEY", "API_KEY")
@@ -186,7 +186,7 @@ async def generate_from_model(
     save_text_to_file(gen_model.model, model_path)
     tarball_path = os.path.join(TMP_DIR, f"{uid}.tar.gz")
     try:
-        out_dir = generate_frontend(model_path, gen_dir)
+        out_dir = generate(model_path, gen_dir)
         make_tarball(tarball_path, out_dir)
         return FileResponse(
             tarball_path,
@@ -208,7 +208,7 @@ async def generate_from_file(
     save_upload_file(model_file, model_path)
     tarball_path = os.path.join(TMP_DIR, f"{uid}.tar.gz")
     try:
-        out_dir = generate_frontend(model_path, gen_dir)
+        out_dir = generate(model_path, gen_dir)
         make_tarball(tarball_path, out_dir)
         return FileResponse(
             tarball_path,
@@ -232,7 +232,7 @@ async def generate_preview_from_model(
     os.makedirs(gen_dir, exist_ok=True)
     save_text_to_file(gen_model.model, model_path)
     try:
-        out_dir = generate_frontend(model_path, gen_dir)
+        out_dir = generate(model_path, gen_dir)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Generation error: {e}")
     try:
@@ -259,7 +259,7 @@ async def generate_preview_from_file(
     os.makedirs(gen_dir, exist_ok=True)
     save_upload_file(model_file, model_path)
     try:
-        out_dir = generate_frontend(model_path, gen_dir)
+        out_dir = generate(model_path, gen_dir)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Generation error: {e}")
     try:
