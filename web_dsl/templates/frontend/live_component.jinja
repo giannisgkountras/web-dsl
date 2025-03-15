@@ -1,0 +1,9 @@
+import { useWebsocket } from "../hooks/useWebsocket";
+import { useContext } from "react";
+import { WebsocketContext } from "../context/WebsocketContext";
+
+const ws = useContext(WebsocketContext);
+
+const callBack = (msg) => {console.log(msg)}
+
+useWebsocket(ws, "patata", callBack);
