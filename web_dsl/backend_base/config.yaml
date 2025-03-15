@@ -1,4 +1,5 @@
 mqtt:
+    name: "mqtt"
     host: "localhost"
     port: 1883
     topics:

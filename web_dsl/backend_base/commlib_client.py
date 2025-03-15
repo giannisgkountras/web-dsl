@@ -6,6 +6,7 @@ from commlib.transports.mqtt import ConnectionParameters
 class MQTTCommlibClient:
     def __init__(
         self,
+        name: str,
         host: str,
         port: int,
         topics: list,
@@ -20,7 +21,7 @@ class MQTTCommlibClient:
             host=host,
             port=port,
         )
-        self.node = Node(node_name="mqtt_node", connection_params=self.conn_params)
+        self.node = Node(node_name=name, connection_params=self.conn_params)
         self.subscribers = []
         self.global_event_loop = global_event_loop
 

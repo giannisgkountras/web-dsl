@@ -25,6 +25,7 @@ async def main():
 
     # Create an MQTT client that subscribes to multiple topics
     mqtt_client = MQTTCommlibClient(
+        name=mqtt_config.get("name", "mqtt_client"),
         host=mqtt_config.get("host", "localhost"),
         port=mqtt_config.get("port", 1883),
         topics=mqtt_config.get("topics", []),

@@ -1,5 +1,6 @@
 import screens
 import components
+import communication
 
 // Root: A webpage consists of multiple screens
 WebPage:
@@ -8,7 +9,8 @@ WebPage:
     ('version:' version=STRING)?
     ('description:' description=STRING)?
     ('navbar:'  navbar=BOOL)?
-    reusableComponents*=ReusableComponentDefinition
+    broker=MessageBroker
+    (reusableComponents*=ReusableComponentDefinition)?
     screens+=Screen
 
 ;
