@@ -1,6 +1,12 @@
-mqtt:
-    name: {{broker.name}}
-    host: {{broker.host}}
+{% set brokerType = "MQTT" if broker.__class__.__name__ == "MQTTBroker" 
+   else "AMQP" if broker.__class__.__name__ == "AMQPBroker" 
+   else "REDIS" if broker.__class__.__name__ == "RedisBroker" 
+   else "Unknown" %}
+
+broker:
+    type: "{{brokerType}}"
+    name: "{{broker.name}}"
+    host: "{{broker.host}}"
     port: {{broker.port}}
 
     topics:

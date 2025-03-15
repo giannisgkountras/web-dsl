@@ -1,12 +1,12 @@
 import asyncio
 from commlib.node import Node
-from commlib.transports.mqtt import ConnectionParameters
 
 
-class MQTTCommlibClient:
+class BrokerCommlibClient:
     def __init__(
         self,
         name: str,
+        type: str,
         host: str,
         port: int,
         topics: list,
@@ -16,12 +16,25 @@ class MQTTCommlibClient:
         self.port = port
         self.topics = topics
         self.ws_server = ws_server
-        # Setup connection parameters for the MQTT broker
-        self.conn_params = ConnectionParameters(
+
+        if type == "MQTT":
+            from commlib.transports.mqtt import ConnectionParameters as conn_params
+
+        elif type == "AMQP":
+            from commlib.transports.amqp import ConnectionParameters as conn_params
+
+        elif type == "REDIS":
+            from commlib.transports.redis import ConnectionParameters as conn_params
+        else:
+            print(f"Unknown broker type: {type}")
+            return
+
+        # Setup connection parameters for the broker
+        self.connection_parameters = conn_params(
             host=host,
             port=port,
         )
-        self.node = Node(node_name=name, connection_params=self.conn_params)
+        self.node = Node(node_name=name, connection_params=self.connection_parameters)
         self.subscribers = []
         self.global_event_loop = global_event_loop
 

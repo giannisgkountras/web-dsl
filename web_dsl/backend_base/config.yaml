@@ -1,5 +1,6 @@
-mqtt:
-    name: "mqtt"
+broker:
+    name: "mycoolbroker"
+    type: "AMQP"
     host: "localhost"
     port: 1883
     topics:
