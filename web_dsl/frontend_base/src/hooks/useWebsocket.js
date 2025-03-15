@@ -3,18 +3,20 @@ import { useEffect } from "react";
 
 export const useWebsocket = (ws, topic, onMessageCallback) => {
     useEffect(() => {
-        if (!ws) {
-            return;
-        }
+        if (!ws) return;
 
-        ws.onmessage = (messageEvent) => {
+        const messageHandler = (messageEvent) => {
             const messageData = JSON.parse(messageEvent.data);
-
             if (messageData[topic] !== undefined) {
                 onMessageCallback(messageData[topic]);
-            } else {
-                return;
             }
+        };
+
+        ws.addEventListener("message", messageHandler);
+
+        // Cleanup: remove the event listener on unmount or dependency change
+        return () => {
+            ws.removeEventListener("message", messageHandler);
         };
     }, [ws, topic, onMessageCallback]);
 
