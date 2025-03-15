@@ -13,7 +13,8 @@ async def main():
     config = load_config()
 
     # Extract Broker and WebSocket settings
-    broker_config = config.get("broker", {})
+    broker_connection_parameters = config.get("broker_connection_parameters", {})
+    broker_info = config.get("broker_info", {})
     ws_config = config.get("websocket", {})
 
     global global_event_loop
@@ -27,11 +28,10 @@ async def main():
     # Create a broker client that subscribes to multiple topics
 
     broker_client = BrokerCommlibClient(
-        name=broker_config.get("name"),
-        type=broker_config.get("type"),
-        host=broker_config.get("host"),
-        port=broker_config.get("port", 1883),
-        topics=broker_config.get("topics", []),
+        name=broker_info.get("name"),
+        broker_connection_parameters=broker_connection_parameters,
+        type=broker_info.get("type"),
+        topics=broker_info.get("topics", []),
         ws_server=ws_server,
         global_event_loop=global_event_loop,
     )

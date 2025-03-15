@@ -3,16 +3,17 @@
    else "REDIS" if broker.__class__.__name__ == "RedisBroker" 
    else "Unknown" %}
 
-broker:
-    type: "{{brokerType}}"
+broker_info:
     name: "{{broker.name}}"
-    host: "{{broker.host}}"
-    port: {{broker.port}}
-
+    type: "{{brokerType}}"
     topics:
         - "patata"
         - "psomi"
         - "testboy"
+
+broker_connection_parameters:
+    host: "{{broker.host}}"
+    port: {{broker.port}}
 
 websocket:
     host: "0.0.0.0"

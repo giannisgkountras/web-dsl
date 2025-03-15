@@ -1,12 +1,14 @@
-broker:
+broker_info:
     name: "mycoolbroker"
-    type: "AMQP"
-    host: "localhost"
-    port: 1883
+    type: "MQTT"
     topics:
         - "patata"
         - "psomi"
         - "testboy"
+
+broker_connection_parameters:
+    host: "localhost"
+    port: 1883
 
 websocket:
     host: "0.0.0.0"

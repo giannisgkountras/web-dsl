@@ -6,14 +6,12 @@ class BrokerCommlibClient:
     def __init__(
         self,
         name: str,
+        broker_connection_parameters,
         type: str,
-        host: str,
-        port: int,
         topics: list,
         ws_server,
         global_event_loop,
     ):
-        self.port = port
         self.topics = topics
         self.ws_server = ws_server
 
@@ -30,10 +28,7 @@ class BrokerCommlibClient:
             return
 
         # Setup connection parameters for the broker
-        self.connection_parameters = conn_params(
-            host=host,
-            port=port,
-        )
+        self.connection_parameters = conn_params(**broker_connection_parameters)
         self.node = Node(node_name=name, connection_params=self.connection_parameters)
         self.subscribers = []
         self.global_event_loop = global_event_loop
