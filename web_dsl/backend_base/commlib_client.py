@@ -1,5 +1,6 @@
 import asyncio
 from commlib.node import Node
+import json
 
 
 class BrokerCommlibClient:
@@ -37,11 +38,12 @@ class BrokerCommlibClient:
         """Generate a callback for a specific topic."""
 
         def callback(msg):
-            print(f"Received from {topic}: {msg}")
-            message_with_prefix = f"{topic}: {msg}"
+            # print(f"Received from {topic}: {msg}")
+            json_msg_with_prefix = f'{{"{topic}": {json.dumps(msg)}}}'
             # Schedule the coroutine in the main event loop
             asyncio.run_coroutine_threadsafe(
-                self.ws_server.send_message(message_with_prefix), self.global_event_loop
+                self.ws_server.send_message(json_msg_with_prefix),
+                self.global_event_loop,
             )
 
         return callback
