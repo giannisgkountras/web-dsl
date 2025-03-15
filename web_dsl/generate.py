@@ -81,7 +81,9 @@ def generate(model_path, gen_path):
     # ========= Generate backend files============
     config_dir = os.path.join(gen_path, "backend")
     config_output_file = os.path.join(config_dir, "config.yaml")
-    config_content = config_template.render(broker=model.broker)
+    config_content = config_template.render(
+        broker=model.broker, websocket=model.websocket
+    )
     with open(config_output_file, "w", encoding="utf-8") as f:
         f.write(config_content)
     print(f"Generated: {config_output_file}")

@@ -10,6 +10,7 @@ WebPage:
     ('description:' description=STRING)?
     ('navbar:'  navbar=BOOL)?
     broker=MessageBroker
+    websocket=Websocket
     (reusableComponents*=ReusableComponentDefinition)?
     screens+=Screen
 

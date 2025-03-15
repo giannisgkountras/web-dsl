@@ -50,3 +50,10 @@ RedisBroker:
         ('auth' ':' auth=Authentication)?
     'end'
 ;
+
+Websocket:
+    'Websocket' name=ID
+        'host:' host=STRING
+        'port:' port=INT
+    'end'
+;
