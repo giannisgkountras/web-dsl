@@ -14,19 +14,24 @@ Websocket mywebsocket
     port: 8765
 end
 
-DefineComponent liveHeader as
+DefineComponent liveText as
     LiveComponent
     topic: "topic/1" 
+    dataName: "firstText"
     content: h1 "This is a live reusable component"
 
 Screen MainScreen
     title: "Layout Testing"
     url: "/"
     description: "Test rows and columns"
-    row
-    	useComponent liveHeader
+    row	
+    	useComponent liveText
+    	
+    	h1 "Kalimera"
+    	
     	LiveComponent
-    	topic: "topic/2"
-    	content: p "This is another live component"
+    	topic: "haha"
+    	dataName: "mytext"
+    	content: h1 "this is a test"
     endrow
 end	

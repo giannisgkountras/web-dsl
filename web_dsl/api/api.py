@@ -241,7 +241,7 @@ async def generate_preview_from_model(
         subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
         subprocess.run(["npm", "run", "build"], cwd=frontend_dir, check=True)
         build_dir = os.path.join(frontend_dir, "dist")
-        base_url = f"/generated/gen-{uid}/dist/"
+        base_url = f"/generated/gen-{uid}/frontend/dist/"
         inject_base_href(build_dir, base_url)
         background_tasks.add_task(cleanup_old_generations)
         return JSONResponse(content={"frontend_url": base_url}, status_code=200)
@@ -269,7 +269,7 @@ async def generate_preview_from_file(
         subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
         subprocess.run(["npm", "run", "build"], cwd=frontend_dir, check=True)
         build_dir = os.path.join(frontend_dir, "dist")
-        base_url = f"/generated/gen-{uid}/dist/"
+        base_url = f"/generated/gen-{uid}/frontend/dist/"
         inject_base_href(build_dir, base_url)
         background_tasks.add_task(cleanup_old_generations)
         return JSONResponse(content={"frontend_url": base_url}, status_code=200)
