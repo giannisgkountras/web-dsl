@@ -15,8 +15,8 @@ backend_env = Environment(
     lstrip_blocks=True,
 )
 
-frontend_base_dir = os.path.join(os.path.dirname(__file__), "frontend_base")
-backend_base_dir = os.path.join(os.path.dirname(__file__), "backend_base")
+frontend_base_dir = os.path.join(os.path.dirname(__file__), "base", "frontend_base")
+backend_base_dir = os.path.join(os.path.dirname(__file__), "base", "backend_base")
 
 screen_template = frontend_env.get_template("screen_template_react.jinja")
 app_template = frontend_env.get_template("app_template_react.jinja")
@@ -27,6 +27,9 @@ websocket_context_config_template = frontend_env.get_template(
 live_component_template = frontend_env.get_template("live_component.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
+dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
+
+docker_compose_template = backend_env.get_template("docker_compose_template.jinja")
 
 
 def generate(model_path, gen_path):
@@ -115,6 +118,20 @@ def generate(model_path, gen_path):
     with open(config_output_file, "w", encoding="utf-8") as f:
         f.write(config_content)
     print(f"Generated: {config_output_file}")
+
+    dockerfile_output_file = os.path.join(gen_path, "backend", "Dockerfile")
+    dockerfile_content = dockerfile_template.render(websocket=model.websocket)
+    with open(dockerfile_output_file, "w", encoding="utf-8") as f:
+        f.write(dockerfile_content)
+    print(f"Generated: {dockerfile_output_file}")
+
+    # ========= Generate docker-compose file============
+    docker_compose_output_file = os.path.join(gen_path, "docker-compose.yml")
+    docker_compose_content = docker_compose_template.render(websocket=model.websocket)
+    with open(docker_compose_output_file, "w", encoding="utf-8") as f:
+        f.write(docker_compose_content)
+    print(f"Generated: {docker_compose_output_file}")
+
     return gen_path
 
 

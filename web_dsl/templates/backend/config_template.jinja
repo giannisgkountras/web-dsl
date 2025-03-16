@@ -16,5 +16,6 @@ broker_connection_parameters:
     port: {{broker.port}}
 
 websocket:
-    host: "{{websocket.host}}"
+{# the backend needs to listen to all #}
+    host: "0.0.0.0"
     port: {{websocket.port}}

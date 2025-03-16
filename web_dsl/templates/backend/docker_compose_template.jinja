@@ -1,0 +1,26 @@
+networks:
+  app_network:  # Define a custom bridge network
+    driver: bridge
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - app_network  # Connect frontend to the network
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: always
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    networks:
+        - app_network  # Connect backend to the same network
+    ports:
+      - "{{websocket.port}}:{{websocket.port}}"
+    restart: always
