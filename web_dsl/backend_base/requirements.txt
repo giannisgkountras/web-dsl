@@ -1,0 +1,4 @@
+asyncio
+commlib-py
+pyyaml
+websockets
