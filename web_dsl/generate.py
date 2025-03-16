@@ -24,6 +24,7 @@ index_html_template = frontend_env.get_template("index_html_template.jinja")
 websocket_context_config_template = frontend_env.get_template(
     "websocket_context_config.jinja"
 )
+live_component_template = frontend_env.get_template("live_component.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
 
@@ -91,12 +92,19 @@ def generate(model_path, gen_path):
     print(f"Generated: {websocket_context_config_output_file}")
 
     # ========= Generate backend files============
+
     # Gather all topics from the model
-    all_topics = set()
+    live_components = set()
     for screen in model.screens:
         for element in screen.elements:
-            collect_topics(element, all_topics)
+            collect_live_components(element, live_components)
+    live_components = list(live_components)
+
+    all_topics = set()
+    for component in live_components:
+        all_topics.add(component.topic)
     all_topics = list(all_topics)
+
     print(f"Found topics: {all_topics}")
 
     config_dir = os.path.join(gen_path, "backend")
@@ -110,28 +118,28 @@ def generate(model_path, gen_path):
     return gen_path
 
 
-def collect_topics(node, topics_set):
+def collect_live_components(node, live_components):
     """
-    Recursively collect topics from LiveComponent nodes into a set.
+    Recursively collect LiveComponent nodes into a list.
 
     Args:
         node: A node in the parsed tree.
-        topics_set: A set to store unique topic strings.
+        live_components: A list to store LiveComponent nodes.
     """
     # Get the class name of the node
     node_type = node.__class__.__name__
 
     # Handle LiveComponent nodes
     if node_type == "LiveComponent":
-        topics_set.add(node.topic)
+        live_components.add(node)
 
     # Handle ReusableComponent nodes
     elif node_type == "ReusableComponent":
         referenced_component = node.ref.definition  # Resolve the reference
         if referenced_component.__class__.__name__ == "LiveComponent":
-            topics_set.add(referenced_component.topic)
+            live_components.add(referenced_component)
 
     # Handle structural nodes like Row or Column
     elif node_type in ("Row", "Column"):
         for element in node.elements:
-            collect_topics(element, topics_set)
+            collect_live_components(element, live_components)
