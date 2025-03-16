@@ -3,8 +3,19 @@ BasicComponent:
     Button | Form | Image | h1 | h2 | p
 ;
 
+// A live component that connects to a topic on a broker
+LiveComponent:
+    'LiveComponent'
+    'topic:' topic=STRING       // 'topic:' is a single keyword token
+    'content:' definition=BasicComponent
+;
+
+Component:
+    BasicComponent | LiveComponent
+;
+
 ReusableComponentDefinition:
-    'DefineComponent' name=ID 'as' definition = BasicComponent
+    'DefineComponent' name=ID 'as' definition = Component
 ;
 
 ReusableComponent:
