@@ -1,9 +1,15 @@
-import { useWebsocket } from "../hooks/useWebsocket";
-import { useContext } from "react";
-import { WebsocketContext } from "../context/WebsocketContext";
+{%import 'component_macros.jinja' as component_macros%}
 
-const ws = useContext(WebsocketContext);
-
-const callBack = (msg) => {console.log(msg)}
-
-useWebsocket(ws, "patata", callBack);
+{% macro live_component(element) -%}
+const {{ element.name }} = () => {
+    const [data, setData] = useState(null);
+    const ws = useContext(WebsocketContext);
+    const callBack = (msg) => {
+        setData(msg);
+    };
+    useWebsocket(ws, "{{ element.topic }}", callBack);
+    return (
+        {{ render_element(element.definition, data) }}
+    );
+};
+{%- endmacro %}

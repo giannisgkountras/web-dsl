@@ -1,0 +1,32 @@
+webpage BrokerTest
+    author: "Giannis"
+    version: "1.0.0"
+    description: "My very cool website"
+    navbar: true
+
+Broker<MQTT> MyBroker
+    host: "localhost"
+    port: 1883
+end
+
+Websocket mywebsocket
+    host: "localhost"
+    port: 8765
+end
+
+DefineComponent liveHeader as
+    LiveComponent
+    topic: "topic/1" 
+    content: h1 "This is a live reusable component"
+
+Screen MainScreen
+    title: "Layout Testing"
+    url: "/"
+    description: "Test rows and columns"
+    row
+    	useComponent liveHeader
+    	LiveComponent
+    	topic: "topic/2"
+    	content: p "This is another live component"
+    endrow
+end	
