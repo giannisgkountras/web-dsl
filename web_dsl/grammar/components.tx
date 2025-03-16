@@ -25,7 +25,7 @@ ReusableComponent:
 
 // A button with a name and text label
 Button:
-    'Button' (name=ID)? text=STRING
+    'Button' (name=ID)? content=STRING
 ;
 
 // A text field with a name and placeholder text
@@ -58,7 +58,7 @@ FormElement:
 
 // An image with a name and source URL
 Image:
-    'Image' name=ID 'source:' source=STRING
+    'Image' name=ID 'source:' content=STRING
 ;
 
 // A header with content

@@ -1,45 +1,34 @@
-{% macro render_element(element) -%}
-    {% if element.__class__.__name__ == 'Row' %}
-    <div className="row {% if element.height <= 0 %}flex-1{% endif %}" 
-        {% if element.height > 0 %}
-        style={% raw %}{{{% endraw %} "height": "{{ element.height }}px"{% raw %}}}{% endraw %}
-        {% endif %}>
-        {% for child in element.elements %}
-        {{ render_element(child) }}
-        {% endfor %}
-    </div>
-    {% elif element.__class__.__name__ == 'Column' %}
-    <div className="col" style={% raw %}{{{% endraw %} 
-      "width": "{% if element.width <= 0 %}100%{% else %}{{ element.width }}px{% endif %}" 
-    {% raw %}}}{% endraw %}>
-        {% for child in element.elements %}
-        {{ render_element(child) }}
-        {% endfor %}
-    </div>
+{% macro render_element(element, live_state=None) %}
+    {% if element.__class__.__name__ == 'LiveComponent' %}
+        {{ render_element(element.definition, live_state=element.dataName) }}
+    {% elif element.__class__.__name__ == 'p' %}
+        <p>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</p>
     {% elif element.__class__.__name__ == 'Button' %}
-        <button className="btn">
-            {{ element.text }}
-        </button>
+        <button className="btn">{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.text }}{% endif %}</button>
+    {% elif element.__class__.__name__ == 'Image' %}
+        <img width="100%" height="100%" src="{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.source }}{% endif %}" />
+    {% elif element.__class__.__name__ == 'h1' %}
+        <h1>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</h1>
+    {% elif element.__class__.__name__ == 'h2' %}
+        <h2>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</h2>
     {% elif element.__class__.__name__ == 'Form' %}
         <form name="{{ element.name }}">
             {% for child in element.elements %}
-                {{ render_element(child) }}
+                {{ render_element(child, live_state=live_state) }}
             {% endfor %}
             <input type="submit"/>
         </form>
-    {% elif element.__class__.__name__ == 'Label' %}
-        <label htmlFor="{{ element.name }}">{{ element.content }}</label>
     {% elif element.__class__.__name__ == 'Input' %}
-        <input type="{{element.type}}" name="{{ element.name }}" placeholder="{{ element.placeholder }}" required="{{element.required}}"/>
-    {% elif element.__class__.__name__ == 'Image' %}
-        <img width="100%" height="100%" src="{{element.source}}"/>
-    {% elif element.__class__.__name__ == 'h1' %}
-        <h1 className="text-3xl font-bold">{{element.content}}</h1>
-    {% elif element.__class__.__name__ == 'h2' %}
-        <h1 className="text-xl font-bold">{{element.content}}</h1>
-    {% elif element.__class__.__name__ == 'p' %}
-        <p>{{element.content}}</p>
+        <input type="{{ element.type }}" name="{{ element.name }}" placeholder="{{ element.placeholder }}" required="{{ element.required }}"/>
+    {% elif element.__class__.__name__ == 'Label' %}
+        <label htmlFor="{{ element.name }}">{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</label>
     {% elif element.__class__.__name__ == 'ReusableComponent' %}
-    {{ render_element(element.ref.definition) }}
+        {{ render_element(element.ref.definition, live_state=live_state) }}
+    {% elif element.__class__.__name__ in ('Row', 'Column') %}
+        <div className="{{ element.__class__.__name__.lower() }}">
+            {% for child in element.elements %}
+                {{ render_element(child, live_state=live_state) }}
+            {% endfor %}
+        </div>
     {% endif %}
-{%- endmacro %}
+{% endmacro %}

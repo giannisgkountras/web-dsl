@@ -2,8 +2,8 @@ broker_info:
     name: "mycoolbroker"
     type: "MQTT"
     topics:
-        - "patata"
-        - "psomi"
+        - "topic/1"
+        - "haha"
         - "testboy"
 
 broker_connection_parameters:

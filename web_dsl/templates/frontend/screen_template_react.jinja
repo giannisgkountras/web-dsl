@@ -4,13 +4,44 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 
 const {{screen.name}} = () => {
+    const ws = useContext(WebsocketContext);
+
+    {# Collect all live components recursively #}
+    {% set live_components = [] %}
+    {% for element in screen.elements recursive %}
+        {% if element.__class__.__name__ == 'LiveComponent' %}
+            {{ live_components.append(element) or '' }}
+        {% elif element.__class__.__name__ == 'ReusableComponent' %}
+            {# Recurse into the definition of the reusable component #}
+            {% if element.ref.definition.__class__.__name__ == 'LiveComponent' %}
+                {{ live_components.append(element.ref.definition) or '' }}
+            {% endif %}
+        {% elif element.__class__.__name__ in ('Row', 'Column') %}
+            {{ loop(element.elements) }}
+        {% endif %}
+    {% endfor %}
+
+    {# Generate state and WebSocket hooks for each live component #}
+    {% for lc in live_components %}
+
+    {# Set the default content as the first thing in state #}
+    {% if lc.content.__class__.__name__ == 'Form' %}
+        {% set default_content = '""' %}
+    {% else %}
+        {% set default_content = lc.definition.content %}
+    {% endif %}
+    const [{{ lc.dataName }}, set{{ lc.dataName | capitalize }}] = useState("{{default_content}}");
+    {# I ASSUME THAT THE MESSAGE I RECEIVE IS LIKE THIS {data: "mplamplampla"} #}
+    useWebsocket(ws, "{{ lc.topic }}", (msg) => set{{ lc.dataName | capitalize }}(msg.data));
+    {% endfor %}
+
     return (
         <div className="screen-container">
             {% for element in screen.elements %}
                 {{ component_macros.render_element(element) }}
             {% endfor %}
         </div>
-    )
+    );
 }
 
-export default {{screen.name}}
+export default {{screen.name}};
