@@ -7,9 +7,9 @@ broker_info:
     name: "{{broker.name}}"
     type: "{{brokerType}}"
     topics:
-        - "patata"
-        - "psomi"
-        - "testboy"
+{% for topic in topics %}
+        - "{{topic}}"
+{% endfor %}
 
 broker_connection_parameters:
     host: "{{broker.host}}"
