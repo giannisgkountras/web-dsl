@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useRef, useState } from "react";
 import config from "./websocketConfig.json";
 
 // Create a context for the WebSocket
@@ -7,24 +7,51 @@ export const WebsocketContext = createContext(null);
 // Provider component to establish and provide the WebSocket connection
 export const WebsocketProvider = ({ children }) => {
     const [ws, setWs] = useState(null);
-    const host = config.host;
-    const port = config.port;
+    const retryCountRef = useRef(0); // Use useRef to persist retry count across re-renders
+    const maxRetries = 5; // Max retry attempts
+    const baseDelay = 5000; // 5 second delay between attempts
 
-    useEffect(() => {
-        const websocket = new WebSocket(`ws://${host}:${port}`);
+    const connectWebSocket = () => {
+        if (retryCountRef.current >= maxRetries) {
+            console.log("Max retries reached. Stopping reconnection attempts.");
+            return;
+        }
+
+        console.log(
+            `Attempting WebSocket connection... (Attempt ${
+                retryCountRef.current + 1
+            })`
+        );
+        const websocket = new WebSocket(`ws://${config.host}:${config.port}`);
 
         websocket.onopen = () => {
             console.log("WebSocket is connected");
+            retryCountRef.current = 0; // Reset retry count on successful connection
         };
 
         websocket.onclose = () => {
-            console.log("WebSocket is closed");
+            console.log("WebSocket is closed.");
+            if (retryCountRef.current < maxRetries) {
+                retryCountRef.current += 1;
+
+                console.log(`Reconnecting in ${baseDelay / 1000} seconds...`);
+                setTimeout(connectWebSocket, baseDelay);
+            }
+        };
+
+        websocket.onerror = (error) => {
+            console.log("WebSocket error:", error);
+            websocket.close(); // Ensure the connection is properly closed before retrying
         };
 
         setWs(websocket);
-        // Clean up the connection when the component unmounts
+    };
+
+    useEffect(() => {
+        connectWebSocket();
+
         return () => {
-            websocket.close();
+            if (ws) ws.close();
         };
     }, []);
 
