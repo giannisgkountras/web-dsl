@@ -1,4 +1,7 @@
 {%import 'component_macros.jinja' as component_macros%}
+import { useState, useContext } from "react";
+import { useWebsocket } from "../hooks/useWebsocket";
+import { WebsocketContext } from "../context/WebsocketContext";
 
 const {{screen.name}} = () => {
     return (
