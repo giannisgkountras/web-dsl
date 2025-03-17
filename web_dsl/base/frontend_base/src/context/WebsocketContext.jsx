@@ -1,4 +1,5 @@
 import { createContext, useEffect, useRef, useState } from "react";
+import { toast } from "react-toastify";
 import config from "./websocketConfig.json";
 
 // Create a context for the WebSocket
@@ -14,6 +15,7 @@ export const WebsocketProvider = ({ children }) => {
     const connectWebSocket = () => {
         if (retryCountRef.current >= maxRetries) {
             console.log("Max retries reached. Stopping reconnection attempts.");
+            toast.error("Error connecting to WebSocket!");
             return;
         }
 
@@ -26,6 +28,7 @@ export const WebsocketProvider = ({ children }) => {
 
         websocket.onopen = () => {
             console.log("WebSocket is connected");
+            toast.success("WebSocket is connected!");
             retryCountRef.current = 0; // Reset retry count on successful connection
         };
 
@@ -35,6 +38,7 @@ export const WebsocketProvider = ({ children }) => {
                 retryCountRef.current += 1;
 
                 console.log(`Reconnecting in ${baseDelay / 1000} seconds...`);
+                toast.warn("Reconnecting to WebSocket...");
                 setTimeout(connectWebSocket, baseDelay);
             }
         };

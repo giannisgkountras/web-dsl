@@ -33,6 +33,20 @@ const App = () => {
             </Routes>
         </Router>
       </div> 
+      <ToastContainer
+                    position="bottom-right"
+                    autoClose={5000}
+                    hideProgressBar={true}
+                    newestOnTop={false}
+                    closeOnClick={false}
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    theme="dark"
+                    transition={Bounce}
+                    limit={4}
+      />
     </WebsocketProvider>
 
   );
