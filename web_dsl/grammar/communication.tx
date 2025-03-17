@@ -2,30 +2,20 @@ MessageBroker:
     AMQPBroker | MQTTBroker | RedisBroker
 ;
 
-Authentication: AuthPlain | AuthApiKey | AuthCert;
+Authentication: AuthPlain;
 
 AuthPlain:
     'username' ':' username=STRING
     'password' ':' password=STRING
 ;
 
-AuthApiKey:
-    'key' ':' key=STRING
-;
-
-AuthCert:
-    ('cert' ':' cert=STRING) | ('certPath' ':' certPath=STRING)
-;
-
 MQTTBroker:
     'Broker<MQTT>' name=ID
         'host:' host=STRING
         'port:' port=INT
-        ('ssl' ':' ssl=BOOL)?
-        ('basePath:' basePath=STRING)?
-        ('webPath:' webPath=STRING)?
-        ('webPort:' webPort=INT)?
+        ('transport:' transport=STRING)?
         ('auth' ':' auth=Authentication)?
+
     'end'
 ;
 
@@ -34,9 +24,6 @@ AMQPBroker:
         'host:' host=STRING
         'port:' port=INT
         ('vhost:' vhost=STRING)?
-        ('topicExchange:' topicE=STRING)?
-        ('rpcExchange:' rpcE=STRING)?
-        ('ssl' ':' ssl=BOOL)?
         ('auth' ':' auth=Authentication)?
     'end'
 ;
@@ -46,7 +33,6 @@ RedisBroker:
         'host:' host=STRING
         'port:' port=INT
         ('db:' db=INT)?
-        ('ssl' ':' ssl=BOOL)?
         ('auth' ':' auth=Authentication)?
     'end'
 ;

@@ -14,6 +14,18 @@ broker_info:
 broker_connection_parameters:
     host: "{{broker.host}}"
     port: {{broker.port}}
+    {% if broker.auth %}
+    username: "{{ broker.auth.username }}"
+    password: "{{ broker.auth.password }}"
+    {% endif %}
+    {% if broker.__class__.__name__ == "AMQPBroker" %}
+    vhost: "{{ broker.vhost if broker.vhost else '/' }}"
+    {% elif broker.__class__.__name__ == "RedisBroker" %}
+    db: {{ broker.db if broker.db is not none else 0 }}
+    {% elif broker.__class__.__name__ == "MQTTBroker" %}
+    transport: "{{ broker.transport if broker.transport else 'tcp' }}"
+    {% endif %}
+
 
 websocket:
 {# the backend needs to listen to all #}

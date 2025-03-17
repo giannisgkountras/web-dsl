@@ -9,6 +9,8 @@ broker_info:
 broker_connection_parameters:
     host: "localhost"
     port: 1883
+    username: ""
+    password: ""
 
 websocket:
     host: "0.0.0.0"
