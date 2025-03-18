@@ -18,8 +18,8 @@ backend_env = Environment(
 frontend_base_dir = os.path.join(os.path.dirname(__file__), "base", "frontend_base")
 backend_base_dir = os.path.join(os.path.dirname(__file__), "base", "backend_base")
 
-screen_template = frontend_env.get_template("screen_template_react.jinja")
-app_template = frontend_env.get_template("app_template_react.jinja")
+screen_template = frontend_env.get_template("screen_template.jinja")
+app_template = frontend_env.get_template("app_template.jinja")
 index_html_template = frontend_env.get_template("index_html_template.jinja")
 websocket_context_config_template = frontend_env.get_template(
     "websocket_context_config.jinja"
