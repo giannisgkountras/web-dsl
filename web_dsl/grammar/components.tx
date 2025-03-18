@@ -1,6 +1,6 @@
 // Define a generic Component that can be one of several types
 BasicComponent:
-    Button | Form | Image | h1 | h2 | p
+    Button | Form | Image | h1 | h2 | p | Notification
 ;
 
 // A live component that connects to a topic on a broker
@@ -74,4 +74,9 @@ h2:
 // A text with content
 p:
     'p' (name=ID)? content=STRING
+;
+
+// A notification component
+Notification:
+    'Notification' (name=ID)? content=STRING
 ;

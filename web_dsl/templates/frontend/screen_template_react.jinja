@@ -1,7 +1,8 @@
 {%import 'component_macros.jinja' as component_macros%}
-import { useState, useContext } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
+import { toast } from 'react-toastify';
 
 const {{screen.name}} = () => {
     const ws = useContext(WebsocketContext);
@@ -25,14 +26,26 @@ const {{screen.name}} = () => {
     {% for lc in live_components %}
 
     {# Set the default content as the first thing in state #}
-    {% if lc.content.__class__.__name__ == 'Form' %}
-        {% set default_content = '""' %}
+    {% if lc.definition.__class__.__name__ == 'Form' or lc.definition.__class__.__name__ == 'Notification' %}
+        {% set default_content = '' %}
     {% else %}
         {% set default_content = lc.definition.content %}
     {% endif %}
     const [{{ lc.dataName }}, set{{ lc.dataName | capitalize }}] = useState("{{default_content}}");
+
+    {% if lc.definition.__class__.__name__ == 'Notification' %}
+    const notify = () => toast.info({{ lc.dataName }});
+    useEffect(() => {
+        if ({{ lc.dataName }} !== "") { // Only trigger if it has a value
+            notify();
+        }
+    }, [{{ lc.dataName }}]);
+    {% endif %}
+
     {# I ASSUME THAT THE MESSAGE I RECEIVE IS LIKE THIS {data: "mplamplampla"} #}
     useWebsocket(ws, "{{ lc.topic }}", (msg) => set{{ lc.dataName | capitalize }}(msg.data));
+
+
     {% endfor %}
 
     return (

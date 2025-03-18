@@ -5,13 +5,13 @@ webpage BrokerTest
     navbar: true
 
 Broker<MQTT> MyBroker
-    host: "localhost"
+    host: "192.168.1.6"
     port: 1883
 end
 
 Websocket mywebsocket
-    host: "localhost"
-    port: 8765
+    host: "192.168.1.6"
+    port: 8888
 end
 
 DefineComponent liveText as
@@ -34,4 +34,10 @@ Screen MainScreen
     	dataName: "mytext"
     	content: h1 "this is a test"
     endrow
+    
+    LiveComponent
+    topic: "notifications"
+    dataName: "notification"
+    content: Notification ""
+    
 end	
