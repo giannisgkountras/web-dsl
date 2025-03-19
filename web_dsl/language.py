@@ -16,7 +16,7 @@ def validate_model(model):
         validate_screen(screen)
 
 
-def get_metamodel(debug: bool = False, global_repo: bool = True):
+def get_metamodel(debug: bool = True, global_repo: bool = True):
     metamodel = metamodel_from_file(
         join(THIS_DIR, "grammar", "webpage.tx"),
         auto_init_attributes=True,
@@ -46,5 +46,5 @@ def build_model(model_path: str):
 
 # Run the file locally to test the function
 if __name__ == "__main__":
-    model = build_model("web_dsl/examples/test.wdsl")
+    model = build_model("web_dsl/examples/broker_live_component_test.wdsl")
     print(model)

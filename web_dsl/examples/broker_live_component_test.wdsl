@@ -16,34 +16,40 @@ end
 
 DefineComponent liveText as
     LiveComponent
-    topic: "topic/1" 
-    dataName: "firstText"
-    content: h1 "This is a live reusable component"
+        topic: "topic/1"
+        dataName: "firstText"
+        content: h1 "This is a live reusable component"
 
 Screen MainScreen
     title: "Layout Testing"
     url: "/"
     description: "Test rows and columns"
-    row	
-    	useComponent liveText
-    	
-    	h1 "Kalimera"
-    	
-    	LiveComponent
-    	topic: "haha"
-    	dataName: "mytext"
-    	content: h1 "this is a test"
-    endrow
     row
+    	useComponent liveText
+
+    	h1 "Kalimera"
+
     	LiveComponent
-    	topic: "chart"
-    	dataName: "lineChart"
-    	content: LineChart mychart
+    	   topic: "haha"
+    	   dataName: "mytext"
+    	   content: h1 "this is a test"
     endrow
-    
+    	LiveComponent
+            topic: "chart"
+            dataName: "lineChart"
+            content:
+                LineChart mychart
+                    xLabel: "Speed"
+                    yLabel: "Time"
+                    xDataKey: "speed_avg"
+                    yDataKey: "timestamp"
+    row
+
+    endrow
+
     LiveComponent
-    topic: "notifications"
-    dataName: "notification"
-    content: Notification ""
-    
-end	
+        topic: "notifications"
+        dataName: "notification"
+        content: Notification mainNotification
+ 
+end

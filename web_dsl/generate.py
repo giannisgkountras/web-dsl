@@ -66,8 +66,6 @@ def generate(model_path, gen_path):
         for element in screen.elements:
             collect_live_components(element, live_components)
     live_components = list(live_components)
-    for element in live_components:
-        print(element.definition)
 
     # ========= Generate frontend files============
     # Prepare the output directories
@@ -118,7 +116,11 @@ def generate(model_path, gen_path):
                 components_dir, "CustomLineChart.jsx"
             )
             with open(custom_line_chart_output_file, "w", encoding="utf-8") as f:
-                f.write(custom_line_chart_template.render(element=component))
+                f.write(
+                    custom_line_chart_template.render(
+                        element=component, chart=component.definition
+                    )
+                )
             print(f"Generated: {custom_line_chart_output_file}")
 
     # ========= Generate backend files============

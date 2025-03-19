@@ -23,8 +23,29 @@ export const CustomLineChart = () => {
         {% raw %}
         <LineChart data={data} width={500} height={300}>
             <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
-            <XAxis dataKey="x_axis" stroke="#ebdbb2" />
-            <YAxis stroke="#ebdbb2" />
+        {% endraw %}
+
+            <XAxis 
+                dataKey="{{chart.xDataKey}}" 
+                stroke="#ebdbb2"
+                label={% raw %} {{ {% endraw%} 
+                    value: "{{chart.xLabel}}", 
+                    position: "insideBottom", 
+                    offset: -5, 
+                    fill: "#ebdbb2"
+                    {% raw %} }} {% endraw%}  
+            />
+        
+            <YAxis 
+                stroke="#ebdbb2" 
+                label={% raw %} {{ {% endraw%} 
+                    value: "{{chart.yLabel}}", 
+                    position: "insideBottom", 
+                    offset: -5, 
+                    fill: "#ebdbb2"
+                    {% raw %} }} {% endraw%}  
+            />
+        {% raw %}
             <Tooltip
                 contentStyle={{ 
                     backgroundColor: "#282828",
@@ -34,16 +55,18 @@ export const CustomLineChart = () => {
                 }}
                 itemStyle={{ color: "#ebdbb2" }}
             />
-            <Legend wrapperStyle={{ color: "#ebdbb2" }} />
             <Line
                 isAnimationActive={false}
                 type="monotone"
-                dataKey="y_axis"
+        {% endraw%}
+                dataKey="{{chart.yDataKey}}"
+        {% raw %}
+            
                 stroke="#fabd2f"
                 strokeWidth={2}
                 dot={{ fill: "#fabd2f" }}
             />
         </LineChart>
-{% endraw %}
+        {% endraw %}
     );
 };

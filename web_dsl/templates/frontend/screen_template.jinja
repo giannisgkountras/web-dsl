@@ -39,10 +39,22 @@ const {{screen.name}} = () => {
     const [{{ lc.dataName }}, set{{ lc.dataName | capitalize }}] = useState("{{default_content}}");
 
     {% if lc.definition.__class__.__name__ == 'Notification' %}
-    const notify = () => toast.info({{ lc.dataName }});
+    {% if lc.definition.type == 'info' %}
+        // Give a unique name to the notification function
+        const notify{{lc.definition.name | capitalize}} = () => toast.info({{ lc.dataName }});
+    {% elif lc.definition.type == 'warning' %}
+        const notify{{lc.definition.name | capitalize}} = () => toast.warning({{ lc.dataName }});
+    {% elif lc.definition.type == 'error' %}
+        const notify{{lc.definition.name | capitalize}} = () => toast.error({{ lc.dataName }});
+    {% elif lc.definition.type == 'success' %}
+        const notify{{lc.definition.name | capitalize}} = () => toast.success({{ lc.dataName }});
+    {% else %}
+        // Default case when type is not specified
+        const notify{{lc.definition.name | capitalize}} = () => toast({{ lc.dataName }});
+    {% endif %}
     useEffect(() => {
         if ({{ lc.dataName }} !== "") { // Only trigger if it has a value
-            notify();
+            notify{{lc.definition.name | capitalize}}();
         }
     }, [{{ lc.dataName }}]);
     {% endif %}

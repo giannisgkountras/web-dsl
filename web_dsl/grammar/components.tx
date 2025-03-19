@@ -78,9 +78,19 @@ p:
 
 // A notification component
 Notification:
-    'Notification' (name=ID)? content=STRING
+    'Notification' name=ID
+    ('type:' type=NotificationType)?
 ;
 
+NotificationType:
+    'info' | 'warning' | 'error' | 'success'
+;
+
+// A line chart compoenent
 LineChart:
     'LineChart' (name=ID)? 
+    'xLabel:' xLabel=STRING
+    'yLabel:' yLabel=STRING
+    'xDataKey:' xDataKey=STRING
+    'yDataKey:' yDataKey=STRING
 ;

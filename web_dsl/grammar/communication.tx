@@ -14,7 +14,7 @@ MQTTBroker:
         'host:' host=STRING
         'port:' port=INT
         ('transport:' transport=STRING)?
-        ('auth' ':' auth=Authentication)?
+        ('auth:' auth=Authentication)?
 
     'end'
 ;
@@ -24,7 +24,7 @@ AMQPBroker:
         'host:' host=STRING
         'port:' port=INT
         ('vhost:' vhost=STRING)?
-        ('auth' ':' auth=Authentication)?
+        ('auth:' auth=Authentication)?
     'end'
 ;
 
@@ -33,7 +33,7 @@ RedisBroker:
         'host:' host=STRING
         'port:' port=INT
         ('db:' db=INT)?
-        ('auth' ':' auth=Authentication)?
+        ('auth:' auth=Authentication)?
     'end'
 ;
 
