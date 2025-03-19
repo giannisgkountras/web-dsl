@@ -18,8 +18,10 @@
 
 -   Displays a notification message to the user
 -   Expects a message from the broker `{data: "Message to display"}`
+-   Has types `success`, `info`, `warning`, `error`
 
 ### Line Chart Component
 
 -   Displays a line chart with the data received from the broker
 -   Expects a message from the broker `{data: { x_axis: 1, y_axis: 10 }}`
+-   Has options to customize the chart with axis labels and data keys
