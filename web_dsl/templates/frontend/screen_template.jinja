@@ -3,6 +3,7 @@ import { useState, useContext, useEffect } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from 'react-toastify';
+import { CustomLineChart } from "../components/CustomLineChart"; 
 
 const {{screen.name}} = () => {
     const ws = useContext(WebsocketContext);
@@ -25,6 +26,10 @@ const {{screen.name}} = () => {
     {# Generate state and WebSocket hooks for each live component #}
     {% for lc in live_components %}
 
+    {% if lc.definition.__class__.__name__ == 'LineChart' %}
+        {% continue %}
+    {% endif %}
+
     {# Set the default content as the first thing in state #}
     {% if lc.definition.__class__.__name__ == 'Form' or lc.definition.__class__.__name__ == 'Notification' %}
         {% set default_content = '' %}
@@ -44,7 +49,6 @@ const {{screen.name}} = () => {
 
     {# I ASSUME THAT THE MESSAGE I RECEIVE IS LIKE THIS {data: "mplamplampla"} #}
     useWebsocket(ws, "{{ lc.topic }}", (msg) => set{{ lc.dataName | capitalize }}(msg.data));
-
 
     {% endfor %}
 

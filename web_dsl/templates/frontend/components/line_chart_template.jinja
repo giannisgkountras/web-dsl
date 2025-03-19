@@ -1,0 +1,49 @@
+import {
+    CartesianGrid,
+    Legend,
+    Line,
+    LineChart,
+    Tooltip,
+    XAxis,
+    YAxis
+} from "recharts";
+import { WebsocketContext } from "../context/WebsocketContext";
+import { useWebsocket } from "../hooks/useWebsocket";
+import { useContext, useState } from "react";
+
+export const CustomLineChart = () => {
+    const [data, setData] = useState([]);
+    const ws = useContext(WebsocketContext);
+
+    useWebsocket(ws, "{{element.topic}}", (msg) => {
+        setData([...data, msg.data]);
+    });
+
+    return (
+        {% raw %}
+        <LineChart data={data} width={500} height={300}>
+            <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
+            <XAxis dataKey="x_axis" stroke="#ebdbb2" />
+            <YAxis stroke="#ebdbb2" />
+            <Tooltip
+                contentStyle={{ 
+                    backgroundColor: "#282828",
+                    border: "none",
+                    color: "#ebdbb2",
+                    borderRadius: "10px"
+                }}
+                itemStyle={{ color: "#ebdbb2" }}
+            />
+            <Legend wrapperStyle={{ color: "#ebdbb2" }} />
+            <Line
+                isAnimationActive={false}
+                type="monotone"
+                dataKey="y_axis"
+                stroke="#fabd2f"
+                strokeWidth={2}
+                dot={{ fill: "#fabd2f" }}
+            />
+        </LineChart>
+{% endraw %}
+    );
+};
