@@ -1,6 +1,6 @@
 // Define a generic Component that can be one of several types
 BasicComponent:
-    Button | Form | Image | h1 | h2 | p | Notification | LineChart
+    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs
 ;
 
 // A live component that connects to a topic on a broker
@@ -93,4 +93,10 @@ LineChart:
     'yLabel:' yLabel=STRING
     'xDataKey:' xDataKey=STRING
     'yDataKey:' yDataKey=STRING
+;
+
+// A table of live Logs
+Logs:
+    'Logs' (name=ID)?
+    '{' columns+=STRING[','] '}'
 ;

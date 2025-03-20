@@ -1,6 +1,5 @@
 import {
     CartesianGrid,
-    Legend,
     Line,
     LineChart,
     Tooltip,
@@ -12,18 +11,16 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState } from "react";
 
 export const CustomLineChart = () => {
-    const [data, setData] = useState([]);
+    const [{{element.dataName}}, set{{element.dataName | capitalize}}] = useState([]);
     const ws = useContext(WebsocketContext);
 
     useWebsocket(ws, "{{element.topic}}", (msg) => {
-        setData([...data, msg.data]);
+        set{{element.dataName | capitalize}}((prevData) => [...prevData, msg.data]);
     });
 
     return (
-        {% raw %}
-        <LineChart data={data} width={500} height={300}>
+        <LineChart data={ {{element.dataName}} } width={500} height={300}>
             <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
-        {% endraw %}
 
             <XAxis 
                 dataKey="{{chart.xDataKey}}" 

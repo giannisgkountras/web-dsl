@@ -30,19 +30,30 @@ Screen MainScreen
     	h1 "Kalimera"
 
     	LiveComponent
-    	   topic: "haha"
+    	   topic: "topic/2"
     	   dataName: "mytext"
     	   content: h1 "this is a test"
     endrow
-    	LiveComponent
+    row
+    	col
+	LiveComponent
             topic: "chart"
             dataName: "lineChart"
             content:
                 LineChart mychart
-                    xLabel: "Speed"
-                    yLabel: "Time"
-                    xDataKey: "speed_avg"
-                    yDataKey: "timestamp"
+                    xLabel: "Time"
+                    yLabel: "Speed"
+                    xDataKey: "timestamp"
+                    yDataKey: "speed"
+    	endcol
+    	col
+    	LiveComponent
+            topic: "logs"
+            dataName: "logdata"
+    	    content: Logs mylogs {"Speed", "Steering", "Yaw", "CPU"}
+    	endcol
+    endrow
+    	
     row
 
     endrow
@@ -50,6 +61,10 @@ Screen MainScreen
     LiveComponent
         topic: "notifications"
         dataName: "notification"
-        content: Notification mainNotification
+        content: Notification infoNotification type: info
+    LiveComponent
+        topic: "errors"
+        dataName: "errorNotifications"
+        content: Notification errorNotification type: error
  
 end

@@ -30,6 +30,7 @@ live_component_template = frontend_env.get_template("live_component.jinja")
 custom_line_chart_template = frontend_env.get_template(
     "components/line_chart_template.jinja"
 )
+logs_template = frontend_env.get_template("components/logs_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
@@ -109,8 +110,8 @@ def generate(model_path, gen_path):
     # Generate component files
     components_dir = os.path.join(gen_path, "frontend", "src", "components")
 
-    # CustomLineChart component
     for component in live_components:
+        # CustomLineChart component
         if component.definition.__class__.__name__ == "LineChart":
             custom_line_chart_output_file = os.path.join(
                 components_dir, "CustomLineChart.jsx"
@@ -122,6 +123,15 @@ def generate(model_path, gen_path):
                     )
                 )
             print(f"Generated: {custom_line_chart_output_file}")
+
+        # Logs component
+        if component.definition.__class__.__name__ == "Logs":
+            logs_output_file = os.path.join(components_dir, "Logs.jsx")
+            with open(logs_output_file, "w", encoding="utf-8") as f:
+                f.write(
+                    logs_template.render(element=component, logs=component.definition)
+                )
+            print(f"Generated: {logs_output_file}")
 
     # ========= Generate backend files============
 

@@ -52,7 +52,7 @@ p {
     height: auto;
 }
 
-.col {
+.column {
     border: 1px solid #ea6962;
     padding: 10px;
     display: flex;

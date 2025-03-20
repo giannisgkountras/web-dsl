@@ -1,0 +1,47 @@
+import { WebsocketContext } from "../context/WebsocketContext";
+import { useWebsocket } from "../hooks/useWebsocket";
+import { useContext, useEffect, useRef, useState } from "react";
+
+export const Logs = () => {
+    const [{{element.dataName}}, set{{element.dataName | capitalize}}] = useState([]);
+
+
+    const ws = useContext(WebsocketContext);
+    const scrollRef = useRef(null);
+    useWebsocket(ws, "{{element.topic}}", (msg) => {
+        console.log(msg);
+        set{{element.dataName | capitalize}}((prevData) => [...prevData, msg.data]);
+    });
+
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+    }, [ {{element.dataName}} ]);
+    return (
+        <div className="flex text-white justify-center items-center flex-col w-full h-96 border shadow-lg">
+            {/* Titles */}
+            <div className="w-full sticky top-0 z-10 border-b">
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 font-bold">
+                    {% for column in logs.columns %}
+                    <h1 className="text-center">{{ column | capitalize }}</h1>
+                {% endfor %}
+                </div>
+            </div>
+            {/* Scrollable Data */}
+            <div ref={scrollRef} className="w-full max-h-80 overflow-y-auto">
+                { {{element.dataName}}.map((log, index) => (
+                    <div
+                        key={index}
+                        className={`grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 text-center 
+                            ${index % 2 === 0 ? "" : "bg-[#2f2c29]"}`}
+                    >
+                        {% for column in logs.columns %}
+                            <p>{log["{{ column|lower }}"] || "-"}</p>
+                        {% endfor %}
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+};
