@@ -7,8 +7,10 @@ Screen:
     'title:' title=STRING
     'url:' url=STRING
     ('description:' description=STRING)?
-    (localEntities*=Entity)?    // Screen-specific entities
-    elements*=StructuralElement
+    (
+        (localEntities*=Entity)?    // Screen-specific entities
+        (elements*=StructuralElement)
+    )#
     'end'
 ;
 

@@ -1,0 +1,94 @@
+webpage Vroomitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A live dashboard"
+    navbar: true
+
+    Broker<MQTT> HomeBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    Broker<Redis> LabRedis
+        host: "192.168.1.6"
+        port: 6379
+    end
+
+    Websocket HomeWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Entity NotificationData
+        source: HomeBroker
+        attributes:
+            - message: str
+    end
+
+
+    Entity AllLogsData
+        source: LabRedis
+        attributes:
+            - speed: float
+            - car_running: bool
+            - current_state: str
+            - FPS: list
+    end
+
+    DefineComponent infoNotification as
+        LiveComponent
+            topic: "topic/1"
+            dataName: "firstText"
+            content: h1 "This is a live reusable component"
+
+
+    Screen dashboard
+        title: "Dashboard"
+        url: "/"
+
+        Entity SensorData
+            source: HomeBroker
+            attributes: 
+                - timestamp: str 
+                - value: float
+        end
+
+        Entity SpeedChartData
+            source: LabRedis
+            attributes:
+                - timestamp: str
+                - speed: float
+        end
+
+
+        row
+            h1 "Sensor Dashboard"
+        endrow
+        row
+            col
+                LiveComponent
+                    topic: "sensor/data"
+                    dataName: "latestReading"
+                    content: p "Latest sensor value"
+                    entity: SensorData
+            endcol
+            col
+                LiveComponent
+                    topic: "chart/speed"
+                    dataName: "speedChart"
+                    content: LineChart speedChart
+                                xLabel: "Time"
+                                yLabel: "Speed"
+                                xDataKey: "time"
+                                yDataKey: "speed"
+                    entity: SpeedChartData
+            endcol
+            col
+                LiveComponent
+                    topic: "logs/all"
+                    dataName: "allLogs"
+                    content: Logs allLogs {"Speed", "Car Running", "Current State", "FPS"}
+                    entity: AllLogsData
+            endcol
+        endrow
+    end
