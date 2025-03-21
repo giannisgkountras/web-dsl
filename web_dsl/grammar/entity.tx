@@ -1,0 +1,54 @@
+import communication
+
+EntitySource: (ref=[MessageBroker]);
+
+DataSchema:
+    'DataSchema' name=ID
+    ('description:' description=STRING)?
+    ('fields:' '-' fields*=Field['-'])?
+    'end'
+;
+
+Entity:
+    'Entity' name=ID
+    'source:' source=EntitySource
+    'dataSchema:' dataSchema=DataSchema 
+    ('description:' description=STRING)?
+    'end'
+;
+
+Field:
+    NumericField    |
+    BoolField       |
+    StringField     |
+    ListField       |
+    DictField
+;
+
+NumericField:
+    IntField | FloatField
+;
+
+IntField:
+    name=ID ':' 'int' ('=' default=INT)?
+;
+
+FloatField:
+    name=ID ':' 'float' ('=' default=FLOAT)?
+;
+
+StringField:
+    name=ID ':' 'str' ('=' default=STRING)?
+;
+
+BoolField:
+    name=ID ':' 'bool' ('=' default=BOOL)?
+;
+
+ListField:
+    name=ID ':' 'list' ('=' '[' default*=OBJECT[','] ']')?
+;
+
+DictField:
+    name=ID ':' 'dict' ('=' '{' items*=Field[','] '}')?
+;

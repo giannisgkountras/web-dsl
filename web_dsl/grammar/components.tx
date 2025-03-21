@@ -1,3 +1,5 @@
+import entity
+
 // Define a generic Component that can be one of several types
 BasicComponent:
     Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs
@@ -9,7 +11,9 @@ LiveComponent:
     'topic:' topic=STRING       
     'dataName:' dataName=STRING
     'content:' definition=BasicComponent
+    ('entity:' ref=[Entity|ID])?   // Optional reference to an entity
 ;
+
 
 Component:
     BasicComponent | LiveComponent
