@@ -1,4 +1,5 @@
 import entity
+import utils
 
 // Define a generic Component that can be one of several types
 BasicComponent:
@@ -11,7 +12,7 @@ LiveComponent:
     'topic:' topic=STRING       
     'dataName:' dataName=STRING
     'content:' definition=BasicComponent
-    ('entity:' ref=[Entity|ID])?   // Optional reference to an entity
+    'entity:' ref=[Entity|FQN] 
 ;
 
 
@@ -34,35 +35,37 @@ Button:
 
 // A text field with a name and placeholder text
 Input:
-    'Input' name=ID 
-    'type:' type=STRING
+    'Input' (name=ID)?
+    'type:' type=InputType
     'placeholder:' placeholder=STRING
     'required:' required=BOOL
+;
 
-
+InputType:
+    'text' | 'password' | 'number' | 'email' | 'checkbox' | 'radio'
 ;
 
 // A label with a name and content
 Label:
-    'Label' name=ID 'content:' content=STRING
+    'Label' (name=ID)? 'content:' content=STRING
 ;
 
 // A form component with an action, method, and nested structural elements
 Form:
-    'Form' name=ID
+    'Form' (name=ID)?
     elements*=FormElement
     'endform'
 ;
 
 // A form element that can be either an input or a label
 FormElement:
-    Input | Label
+    Input | Label | Button
 ;
 
 
 // An image with a name and source URL
 Image:
-    'Image' name=ID 'source:' content=STRING
+    'Image' (name=ID)? 'source:' content=STRING
 ;
 
 // A header with content

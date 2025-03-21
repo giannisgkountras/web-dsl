@@ -2,7 +2,7 @@ import screens
 import components
 import communication
 import entity
-// Root: A webpage consists of multiple screens
+
 WebPage:
     'webpage' name=ID 
     ('author:' author=STRING)?
@@ -13,7 +13,6 @@ WebPage:
     websocket=Websocket
     (reusableComponents*=ReusableComponentDefinition)?
     screens+=Screen
-    (entities+=Entity)?
-
+    (globalEntities*=Entity)?
 ;
 

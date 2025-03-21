@@ -1,4 +1,5 @@
 import components
+import entity
 
 // Each screen has a name, title, URL, optional description, and nested structure
 Screen:
@@ -6,6 +7,7 @@ Screen:
     'title:' title=STRING
     'url:' url=STRING
     ('description:' description=STRING)?
+    (localEntities*=Entity)?    // Screen-specific entities
     elements*=StructuralElement
     'end'
 ;

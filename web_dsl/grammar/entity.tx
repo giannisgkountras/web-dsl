@@ -2,53 +2,50 @@ import communication
 
 EntitySource: (ref=[MessageBroker]);
 
-DataSchema:
-    'DataSchema' name=ID
-    ('description:' description=STRING)?
-    ('fields:' '-' fields*=Field['-'])?
-    'end'
-;
-
 Entity:
     'Entity' name=ID
     'source:' source=EntitySource
-    'dataSchema:' dataSchema=DataSchema 
+    'attributes:' '-' attributes*=Attribute['-']
     ('description:' description=STRING)?
     'end'
 ;
 
-Field:
-    NumericField    |
-    BoolField       |
-    StringField     |
-    ListField       |
-    DictField
+Attribute:
+    NumericAttribute    |
+    BoolAttribute       |
+    StringAttribute     |
+    ListAttribute       |
+    DictAttribute
 ;
 
-NumericField:
-    IntField | FloatField
+NumericAttribute:
+    IntAttribute | FloatAttribute
 ;
 
-IntField:
+IntAttribute:
     name=ID ':' 'int' ('=' default=INT)?
 ;
 
-FloatField:
+FloatAttribute:
     name=ID ':' 'float' ('=' default=FLOAT)?
 ;
 
-StringField:
+StringAttribute:
     name=ID ':' 'str' ('=' default=STRING)?
 ;
 
-BoolField:
+BoolAttribute:
     name=ID ':' 'bool' ('=' default=BOOL)?
 ;
 
-ListField:
-    name=ID ':' 'list' ('=' '[' default*=OBJECT[','] ']')?
+ListAttribute:
+    name=ID ':' 'list' ('=' '[' default*=ListValue[','] ']')?
 ;
 
-DictField:
-    name=ID ':' 'dict' ('=' '{' items*=Field[','] '}')?
+ListValue:
+    INT | FLOAT | STRING | BOOL
+;
+
+DictAttribute:
+    name=ID ':' 'dict' ('=' '{' items*=Attribute[','] '}')?
 ;
