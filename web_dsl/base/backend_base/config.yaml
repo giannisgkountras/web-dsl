@@ -1,16 +1,23 @@
-broker_info:
-    name: "mycoolbroker"
-    type: "MQTT"
-    topics:
-        - "topic/1"
-        - "haha"
-        - "testboy"
+brokers:
+    - name: "redis"
+      type: "REDIS"
+      topics:
+          - "topic1"
+      broker_connection_parameters:
+          host: "localhost"
+          port: 6379
+          username: ""
+          password: ""
 
-broker_connection_parameters:
-    host: "localhost"
-    port: 1883
-    username: ""
-    password: ""
+    - name: "mycoolbroker"
+      type: "MQTT"
+      topics:
+          - "topic2"
+      broker_connection_parameters:
+          host: "localhost"
+          port: 1883
+          username: ""
+          password: ""
 
 websocket:
     host: "0.0.0.0"

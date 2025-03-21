@@ -38,8 +38,12 @@ class BrokerCommlibClient:
         """Generate a callback for a specific topic."""
 
         def callback(msg):
-            # print(f"Received from {topic}: {msg}")
-            json_msg_with_prefix = f'{{"{topic}": {json.dumps(msg)}}}'
+            try:
+                json_msg_with_prefix = f'{{"{topic}": {json.dumps(msg)}}}'
+            except Exception as e:
+                print(f"Failed to convert message to JSON: {e}")
+                return
+            # print(f"Sending to WebSocket: {json_msg_with_prefix}")
             # Schedule the coroutine in the main event loop
             asyncio.run_coroutine_threadsafe(
                 self.ws_server.send_message(json_msg_with_prefix),

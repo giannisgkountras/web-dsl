@@ -9,6 +9,11 @@ Broker<MQTT> MyBroker
     port: 1883
 end
 
+Broker<Redis> Redisbroker
+    host: "192.168.1.6"
+    port: 6379
+end
+
 Websocket mywebsocket
     host: "192.168.1.6"
     port: 8888
@@ -30,7 +35,7 @@ Screen MainScreen
     	h1 "Kalimera"
 
     	LiveComponent
-    	   topic: "topic/2"
+    	   topic: "haha"
     	   dataName: "mytext"
     	   content: h1 "this is a test"
     endrow

@@ -143,10 +143,16 @@ def generate(model_path, gen_path):
 
     print(f"Found topics: {all_topics}")
 
+    # Collect all brokers
+    all_brokers = set()
+    for broker in model.brokers:
+        all_brokers.add(broker)
+    all_brokers = list(all_brokers)
+
     config_dir = os.path.join(gen_path, "backend")
     config_output_file = os.path.join(config_dir, "config.yaml")
     config_content = config_template.render(
-        broker=model.broker, websocket=model.websocket, topics=all_topics
+        brokers=all_brokers, websocket=model.websocket, topics=all_topics
     )
     with open(config_output_file, "w", encoding="utf-8") as f:
         f.write(config_content)

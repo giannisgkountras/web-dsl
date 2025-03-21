@@ -41,5 +41,6 @@ Websocket:
     'Websocket' name=ID
         'host:' host=STRING
         'port:' port=INT
+        ('auth:' auth=Authentication)?
     'end'
 ;

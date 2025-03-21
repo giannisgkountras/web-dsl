@@ -9,7 +9,7 @@ WebPage:
     ('version:' version=STRING)?
     ('description:' description=STRING)?
     ('navbar:'  navbar=BOOL)?
-    broker=MessageBroker
+    brokers+=MessageBroker
     websocket=Websocket
     (reusableComponents*=ReusableComponentDefinition)?
     screens+=Screen

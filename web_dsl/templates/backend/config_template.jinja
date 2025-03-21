@@ -1,33 +1,24 @@
-{% set brokerType = "MQTT" if broker.__class__.__name__ == "MQTTBroker" 
-   else "AMQP" if broker.__class__.__name__ == "AMQPBroker" 
-   else "REDIS" if broker.__class__.__name__ == "RedisBroker" 
-   else "Unknown" %}
-
-broker_info:
-    name: "{{broker.name}}"
-    type: "{{brokerType}}"
+brokers:
+  {% for broker in brokers %}
+  - name: "{{ broker.name }}"
+    type: "{{ broker.__class__.__name__.replace('Broker', '').upper() }}"
     topics:
-{% for topic in topics %}
-        - "{{topic}}"
-{% endfor %}
-
-broker_connection_parameters:
-    host: "{{broker.host}}"
-    port: {{broker.port}}
-    {% if broker.auth %}
-    username: "{{ broker.auth.username }}"
-    password: "{{ broker.auth.password }}"
-    {% endif %}
-    {% if broker.__class__.__name__ == "AMQPBroker" %}
-    vhost: "{{ broker.vhost if broker.vhost else '/' }}"
-    {% elif broker.__class__.__name__ == "RedisBroker" %}
-    db: {{ broker.db if broker.db is not none else 0 }}
-    {% elif broker.__class__.__name__ == "MQTTBroker" %}
-    transport: "{{ broker.transport if broker.transport else 'tcp' }}"
-    {% endif %}
-
+      {% for topic in topics %}
+      - "{{ topic }}"
+      {% endfor %}
+    broker_connection_parameters:
+      host: "{{ broker.host }}"
+      port: {{ broker.port }}
+      {% if broker.auth %}
+      username: "{{ broker.auth.username}}"
+      password: "{{ broker.auth.password}}"
+      {% endif %}
+  {% endfor %}
 
 websocket:
-{# the backend needs to listen to all #}
-    host: "0.0.0.0"
-    port: {{websocket.port}}
+  host: "0.0.0.0"
+  port: {{ websocket.port }}
+  {% if websocket.auth %}
+  username: "{{ websocket.auth.username}}"
+  password: "{{ websocket.auth.password}}"
+{% endif %}
