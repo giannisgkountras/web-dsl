@@ -19,6 +19,7 @@ webpage Vroomitor
         port: 8080
     end
 
+    
     Entity NotificationData
         source: HomeBroker
         attributes:
@@ -40,6 +41,7 @@ webpage Vroomitor
             topic: "topic/1"
             dataName: "firstText"
             content: h1 "This is a live reusable component"
+            entity: NotificationData
 
 
     Screen dashboard

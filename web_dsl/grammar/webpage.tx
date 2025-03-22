@@ -10,11 +10,11 @@ WebPage:
     ('description:' description=STRING)?
     ('navbar:'  navbar=BOOL)?
     (
-        (brokers+=MessageBroker)
-        (websocket=Websocket)
-        (reusableComponents*=ReusableComponentDefinition)?
-        (screens+=Screen)
-        (globalEntities*=Entity)?
+        (brokers+=MessageBroker)*
+        (websocket=Websocket)?
+        (reusableComponents*=ReusableComponentDefinition)*
+        (screens+=Screen)*
+        (globalEntities*=Entity)*
     )#
 ;
 
