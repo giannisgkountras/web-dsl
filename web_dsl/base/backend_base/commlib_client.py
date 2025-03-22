@@ -55,6 +55,7 @@ class BrokerCommlibClient:
     def subscribe(self):
         """Subscribe to all specified topics."""
         for topic in self.topics:
+            print(f"Subscribing to topic: {topic}")
             subscriber = self.node.create_subscriber(
                 topic=topic,
                 on_message=self.on_message_callback(topic),

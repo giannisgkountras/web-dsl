@@ -38,9 +38,9 @@ webpage Vroomitor
 
     DefineComponent infoNotification as
         LiveComponent
-            topic: "topic/1"
-            dataName: "firstText"
-            content: h1 "This is a live reusable component"
+            topic: "notifications/info"
+            dataName: "notificationsInfo"
+            content: Notification infoNotification type: info
             entity: NotificationData
 
 
@@ -93,4 +93,5 @@ webpage Vroomitor
                     entity: AllLogsData
             endcol
         endrow
+        useComponent infoNotification
     end

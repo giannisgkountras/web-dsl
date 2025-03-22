@@ -2,10 +2,6 @@ brokers:
   {% for broker in brokers %}
   - name: "{{ broker.name }}"
     type: "{{ broker.__class__.__name__.replace('Broker', '').upper() }}"
-    topics:
-      {% for topic in topics %}
-      - "{{ topic }}"
-      {% endfor %}
     broker_connection_parameters:
       host: "{{ broker.host }}"
       port: {{ broker.port }}
@@ -13,6 +9,10 @@ brokers:
       username: "{{ broker.auth.username}}"
       password: "{{ broker.auth.password}}"
       {% endif %}
+    topics:
+    {% for topic_config in topic_configs if topic_config.broker == broker.name %}
+      - topic: {{ topic_config.topic }}
+    {% endfor %}
   {% endfor %}
 
 websocket:

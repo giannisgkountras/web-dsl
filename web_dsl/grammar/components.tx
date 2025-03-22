@@ -12,7 +12,7 @@ LiveComponent:
     'topic:' topic=STRING       
     'dataName:' dataName=STRING
     'content:' definition=BasicComponent
-    'entity:' ref=[Entity|FQN] 
+    'entity:' entity=[Entity|FQN] 
 ;
 
 

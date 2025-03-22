@@ -41,6 +41,9 @@ async def main():
     broker_threads = []
 
     for broker_info in broker_configs:
+        topics = []
+        for topic in broker_info.get("topics", []):
+            topics.append(topic.get("topic"))
         try:
             # Attempt to create a broker client
             broker_client = BrokerCommlibClient(
@@ -49,7 +52,7 @@ async def main():
                     "broker_connection_parameters", {}
                 ),
                 type=broker_info.get("type"),
-                topics=broker_info.get("topics", []),
+                topics=topics,
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
             )

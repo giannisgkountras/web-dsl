@@ -136,13 +136,15 @@ def generate(model_path, gen_path):
     # ========= Generate backend files============
 
     # Gather all topics from the model
-    all_topics = set()
+    topic_configs = []
     for component in live_components:
-        all_topics.add(component.topic)
-    all_topics = list(all_topics)
-
-    print(f"Found topics: {all_topics}")
-
+        topic_configs.append(
+            {
+                "topic": component.topic,
+                "broker": component.entity.source.ref.name,
+            }
+        )
+    print("Topic Configs: ", topic_configs)
     # Collect all brokers
     all_brokers = set()
     for broker in model.brokers:
@@ -152,7 +154,7 @@ def generate(model_path, gen_path):
     config_dir = os.path.join(gen_path, "backend")
     config_output_file = os.path.join(config_dir, "config.yaml")
     config_content = config_template.render(
-        brokers=all_brokers, websocket=model.websocket, topics=all_topics
+        brokers=all_brokers, websocket=model.websocket, topic_configs=topic_configs
     )
     with open(config_output_file, "w", encoding="utf-8") as f:
         f.write(config_content)
@@ -199,3 +201,21 @@ def collect_live_components(node, live_components):
     elif node_type in ("Row", "Column"):
         for element in node.elements:
             collect_live_components(element, live_components)
+
+
+def map_attribute_class_names_to_types(attribute):
+    """
+    Maps the class names of the attributes to their types.
+    """
+
+    attribute_types = {
+        "IntAttribute": "int",
+        "FloatAttribute": "float",
+        "BoolAttribute": "bool",
+        "StringAttribute": "string",
+        "ListAttribute": "list",
+        "DictAttribute": "dict",
+    }
+    if attribute.__class__.__name__ not in attribute_types:
+        raise ValueError(f"Unsupported attribute type: {attribute.__class__.__name__}")
+    return attribute_types[attribute.__class__.__name__]

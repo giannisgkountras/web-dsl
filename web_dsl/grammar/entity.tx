@@ -11,15 +11,12 @@ Entity:
 ;
 
 Attribute:
-    NumericAttribute    |
+    IntAttribute        |
+    FloatAttribute      |
     BoolAttribute       |
     StringAttribute     |
     ListAttribute       |
     DictAttribute
-;
-
-NumericAttribute:
-    IntAttribute | FloatAttribute
 ;
 
 IntAttribute:
