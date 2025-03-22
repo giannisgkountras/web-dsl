@@ -36,12 +36,9 @@ BoolAttribute:
 ;
 
 ListAttribute:
-    name=ID ':' 'list' ('=' '[' default*=ListValue[','] ']')?
+    name=ID ':' 'list' ('=' '[' items*=Attribute[','] ']')?
 ;
 
-ListValue:
-    INT | FLOAT | STRING | BOOL
-;
 
 DictAttribute:
     name=ID ':' 'dict' ('=' '{' items*=Attribute[','] '}')?
