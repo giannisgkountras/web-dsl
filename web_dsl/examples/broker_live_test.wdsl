@@ -5,17 +5,17 @@ webpage Vroomitor
     navbar: true
 
     Broker<MQTT> HomeBroker
-        host: "192.168.1.6"
+        host: "192.168.1.18"
         port: 1883
     end
 
     Broker<Redis> LabRedis
-        host: "192.168.1.6"
+        host: "192.168.1.18"
         port: 6379
     end
 
     Websocket HomeWebsocket
-        host: "192.168.1.6"
+        host: "192.168.1.18"
         port: 8080
     end
 

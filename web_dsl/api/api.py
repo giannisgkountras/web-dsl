@@ -7,6 +7,7 @@ import subprocess
 import time
 import shutil
 
+from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
     File,
@@ -26,6 +27,8 @@ from pydantic import BaseModel
 from web_dsl.language import build_model
 from web_dsl.generate import generate
 
+# Load the .env file
+load_dotenv()
 
 API_KEY = os.getenv("API_KEY", "API_KEY")
 TMP_DIR = "./tmp/"

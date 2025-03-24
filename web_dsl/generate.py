@@ -129,7 +129,11 @@ def generate(model_path, gen_path):
             logs_output_file = os.path.join(components_dir, "Logs.jsx")
             with open(logs_output_file, "w", encoding="utf-8") as f:
                 f.write(
-                    logs_template.render(element=component, logs=component.definition)
+                    logs_template.render(
+                        element=component,
+                        logs=component.definition,
+                        entity=component.entity,
+                    )
                 )
             print(f"Generated: {logs_output_file}")
 
