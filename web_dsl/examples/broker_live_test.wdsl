@@ -68,6 +68,12 @@ webpage Vroomitor
                 - cpu: int
         end
 
+        Entity LiveImageData
+            source: HomeBroker
+            attributes:
+                - frame: str
+        end
+
         row
             h1 "Sensor Dashboard"
         endrow
@@ -99,11 +105,21 @@ webpage Vroomitor
             endcol
         endrow
         row
-            LiveComponent
-                topic: "gauge"
-                dataName: "gaugeValue"
-                content: Gauge cpuGauge
-                entity: GaugeData
+            col
+                LiveComponent
+                    topic: "gauge"
+                    dataName: "gaugeValue"
+                    content: Gauge cpuGauge
+                    entity: GaugeData
+            endcol
+            col
+                LiveComponent
+                    topic: "image"
+                    dataName: "liveImg"
+                    content: 
+                        Image liveimg 
+                    entity: LiveImageData
+            endcol
         endrow
         useComponent infoNotification
     end

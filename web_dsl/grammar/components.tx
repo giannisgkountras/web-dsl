@@ -12,7 +12,7 @@ LiveComponent:
     'topic:' topic=STRING       
     'dataName:' dataName=STRING
     'content:' definition=BasicComponent
-    'entity:' entity=[Entity|FQN] 
+    'entity:' entity=[Entity|FQN]
 ;
 
 
@@ -65,7 +65,8 @@ FormElement:
 
 // An image with a name and source URL
 Image:
-    'Image' (name=ID)? 'source:' content=STRING
+    'Image' (name=ID)? 
+    ('source:' content=STRING)?
 ;
 
 // A header with content
