@@ -19,13 +19,11 @@ webpage Vroomitor
         port: 8080
     end
 
-    
     Entity NotificationData
         source: HomeBroker
         attributes:
             - message: str
     end
-
 
     Entity AllLogsData
         source: LabRedis
@@ -41,6 +39,8 @@ webpage Vroomitor
             dataName: "notificationsInfo"
             content: Notification infoNotification type: info
             entity: NotificationData
+        end
+    end
 
 
     Screen Dashboard
@@ -85,6 +85,7 @@ webpage Vroomitor
                     dataName: "latestReading"
                     content: p "Latest sensor value"
                     entity: SensorData
+                end
             endcol
             col
                 LiveComponent
@@ -94,6 +95,7 @@ webpage Vroomitor
                                 xLabel: "Time"
                                 yLabel: "Speed"
                     entity: SpeedChartData
+                end
             endcol
             col
                 LiveComponent
@@ -101,6 +103,7 @@ webpage Vroomitor
                     dataName: "allLogs"
                     content: Logs allLogs
                     entity: AllLogsData
+                end
             endcol
         endrow
         row
@@ -110,6 +113,7 @@ webpage Vroomitor
                     dataName: "gaugeValue"
                     content: Gauge cpuGauge
                     entity: GaugeData
+                end
             endcol
             col
                 LiveComponent
@@ -118,6 +122,7 @@ webpage Vroomitor
                     content: 
                         Image liveimg 
                     entity: LiveImageData
+                end
             endcol
         endrow
         useComponent infoNotification

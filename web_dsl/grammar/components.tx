@@ -13,6 +13,7 @@ LiveComponent:
     'dataName:' dataName=STRING
     'content:' definition=BasicComponent
     'entity:' entity=[Entity|FQN]
+    'end'
 ;
 
 
@@ -21,7 +22,9 @@ Component:
 ;
 
 ReusableComponentDefinition:
-    'DefineComponent' name=ID 'as' definition = Component
+    'DefineComponent' name=ID 
+    'as' definition = Component
+    'end'
 ;
 
 ReusableComponent:
