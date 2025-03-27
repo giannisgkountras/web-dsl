@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { CustomLineChart } from "../components/CustomLineChart"; 
 import { Logs } from "../components/Logs";
 import { GaugeComponent } from "react-gauge-component";
+import convertTypeValue from "./utils/convertTypeValue";
 
 const {{screen.name}} = () => {
     const ws = useContext(WebsocketContext);
@@ -61,8 +62,21 @@ const {{screen.name}} = () => {
     }, [{{ lc.dataName }}]);
     {% endif %}
 
-    {# I ASSUME THAT THE MESSAGE I RECEIVE IS LIKE THIS {data: "mplamplampla"} #}
-    useWebsocket(ws, "{{ lc.topic }}", (msg) => set{{ lc.dataName | capitalize }}(msg.data));
+    {# // WebSocket handler: Build an object based on the entity's attribute definitions. #}
+    useWebsocket(ws, "{{ lc.topic }}", (msg) => {
+        let entityData = {};
+        {% for attr in lc.entity.attributes %}
+            {# // Assuming each attribute has a 'name' and a type (e.g., 'IntAttribute', etc.) #}
+            entityData["{{ attr.name }}"] = convertTypeValue(msg["{{ attr.name }}"], "{{ attr.__class__.__name__ }}");
+        {% endfor %}
+
+        {# // If the entity has a single attribute, set the state to that value. #}
+        {% if lc.entity.attributes|length == 1 %}
+            set{{ lc.dataName | capitalize }}(entityData["{{ lc.entity.attributes[0].name }}"]);
+        {% else %}
+            set{{ lc.dataName | capitalize }}(entityData);
+        {% endif %}
+    });
 
     {% endfor %}
 
