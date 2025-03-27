@@ -9,7 +9,8 @@
         <button className="btn">{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.text }}{% endif %}</button>
 
     {% elif element.__class__.__name__ == 'Image' %}
-        <img width="100%" height="100%" src={ {% if live_state %}`data:image/png;base64,${ {{ live_state }}} `{% else %}{{ element.source }}{% endif %} } />
+        <img className="w-{% if element.width %}[{{ element.width }}px]{% else %}full{% endif %} h-{% if element.height %}[{{ element.height }}px]{% else %}full{% endif %}" 
+           src={ {% if live_state %}`data:image/png;base64,${ {{ live_state }}} `{% else %}{{ element.source }}{% endif %} } />
 
     {% elif element.__class__.__name__ == 'h1' %}
         <h1>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</h1>

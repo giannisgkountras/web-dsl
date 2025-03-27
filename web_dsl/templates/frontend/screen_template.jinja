@@ -72,12 +72,17 @@ const {{screen.name}} = () => {
             entityData["{{ attr.name }}"] = convertTypeValue(msg["{{ attr.name }}"], "{{ attr.__class__.__name__ }}");
         {% endfor %}
 
-        {# // If the entity has a single attribute, set the state to that value. #}
-        {% if lc.entity.attributes|length == 1 %}
-            set{{ lc.dataName | capitalize }}(entityData["{{ lc.entity.attributes[0].name }}"]);
-        {% else %}
-            set{{ lc.dataName | capitalize }}(entityData);
-        {% endif %}
+        try {
+            {# If the entity has a single attribute, set the state to that value. #}
+            {% if lc.entity.attributes|length == 1 %}
+                set{{ lc.dataName | capitalize }}(entityData["{{ lc.entity.attributes[0].name }}"]);
+            {% else %}
+                set{{ lc.dataName | capitalize }}(entityData);
+            {% endif %}
+        } catch (error) {
+            toast.error("An error occurred while setting {{ lc.dataName }}: " + error.message);
+            console.error("Error setting {{ lc.dataName }}:", error);
+        }
     });
 
     {% endfor %}

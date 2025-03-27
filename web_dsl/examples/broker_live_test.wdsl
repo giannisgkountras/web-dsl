@@ -50,7 +50,6 @@ webpage Vroomitor
         Entity SensorData
             source: HomeBroker
             attributes: 
-                - timestamp: str 
                 - value: float
         end
 
@@ -126,7 +125,9 @@ webpage Vroomitor
                     topic: "image"
                     dataName: "liveImg"
                     content: 
-                        Image liveimg 
+                        Image liveimg
+                        width: 400
+                        height: 400 
                     entity: LiveImageData
                 end
             endcol

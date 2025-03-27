@@ -69,6 +69,8 @@ FormElement:
 // An image with a name and source URL
 Image:
     'Image' (name=ID)? 
+    ('width:' width=INT)?
+    ('height:' height=INT)?
     ('source:' content=STRING)?
 ;
 
