@@ -99,8 +99,6 @@ LineChart:
     'LineChart' (name=ID)? 
     'xLabel:' xLabel=STRING
     'yLabel:' yLabel=STRING
-    'xDataKey:' xDataKey=STRING
-    'yDataKey:' yDataKey=STRING
 ;
 
 // A table of live Logs

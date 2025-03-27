@@ -9,21 +9,37 @@ import {
 import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState } from "react";
+import convertTypeValue from "../utils/convertTypeValue";
 
 export const CustomLineChart = () => {
+
+    {# // Generate an initial data point dynamically using all entity attributes #}
+    const initialData = {
+        {% for attr in element.entity.attributes %}
+            "{{ attr.name }}": "0",
+        {% endfor %}
+    };
+
     const [{{element.dataName}}, set{{element.dataName | capitalize}}] = useState([{xDataKey: "0", yDataKey: "0"}]);
     const ws = useContext(WebsocketContext);
 
     useWebsocket(ws, "{{element.topic}}", (msg) => {
-        set{{element.dataName | capitalize}}((prevData) => [...prevData, msg.data]);
+        let newData = {};
+        {% for attr in element.entity.attributes %}
+            newData["{{ attr.name }}"] = convertTypeValue(msg["{{ attr.name }}"], "{{ attr.__class__.__name__ }}");
+        {% endfor %}
+        set{{element.dataName | capitalize}}((prevData) => [...prevData, newData]);
     });
+
+     {# // Define an array of colors to assign each line a distinct color. #}
+    const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
     return (
         <LineChart data={ {{element.dataName}} } width={500} height={300}>
             <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
 
             <XAxis 
-                dataKey="{{chart.xDataKey}}" 
+                dataKey="{{ element.entity.attributes[0].name }}" 
                 stroke="#ebdbb2"
                 label={% raw %} {{ {% endraw%} 
                     value: "{{chart.xLabel}}", 
@@ -52,18 +68,21 @@ export const CustomLineChart = () => {
                 }}
                 itemStyle={{ color: "#ebdbb2" }}
             />
-            <Line
-                isAnimationActive={false}
-                type="monotone"
         {% endraw%}
-                dataKey="{{chart.yDataKey}}"
-        {% raw %}
-            
-                stroke="#fabd2f"
-                strokeWidth={2}
-                dot={{ fill: "#fabd2f" }}
-            />
+           {/*
+              Generate a <Line> for each attribute beyond the first.
+              Each line gets a distinct color from the colors array.
+            */}
+            {% for attr in element.entity.attributes[1:] %}
+                <Line
+                    isAnimationActive={false}
+                    type="monotone"
+                    dataKey="{{ attr.name }}"
+                    stroke={colors[{{ loop.index }} % colors.length]}
+                    strokeWidth={2}
+                    dot= {% raw %} {{ {% endraw %} fill: colors[{{ loop.index }} % colors.length] {% raw %} }} {% endraw %}
+                />
+            {% endfor %}
         </LineChart>
-        {% endraw %}
     );
 };

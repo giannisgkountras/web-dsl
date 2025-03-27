@@ -56,10 +56,12 @@ webpage Vroomitor
         end
 
         Entity SpeedChartData
-            source: LabRedis
+            source: HomeBroker
             attributes:
                 - timestamp: str
                 - speed: float
+                - cpu: float
+                - gpu: float
         end
 
         Entity GaugeData
@@ -92,8 +94,6 @@ webpage Vroomitor
                     content: LineChart speedChart
                                 xLabel: "Time"
                                 yLabel: "Speed"
-                                xDataKey: "time"
-                                yDataKey: "speed"
                     entity: SpeedChartData
             endcol
             col
