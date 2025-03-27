@@ -104,7 +104,6 @@ LineChart:
 // A table of live Logs
 Logs:
     'Logs' (name=ID)?
-    '{' columns+=STRING[','] '}'
 ;
 
 Gauge:

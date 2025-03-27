@@ -1,6 +1,7 @@
 import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useEffect, useRef, useState } from "react";
+import convertTypeValue from "../utils/convertTypeValue";
 
 export const Logs = () => {
     const [{{element.dataName}}, set{{element.dataName | capitalize}}] = useState([]);
@@ -8,9 +9,14 @@ export const Logs = () => {
 
     const ws = useContext(WebsocketContext);
     const scrollRef = useRef(null);
+
+    // When a new message is received, build an object based on the entity's attributes.
     useWebsocket(ws, "{{element.topic}}", (msg) => {
-        console.log(msg);
-        set{{element.dataName | capitalize}}((prevData) => [...prevData, msg.data]);
+        let newData = {};
+        {% for attr in element.entity.attributes %}
+            newData["{{ attr.name | lower }}"] = convertTypeValue(msg["{{ attr.name }}"], "{{ attr.__class__.__name__ }}");
+        {% endfor %}
+        set{{element.dataName | capitalize}}((prevData) => [...prevData, newData]);
     });
 
     useEffect(() => {
@@ -23,9 +29,9 @@ export const Logs = () => {
             {/* Titles */}
             <div className="w-full sticky top-0 z-10 border-b">
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 font-bold">
-                    {% for column in logs.columns %}
-                    <h1 className="text-center">{{ column | capitalize }}</h1>
-                {% endfor %}
+                    {% for attr in element.entity.attributes %}
+                        <h1 className="text-center">{{ attr.name | capitalize }}</h1>
+                    {% endfor %}
                 </div>
             </div>
             {/* Scrollable Data */}
@@ -36,8 +42,8 @@ export const Logs = () => {
                         className={`grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 text-center 
                             ${index % 2 === 0 ? "" : "bg-[#2f2c29]"}`}
                     >
-                        {% for column in logs.columns %}
-                            <p>{log["{{ column|lower }}"] || "-"}</p>
+                        {% for attr in element.entity.attributes %}
+                            <p>{log["{{ attr.name | lower }}"] || "-"}</p>
                         {% endfor %}
                     </div>
                 ))}
