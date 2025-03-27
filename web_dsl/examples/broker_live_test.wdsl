@@ -5,17 +5,17 @@ webpage Vroomitor
     navbar: true
 
     Broker<MQTT> HomeBroker
-        host: "192.168.1.18"
+        host: "192.168.1.6"
         port: 1883
     end
 
     Broker<Redis> LabRedis
-        host: "192.168.1.18"
+        host: "192.168.1.6"
         port: 6379
     end
 
     Websocket HomeWebsocket
-        host: "192.168.1.18"
+        host: "192.168.1.6"
         port: 8080
     end
 
@@ -44,7 +44,7 @@ webpage Vroomitor
             entity: NotificationData
 
 
-    Screen dashboard
+    Screen Dashboard
         title: "Dashboard"
         url: "/"
 
@@ -62,6 +62,11 @@ webpage Vroomitor
                 - speed: float
         end
 
+        Entity GaugeData
+            source: HomeBroker
+            attributes:
+                - cpu: int
+        end
 
         row
             h1 "Sensor Dashboard"
@@ -92,6 +97,13 @@ webpage Vroomitor
                     content: Logs allLogs {"Speed", "Car Running", "Current State", "FPS"}
                     entity: AllLogsData
             endcol
+        endrow
+        row
+            LiveComponent
+                topic: "gauge"
+                dataName: "gaugeValue"
+                content: Gauge cpuGauge
+                entity: GaugeData
         endrow
         useComponent infoNotification
     end

@@ -3,7 +3,7 @@ import utils
 
 // Define a generic Component that can be one of several types
 BasicComponent:
-    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs
+    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge
 ;
 
 // A live component that connects to a topic on a broker
@@ -106,4 +106,8 @@ LineChart:
 Logs:
     'Logs' (name=ID)?
     '{' columns+=STRING[','] '}'
+;
+
+Gauge:
+    'Gauge' (name=ID)?
 ;

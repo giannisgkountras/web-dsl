@@ -36,6 +36,10 @@
     
     {% elif element.__class__.__name__ == 'Logs' %}
         <Logs />
+    
+    {% elif element.__class__.__name__ == 'Gauge'%}
+        <GaugeComponent value={ {{ live_state }} } />
+
     {% elif element.__class__.__name__ == 'ReusableComponent' %}
         {{ render_element(element.ref.definition, live_state=live_state) }}
     {% elif element.__class__.__name__ in ('Row', 'Column') %}
