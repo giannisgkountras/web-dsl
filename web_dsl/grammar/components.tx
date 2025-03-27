@@ -3,7 +3,7 @@ import utils
 
 // Define a generic Component that can be one of several types
 BasicComponent:
-    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge
+    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer
 ;
 
 // A live component that connects to a topic on a broker
@@ -111,4 +111,8 @@ Logs:
 
 Gauge:
     'Gauge' (name=ID)?
+;
+
+JsonViewer:
+    'JsonViewer' (name=ID)?
 ;

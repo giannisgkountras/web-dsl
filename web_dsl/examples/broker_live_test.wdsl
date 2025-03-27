@@ -75,6 +75,12 @@ webpage Vroomitor
                 - frame: str
         end
 
+        Entity JsonViewerData
+            source: HomeBroker
+            attributes:
+                - data: dict
+        end
+
         row
             h1 "Sensor Dashboard"
         endrow
@@ -122,6 +128,15 @@ webpage Vroomitor
                     content: 
                         Image liveimg 
                     entity: LiveImageData
+                end
+            endcol
+            col
+                LiveComponent
+                    topic: "view"
+                    dataName: "jsonData"
+                    content:
+                        JsonViewer dataViewer
+                    entity: JsonViewerData
                 end
             endcol
         endrow

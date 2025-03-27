@@ -11,6 +11,7 @@
     },
     "dependencies": {
         "@tailwindcss/vite": "^4.0.10",
+        "@uiw/react-json-view": "^2.0.0-alpha.30",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
         "react-gauge-component": "^1.2.64",
