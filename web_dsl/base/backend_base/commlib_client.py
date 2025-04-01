@@ -31,8 +31,10 @@ class BrokerCommlibClient:
         # Setup connection parameters for the broker
         self.connection_parameters = conn_params(**broker_connection_parameters)
         self.node = Node(node_name=name, connection_params=self.connection_parameters)
+        self.name = name
         self.subscribers = []
         self.global_event_loop = global_event_loop
+        self.pub = self.node.create_mpublisher()
 
     def on_message_callback(self, topic: str):
         """Generate a callback for a specific topic."""
@@ -61,6 +63,14 @@ class BrokerCommlibClient:
                 on_message=self.on_message_callback(topic),
             )
             self.subscribers.append(subscriber)
+
+    def publish(self, message: dict, topic: str):
+        """Publish a message to a specific topic."""
+        try:
+            self.pub.publish(json.loads(message), topic)
+            print(f"Published message to {topic}: {message}")
+        except Exception as e:
+            print(f"Failed to publish message: {e}")
 
     def run(self):
         """Run the commlib node to start listening for MQTT messages."""

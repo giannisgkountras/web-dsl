@@ -172,21 +172,28 @@ def generate(model_path, gen_path):
     config_dir = os.path.join(gen_path, "backend")
     config_output_file = os.path.join(config_dir, "config.yaml")
     config_content = config_template.render(
-        brokers=all_brokers, websocket=model.websocket, topic_configs=topic_configs
+        brokers=all_brokers,
+        websocket=model.websocket,
+        api=model.api,
+        topic_configs=topic_configs,
     )
     with open(config_output_file, "w", encoding="utf-8") as f:
         f.write(config_content)
     print(f"Generated: {config_output_file}")
 
     dockerfile_output_file = os.path.join(gen_path, "backend", "Dockerfile")
-    dockerfile_content = dockerfile_template.render(websocket=model.websocket)
+    dockerfile_content = dockerfile_template.render(
+        websocket=model.websocket, api=model.api
+    )
     with open(dockerfile_output_file, "w", encoding="utf-8") as f:
         f.write(dockerfile_content)
     print(f"Generated: {dockerfile_output_file}")
 
     # ========= Generate docker-compose file============
     docker_compose_output_file = os.path.join(gen_path, "docker-compose.yml")
-    docker_compose_content = docker_compose_template.render(websocket=model.websocket)
+    docker_compose_content = docker_compose_template.render(
+        websocket=model.websocket, api=model.api
+    )
     with open(docker_compose_output_file, "w", encoding="utf-8") as f:
         f.write(docker_compose_content)
     print(f"Generated: {docker_compose_output_file}")

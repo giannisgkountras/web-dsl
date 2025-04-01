@@ -11,6 +11,7 @@ WebPage:
     ('navbar:'  navbar=BOOL)?
     (
         (brokers+=MessageBroker)*
+        (api=API)?
         (websocket=Websocket)?
         (reusableComponents*=ReusableComponentDefinition)*
         (screens+=Screen)*

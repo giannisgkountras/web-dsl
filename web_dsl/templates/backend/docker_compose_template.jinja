@@ -23,4 +23,5 @@ services:
         - app_network  # Connect backend to the same network
     ports:
       - "{{websocket.port}}:{{websocket.port}}"
+      - "{{api.port}}:{{api.port}}"
     restart: always
