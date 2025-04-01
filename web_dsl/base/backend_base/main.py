@@ -2,7 +2,9 @@ import asyncio
 import threading
 import logging
 import uvicorn
+from pydantic import BaseModel
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from utils import load_config
@@ -19,6 +21,15 @@ global_event_loop = None
 broker_clients = []  # Store broker clients for access in FastAPI
 
 app = FastAPI()
+
+# Allow all origins (unsafe for production)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all domains
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 
 async def start_fastapi():
@@ -103,10 +114,20 @@ async def main():
         thread.join()
 
 
+class PublishRequest(BaseModel):
+    broker: str
+    message: dict
+    topic: str
+
+
 # Publish API endpoint
 @app.post("/publish")
-async def publish_message(broker: str, topic: str, message: str):
+async def publish_message(request: PublishRequest):
     """Publish a message to a specific topic of a broker."""
+    broker = request.broker
+    message = request.message
+    topic = request.topic
+
     for broker_client in broker_clients:
         if broker_client.name == broker:
             try:
@@ -117,8 +138,7 @@ async def publish_message(broker: str, topic: str, message: str):
                 logging.error(f"Failed to publish message: {e}")
                 return {"status": "error", "message": str(e)}
 
-        else:
-            return {"status": "error", "message": f"Broker {broker} not found"}
+    return {"status": "error", "message": f"Broker {broker} not found"}
 
 
 if __name__ == "__main__":

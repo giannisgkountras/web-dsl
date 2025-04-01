@@ -67,7 +67,7 @@ class BrokerCommlibClient:
     def publish(self, message: dict, topic: str):
         """Publish a message to a specific topic."""
         try:
-            self.pub.publish(json.loads(message), topic)
+            self.pub.publish(message, topic)
             print(f"Published message to {topic}: {message}")
         except Exception as e:
             print(f"Failed to publish message: {e}")
