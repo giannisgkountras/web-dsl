@@ -113,12 +113,23 @@ webpage Vroomitor
         endrow
         row
             col
-                LiveComponent
-                    topic: "gauge"
-                    dataName: "gaugeValue"
-                    content: Gauge cpuGauge
-                    entity: GaugeData
-                end
+                row
+                    LiveComponent
+                        topic: "gauge"
+                        dataName: "gaugeValue"
+                        content: Gauge cpuGauge
+                        entity: GaugeData
+                    end
+                endrow
+                row
+                    LiveComponent
+                        topic: "gauge"
+                        dataName: "aliveValue"
+                        content: Alive gaugeAlive
+                                    timeout: 5000
+                        entity: GaugeData
+                    end
+                endrow
             endcol
             col
                 LiveComponent

@@ -31,6 +31,7 @@ custom_line_chart_template = frontend_env.get_template(
     "components/line_chart_template.jinja"
 )
 logs_template = frontend_env.get_template("components/logs_template.jinja")
+alive_component_template = frontend_env.get_template("components/alive_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
@@ -136,6 +137,19 @@ def generate(model_path, gen_path):
                     )
                 )
             print(f"Generated: {logs_output_file}")
+
+        # AliveComponent
+        if component.definition.__class__.__name__ == "Alive":
+            alive_component_output_file = os.path.join(components_dir, "Alive.jsx")
+            with open(alive_component_output_file, "w", encoding="utf-8") as f:
+                f.write(
+                    alive_component_template.render(
+                        element=component,
+                        alive=component.definition,
+                        entity=component.entity,
+                    )
+                )
+            print(f"Generated: {alive_component_output_file}")
 
     # ========= Generate backend files============
 
