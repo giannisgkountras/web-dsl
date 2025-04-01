@@ -11,36 +11,43 @@ AuthPlain:
 
 MQTTBroker:
     'Broker<MQTT>' name=ID
-        'host:' host=STRING
-        'port:' port=INT
+    (
+        ('host:' host=STRING)
+        ('port:' port=INT)
         ('transport:' transport=STRING)?
         ('auth:' auth=Authentication)?
-
+    )#
     'end'
 ;
 
 AMQPBroker:
     'Broker<AMQP>' name=ID
-        'host:' host=STRING
-        'port:' port=INT
+    (
+        ('host:' host=STRING)
+        ('port:' port=INT)
         ('vhost:' vhost=STRING)?
         ('auth:' auth=Authentication)?
+    )#
     'end'
 ;
 
 RedisBroker:
     'Broker<Redis>' name=ID
-        'host:' host=STRING
-        'port:' port=INT
+    (
+        ('host:' host=STRING)
+        ('port:' port=INT)
         ('db:' db=INT)?
         ('auth:' auth=Authentication)?
+    )#
     'end'
 ;
 
 Websocket:
     'Websocket' name=ID
-        'host:' host=STRING
-        'port:' port=INT
+    (
+        ('host:' host=STRING)
+        ('port:' port=INT)
         ('auth:' auth=Authentication)?
+    )#
     'end'
 ;

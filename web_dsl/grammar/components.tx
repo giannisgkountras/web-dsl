@@ -9,10 +9,12 @@ BasicComponent:
 // A live component that connects to a topic on a broker
 LiveComponent:
     'LiveComponent'
-    'topic:' topic=STRING       
-    'dataName:' dataName=STRING
-    'content:' definition=BasicComponent
-    'entity:' entity=[Entity|FQN]
+    (
+        ('topic:' topic=STRING)       
+        ('dataName:' dataName=STRING)
+        ('content:' definition=BasicComponent)
+        ('entity:' entity=[Entity|FQN])
+    )#
     'end'
 ;
 
@@ -39,9 +41,11 @@ Button:
 // A text field with a name and placeholder text
 Input:
     'Input' (name=ID)?
-    'type:' type=InputType
-    'placeholder:' placeholder=STRING
-    'required:' required=BOOL
+    (
+        ('type:' type=InputType)
+        ('placeholder:' placeholder=STRING)
+        ('required:' required=BOOL)
+    )#
 ;
 
 InputType:
@@ -68,10 +72,12 @@ FormElement:
 
 // An image with a name and source URL
 Image:
-    'Image' (name=ID)? 
-    ('width:' width=INT)?
-    ('height:' height=INT)?
-    ('source:' content=STRING)?
+    'Image' (name=ID)?
+    ( 
+        ('width:' width=INT)?
+        ('height:' height=INT)?
+        ('source:' content=STRING)?
+    )#
 ;
 
 // A header with content
