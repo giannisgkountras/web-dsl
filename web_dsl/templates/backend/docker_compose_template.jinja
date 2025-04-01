@@ -23,5 +23,7 @@ services:
         - app_network  # Connect backend to the same network
     ports:
       - "{{websocket.port}}:{{websocket.port}}"
-      - "{{api.port}}:{{api.port}}"
+      {% if api and api.port %}
+      - "{{ api.port }}:{{ api.port }}"
+      {% endif %}
     restart: always

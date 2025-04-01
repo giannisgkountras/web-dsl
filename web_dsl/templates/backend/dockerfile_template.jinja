@@ -15,7 +15,9 @@ COPY . .
 EXPOSE {{websocket.port}}
 
 # Expose API port
+{% if api and api.port %}
 EXPOSE {{api.port}}
+{% endif %}
 
 # Run the WebSocket server
 CMD ["python", "main.py"]
