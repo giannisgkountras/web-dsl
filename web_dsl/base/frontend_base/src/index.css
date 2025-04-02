@@ -77,3 +77,11 @@ form {
     flex-direction: column;
     gap: 10px;
 }
+
+input[type="text"] {
+    background-color: #3c3836;
+    border: 1px solid #ddc7a1;
+    padding: 0.5rem 1rem;
+    color: #ddc7a1;
+    border-radius: 5px;
+}

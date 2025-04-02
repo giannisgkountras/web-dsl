@@ -46,6 +46,9 @@
 
     {% elif element.__class__.__name__ == 'Alive' %}
         <Alive />
+    
+    {% elif element.__class__.__name__ == 'Publish' %}
+        <Publish brokerName={"{{element.ref.name}}"}/>
     {% elif element.__class__.__name__ == 'ReusableComponent' %}
         {{ render_element(element.ref.definition, live_state=live_state) }}
     {% elif element.__class__.__name__ in ('Row', 'Column') %}

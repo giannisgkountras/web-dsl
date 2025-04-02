@@ -11,7 +11,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState } from "react";
 import convertTypeValue from "../utils/convertTypeValue";
 
-export const CustomLineChart = () => {
+const CustomLineChart = () => {
 
     {# // Generate an initial data point dynamically using all entity attributes #}
     const initialData = {
@@ -86,3 +86,5 @@ export const CustomLineChart = () => {
         </LineChart>
     );
 };
+
+export default CustomLineChart;

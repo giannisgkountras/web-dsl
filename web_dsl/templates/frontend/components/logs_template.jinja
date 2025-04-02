@@ -3,7 +3,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useEffect, useRef, useState } from "react";
 import convertTypeValue from "../utils/convertTypeValue";
 
-export const Logs = () => {
+const Logs = () => {
     const [{{element.dataName}}, set{{element.dataName | capitalize}}] = useState([]);
 
 
@@ -51,3 +51,5 @@ export const Logs = () => {
         </div>
     );
 };
+
+export default Logs

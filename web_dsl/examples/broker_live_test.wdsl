@@ -148,13 +148,20 @@ webpage Vroomitor
                 end
             endcol
             col
-                LiveComponent
-                    topic: "view"
-                    dataName: "jsonData"
-                    content:
-                        JsonViewer dataViewer
-                    entity: JsonViewerData
-                end
+                row
+                    LiveComponent
+                        topic: "view"
+                        dataName: "jsonData"
+                        content:
+                            JsonViewer dataViewer
+                        entity: JsonViewerData
+                    end
+                endrow
+                row
+                    Publish HomeBrokerPublisher
+                        broker: HomeBroker
+                endrow
+                
             endcol
         endrow
         useComponent infoNotification

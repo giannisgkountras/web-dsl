@@ -1,9 +1,10 @@
 import entity
 import utils
+import communication
 
 // Define a generic Component that can be one of several types
 BasicComponent:
-    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer | Alive
+    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer | Alive | Publish
 ;
 
 // A live component that connects to a topic on a broker
@@ -128,4 +129,9 @@ JsonViewer:
 Alive:
     'Alive' (name=ID)?
     'timeout:' timeout=INT
+;
+
+Publish:
+    'Publish' (name=ID)?
+    'broker:' ref=[MessageBroker]
 ;
