@@ -12,7 +12,7 @@ const api = {
         try {
             return await rootApi.post(path, { json }).json();
         } catch (error) {
-            toast.error("API Post Error:", error);
+            toast.error(error.message);
         }
     }
 };

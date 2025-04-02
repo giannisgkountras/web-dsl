@@ -26,7 +26,7 @@ const Publish = ({ brokerName }) => {
             <button
                 className="btn text-[#fff] flex cursor-pointer items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => publish(brokerName, topic, dataToPublish)}
-                disabled={!!jsonError} // Disable when JSON is invalid
+                disabled={!!jsonError || topic === ""} // Disable when JSON is invalid or topic is empty
             >
                 Publish Message <IoSend className="ml-2" />
             </button>
