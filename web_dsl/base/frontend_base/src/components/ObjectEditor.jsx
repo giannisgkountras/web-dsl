@@ -67,10 +67,10 @@ const ObjectEditor = ({ initialData, onChange, jsonError, setJsonError }) => {
                     fontFamily: "monospace",
                     fontSize: "14px",
                     backgroundColor: "#101828",
-                    color: "#ffffff", // Ensure text is visible on dark background
+                    color: "#ffffff",
                     border: "1px solid #2d4373",
                     borderRadius: "0.5rem",
-                    minHeight: "200px", // Minimum height for better usability
+                    minHeight: "100px",
                     outline: "none" // Remove default focus outline
                 }}
                 textareaClassName="focus:ring-2 focus:ring-blue-500" // Add focus ring to the underlying textarea
