@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 const convertTypeValue = (value, type) => {
     try {
         if (value === undefined || value === null) {
-            throw new Error("Cannot convert undefined or null to object");
+            throw new Error("Unexpected value: " + value);
         }
 
         switch (type) {

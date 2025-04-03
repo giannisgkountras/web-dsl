@@ -37,11 +37,6 @@ body {
     overflow: auto;
 }
 
-h1,
-p {
-    margin: 0 0 10px 0;
-}
-
 .row {
     display: flex;
     justify-content: center;

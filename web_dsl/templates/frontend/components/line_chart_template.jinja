@@ -53,9 +53,10 @@ const CustomLineChart = () => {
                 stroke="#fff" 
                 label={% raw %} {{ {% endraw%} 
                     value: "{{chart.yLabel}}", 
-                    position: "insideBottom", 
-                    offset: -5, 
-                    fill: "#fff"
+                    position: "outsideLeft",
+                    fill: "#fff",
+                    angle: -90,
+                    dx: -10
                     {% raw %} }} {% endraw%}  
             />
         {% raw %}
