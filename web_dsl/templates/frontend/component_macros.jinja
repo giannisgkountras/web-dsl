@@ -1,4 +1,4 @@
-{% macro render_element(element, live_state=None, topic=None) %}
+{% macro render_element(element, live_state=None, topic=None, row_parent=True) %}
     {% if element.__class__.__name__ == 'LiveComponent' %}
         {{ render_element(element.definition, live_state=element.dataName, topic=element.topic) }}
 
@@ -58,13 +58,24 @@
 
     {% elif element.__class__.__name__ == 'ReusableComponent' %}
         {{ render_element(element.ref.definition, live_state=live_state) }}
-        
-    {% elif element.__class__.__name__ in ('Row', 'Column') %}
 
-        <div className="{{ element.__class__.__name__.lower() }}">
+    {% elif element.__class__.__name__ == 'Row' %}
+        {% if row_parent %}
+            <div className="row row-parent">
+        {% else %}
+            <div className="row row-child">
+        {% endif %}
             {% for child in element.elements %}
-                {{ render_element(child, live_state=live_state) }}
+                {{ render_element(child, live_state=live_state, row_parent=False) }}
             {% endfor %}
         </div>
+    
+    {% elif element.__class__.__name__ == 'Column'%}
+        <div className="column">
+            {% for child in element.elements %}
+                {{ render_element(child, live_state=live_state, row_parent=False) }}
+            {% endfor %}
+        </div>
+    
     {% endif %}
 {% endmacro %}
