@@ -26,7 +26,6 @@ index_html_template = frontend_env.get_template("index_html_template.jinja")
 websocket_context_config_template = frontend_env.get_template(
     "websocket_context_config.jinja"
 )
-alive_component_template = frontend_env.get_template("components/alive_template.jinja")
 dot_env_frontend_template = frontend_env.get_template("dot_env_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
@@ -109,24 +108,6 @@ def generate(model_path, gen_path):
     with open(env_frontend_output_file, "w", encoding="utf-8") as f:
         f.write(env_frontend_content)
     print(f"Generated {env_frontend_output_file}")
-
-    # Generate component files
-    components_dir = os.path.join(gen_path, "frontend", "src", "components")
-
-    for component in live_components:
-
-        # AliveComponent
-        if component.definition.__class__.__name__ == "Alive":
-            alive_component_output_file = os.path.join(components_dir, "Alive.jsx")
-            with open(alive_component_output_file, "w", encoding="utf-8") as f:
-                f.write(
-                    alive_component_template.render(
-                        element=component,
-                        alive=component.definition,
-                        entity=component.entity,
-                    )
-                )
-            print(f"Generated: {alive_component_output_file}")
 
     # ========= Generate backend files============
 

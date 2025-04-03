@@ -70,7 +70,16 @@
         </div>
 
     {% elif element.__class__.__name__ == 'Alive' %}
-        <Alive />
+        <Alive topic={ "{{ live_parent.topic }}" }
+               attributes={[
+            {% for attr in live_parent.entity.attributes %}
+                {
+                name: "{{ attr.name }}",
+                type: "{{ attr.__class__.__name__ }}"
+                },
+            {% endfor %}
+        ]}    timeout={ {{ element.timeout }} }
+        />
     
     {% elif element.__class__.__name__ == 'Publish' %}
         <Publish brokerName={"{{element.ref.name}}"}/>
