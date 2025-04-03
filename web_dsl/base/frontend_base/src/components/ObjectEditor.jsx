@@ -52,7 +52,7 @@ const ObjectEditor = ({ initialData, onChange, jsonError, setJsonError }) => {
     };
 
     return (
-        <div className="p-4 w-full max-w-lg flex flex-col">
+        <div className="mb-4 w-11/12 flex flex-col">
             <h2 className="mb-2 text-lg font-semibold text-gray-200">
                 Edit JSON
             </h2>
@@ -66,6 +66,7 @@ const ObjectEditor = ({ initialData, onChange, jsonError, setJsonError }) => {
                 style={{
                     fontFamily: "monospace",
                     fontSize: "14px",
+                    width: "100%",
                     backgroundColor: "#101828",
                     color: "#ffffff",
                     border: "1px solid #2d4373",

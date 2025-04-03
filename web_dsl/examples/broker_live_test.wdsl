@@ -182,6 +182,18 @@ webpage Vroomitor
                 - tire4: float
         end
 
+        Entity Camera
+            source: HomeBroker
+            attributes:
+                - data: dict
+        end
+
+        Entity Lidar
+            source: HomeBroker
+            attributes:
+                - data: dict
+        end
+
         row
             col
                 LiveComponent
@@ -191,5 +203,34 @@ webpage Vroomitor
                         entity: TireData
                 end
             endcol
+            col
+                LiveComponent
+                        topic: "camera"
+                        dataName: "aliveCamera"
+                        content: Alive aliveCamera
+                                    timeout: 5000
+                        entity: Camera
+                end
+            endcol
+                        col
+                LiveComponent
+                        topic: "lidar"
+                        dataName: "aliveLidar"
+                        content: Alive aliveLidar
+                                    timeout: 1000
+                        entity: Lidar
+                end
+            endcol
         endrow
+        row
+            col
+                Publish HomeBrokerPublisher
+                    broker: HomeBroker
+            endcol
+            col
+            endcol
+            col
+            endcol
+        endrow
+        useComponent infoNotification
     end
