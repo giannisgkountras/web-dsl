@@ -86,20 +86,29 @@ webpage Vroomitor
         end
 
         row
-            h1 "Sensor Dashboard"
-        endrow
-        row
-            col
-                LiveComponent
-                    topic: "sensor/data"
-                    dataName: "latestReading"
-                    content: p "Latest sensor value"
-                    entity: SensorData
-                end
+            col 
+                row
+                     p "Humidity Sensor:"
+                    LiveComponent
+                        topic: "sensor"
+                        dataName: "latestReading"
+                        content: p "Latest sensor value"
+                        entity: SensorData
+                    end
+                endrow
+                row
+                    LiveComponent
+                        topic: "view"
+                        dataName: "jsonData"
+                        content:
+                            JsonViewer dataViewer
+                        entity: JsonViewerData
+                    end
+                endrow
             endcol
             col
                 LiveComponent
-                    topic: "chart/speed"
+                    topic: "chart"
                     dataName: "speedChart"
                     content: LineChart speedChart
                                 xLabel: "Time"
@@ -109,7 +118,7 @@ webpage Vroomitor
             endcol
             col
                 LiveComponent
-                    topic: "logs/all"
+                    topic: "logs"
                     dataName: "allLogs"
                     content: Logs allLogs
                     entity: AllLogsData
@@ -149,19 +158,9 @@ webpage Vroomitor
             endcol
             col
                 row
-                    LiveComponent
-                        topic: "view"
-                        dataName: "jsonData"
-                        content:
-                            JsonViewer dataViewer
-                        entity: JsonViewerData
-                    end
-                endrow
-                row
                     Publish HomeBrokerPublisher
                         broker: HomeBroker
                 endrow
-                
             endcol
         endrow
         useComponent infoNotification
