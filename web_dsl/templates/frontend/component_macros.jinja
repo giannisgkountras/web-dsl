@@ -33,7 +33,18 @@
         <label htmlFor="{{ element.name }}">{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</label>
 
     {% elif element.__class__.__name__ == 'LineChart' %}
-        <CustomLineChart />
+        <CustomLineChart
+            topic={ "{{ live_parent.topic }}" }
+            xLabel={ "{{ element.xLabel }}" }
+            yLabel={ "{{ element.yLabel }}" }
+            attributes={ [
+                {% for attr in live_parent.entity.attributes %}
+                    {
+                    name: "{{ attr.name }}",
+                    type: "{{ attr.__class__.__name__ }}"
+                    },
+                {% endfor %}
+            ]}/>
     
     {% elif element.__class__.__name__ == 'Logs' %}
 
