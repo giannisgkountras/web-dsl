@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Arimo:ital,wght@0,400..700;1,400..700&display=swap");
 @import "tailwindcss";
 
 * {
@@ -7,11 +8,12 @@
 #root {
     width: 100%;
     height: 100%;
+    font-family: "Arimo", sans-serif;
 }
 
 body {
-    background-color: #252423;
-    color: #ddc7a1;
+    background: #010409;
+    color: #fff;
     display: flex;
     flex-direction: column;
     margin: 0;
@@ -45,15 +47,13 @@ p {
     justify-content: center;
     align-items: center;
     gap: 10px;
-    background-color: #3c3836;
-    border: 1px solid #7daea3;
     padding: 5px;
     width: 100%;
-    height: auto;
+    height: 45vh;
+    padding: 0.5rem 0.5rem 0 0.5rem;
 }
 
 .column {
-    border: 1px solid #ea6962;
     padding: 10px;
     display: flex;
     flex-direction: column;
@@ -61,10 +61,15 @@ p {
     align-items: center;
     height: 100%;
     width: 100%;
+    border: 1px solid #26272b;
+    padding: 1rem;
+    border-radius: 1rem;
+    background-color: #0c1116;
 }
 
 .btn {
-    background-color: #b16286;
+    background-color: #1f6feb;
+    color: #fff;
     border: none;
     padding: 10px;
     border-radius: 5px;
@@ -78,9 +83,14 @@ form {
 }
 
 input[type="text"] {
-    background-color: #3c3836;
-    border: 1px solid #ddc7a1;
+    background-color: #26272b;
+    border: 1px solid #636672;
     padding: 0.5rem 1rem;
-    color: #ddc7a1;
+    color: #fff;
     border-radius: 5px;
+}
+
+.Toastify__toast {
+    border: 1px solid #636672a2;
+    border-radius: 8px;
 }

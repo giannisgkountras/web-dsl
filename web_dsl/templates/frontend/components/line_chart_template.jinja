@@ -40,22 +40,22 @@ const CustomLineChart = () => {
 
             <XAxis 
                 dataKey="{{ element.entity.attributes[0].name }}" 
-                stroke="#ebdbb2"
+                stroke="#fff"
                 label={% raw %} {{ {% endraw%} 
                     value: "{{chart.xLabel}}", 
                     position: "insideBottom", 
                     offset: -5, 
-                    fill: "#ebdbb2"
+                    fill: "#fff"
                     {% raw %} }} {% endraw%}  
             />
         
             <YAxis 
-                stroke="#ebdbb2" 
+                stroke="#fff" 
                 label={% raw %} {{ {% endraw%} 
                     value: "{{chart.yLabel}}", 
                     position: "insideBottom", 
                     offset: -5, 
-                    fill: "#ebdbb2"
+                    fill: "#fff"
                     {% raw %} }} {% endraw%}  
             />
         {% raw %}
@@ -63,10 +63,10 @@ const CustomLineChart = () => {
                 contentStyle={{ 
                     backgroundColor: "#282828",
                     border: "none",
-                    color: "#ebdbb2",
+                    color: "#fff",
                     borderRadius: "10px"
                 }}
-                itemStyle={{ color: "#ebdbb2" }}
+                itemStyle={{ color: "#fff" }}
             />
         {% endraw%}
            {/*
