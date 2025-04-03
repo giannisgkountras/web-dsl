@@ -40,7 +40,7 @@ const Logs = () => {
                     <div
                         key={index}
                         className={`grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 text-center 
-                            ${index % 2 === 0 ? "" : "bg-[#2f2c29]"}`}
+                            ${index % 2 === 0 ? "" : "bg-[#27262B]"}`}
                     >
                         {% for attr in element.entity.attributes %}
                             <p>{log["{{ attr.name | lower }}"] || "-"}</p>

@@ -68,12 +68,22 @@ p {
 }
 
 .btn {
-    background-color: #1f6feb;
+    background-color: #2d4373;
     color: #fff;
     border: none;
     padding: 10px;
     border-radius: 5px;
     height: fit-content;
+    transition: all 0.1s ease;
+}
+.btn:hover {
+    background-color: #4b71c3;
+}
+
+.btn:disabled {
+    background-color: #34373c;
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 form {
@@ -83,8 +93,8 @@ form {
 }
 
 input[type="text"] {
-    background-color: #26272b;
-    border: 1px solid #636672;
+    background-color: #111828;
+    border: 1px solid #2d4373;
     padding: 0.5rem 1rem;
     color: #fff;
     border-radius: 5px;

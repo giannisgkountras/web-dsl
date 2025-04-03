@@ -9,12 +9,17 @@ const Publish = ({ brokerName }) => {
     const [jsonError, setJsonError] = useState(null);
 
     return (
-        <div className="flex justify-center items-center flex-col w-full">
-            <h1 className="font-bold">{brokerName}</h1>
-            <p>Enter the topic:</p>
+        <div className="flex justify-center items-center flex-col w-full ">
+            <h1 className="mb-2 text-lg font-semibold text-gray-200">
+                {brokerName}
+            </h1>
+            <h2 className="mb-2 text-lg font-semibold text-gray-200 text-start w-11/12">
+                Edit Topic
+            </h2>
             <input
                 type="text"
                 onChange={(e) => setTopic(e.target.value)}
+                className="w-11/12 p-2 rounded-md mb-4"
                 placeholder="Topic"
             />
             <ObjectEditor
