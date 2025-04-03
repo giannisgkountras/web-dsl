@@ -3,48 +3,60 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useEffect, useRef, useState } from "react";
 import convertTypeValue from "../utils/convertTypeValue";
 
-const Logs = () => {
-    const [{{element.dataName}}, set{{element.dataName | capitalize}}] = useState([]);
-
+const Logs = ({ topic, attributes }) => {
+    const [logs, setLogs] = useState([]);
 
     const ws = useContext(WebsocketContext);
     const scrollRef = useRef(null);
 
-    // When a new message is received, build an object based on the entity's attributes.
-    useWebsocket(ws, "{{element.topic}}", (msg) => {
+    // Handle incoming WebSocket messages using the 'topic' prop
+    useWebsocket(ws, topic, (msg) => {
         let newData = {};
-        {% for attr in element.entity.attributes %}
-            newData["{{ attr.name | lower }}"] = convertTypeValue(msg["{{ attr.name }}"], "{{ attr.__class__.__name__ }}");
-        {% endfor %}
-        set{{element.dataName | capitalize}}((prevData) => [...prevData, newData]);
+        // Dynamically parse the message based on the 'attributes' prop
+        attributes.forEach((attr) => {
+            newData[attr.name.toLowerCase()] = convertTypeValue(
+                msg[attr.name],
+                attr.type
+            );
+        });
+        setLogs((prevLogs) => [...prevLogs, newData]);
     });
 
+    // Auto-scroll to the bottom when new logs are added
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
         }
-    }, [ {{element.dataName}} ]);
+    }, [logs]);
+
+    // Utility function to capitalize attribute names for display
+    const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
+
     return (
         <div className="flex text-white justify-center items-center flex-col w-full h-96">
             {/* Titles */}
             <div className="w-full sticky top-0 z-10 border-b">
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 font-bold">
-                    {% for attr in element.entity.attributes %}
-                        <h1 className="text-center">{{ attr.name | capitalize }}</h1>
-                    {% endfor %}
+                    {attributes.map((attr) => (
+                        <h1 key={attr.name} className="text-center">
+                            {capitalize(attr.name)}
+                        </h1>
+                    ))}
                 </div>
             </div>
             {/* Scrollable Data */}
             <div ref={scrollRef} className="w-full max-h-80 overflow-y-auto">
-                { {{element.dataName}}.map((log, index) => (
+                {logs.map((log, index) => (
                     <div
                         key={index}
                         className={`grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 text-center 
                             ${index % 2 === 0 ? "" : "bg-[#27262B]"}`}
                     >
-                        {% for attr in element.entity.attributes %}
-                            <p>{log["{{ attr.name | lower }}"] || "-"}</p>
-                        {% endfor %}
+                        {attributes.map((attr) => (
+                            <p key={attr.name}>
+                                {log[attr.name.toLowerCase()] || "-"}
+                            </p>
+                        ))}
                     </div>
                 ))}
             </div>
@@ -52,4 +64,4 @@ const Logs = () => {
     );
 };
 
-export default Logs
+export default Logs;

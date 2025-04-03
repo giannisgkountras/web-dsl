@@ -185,9 +185,9 @@ webpage Vroomitor
         row
             col
                 LiveComponent
-                        topic: "speedlog"
-                        dataName: "speedLogs"
-                        content: Logs speedLogs
+                        topic: "tirelog"
+                        dataName: "tireLogs"
+                        content: Logs tireLogs
                         entity: TireData
                 end
             endcol

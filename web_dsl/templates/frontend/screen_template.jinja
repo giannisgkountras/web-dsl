@@ -34,7 +34,7 @@ const {{screen.name}} = () => {
     {# Generate state and WebSocket hooks for each live component #}
     {% for lc in live_components %}
 
-    {% if lc.definition.__class__.__name__ == 'LineChart' %}
+    {% if lc.definition.__class__.__name__ in ('LineChart', 'Logs')  %}
         {% continue %}
     {% endif %}
 

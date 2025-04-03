@@ -1,6 +1,6 @@
-{% macro render_element(element, live_state=None, topic=None, row_parent=True) %}
+{% macro render_element(element, live_state=None, topic=None, row_parent=True, live_parent=None) %}
     {% if element.__class__.__name__ == 'LiveComponent' %}
-        {{ render_element(element.definition, live_state=element.dataName, topic=element.topic) }}
+        {{ render_element(element=element.definition, live_state=element.dataName, topic=element.topic, live_parent=element) }}
 
     {% elif element.__class__.__name__ == 'p' %}
         <p>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</p>
@@ -36,7 +36,15 @@
         <CustomLineChart />
     
     {% elif element.__class__.__name__ == 'Logs' %}
-        <Logs />
+
+        <Logs topic={"{{ live_parent.topic }}"} attributes={ [
+            {% for attr in live_parent.entity.attributes %}
+                {
+                name: "{{ attr.name }}",
+                type: "{{ attr.__class__.__name__ }}"
+                },
+            {% endfor %}
+        ]}/>
     
     {% elif element.__class__.__name__ == 'Gauge'%}
         <GaugeComponent value={ {{ live_state }} } />
