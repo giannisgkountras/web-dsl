@@ -50,7 +50,7 @@ const Logs = ({ topic, attributes }) => {
                     <div
                         key={index}
                         className={`grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 text-center 
-                            ${index % 2 === 0 ? "" : "bg-[#27262B]"}`}
+                            ${index % 2 === 0 ? "" : "bg-[#161a23]"}`}
                     >
                         {attributes.map((attr) => (
                             <p key={attr.name}>

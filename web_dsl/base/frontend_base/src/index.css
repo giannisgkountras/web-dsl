@@ -106,3 +106,23 @@ input[type="text"] {
     border: 1px solid #636672a2;
     border-radius: 8px;
 }
+
+/* For Webkit Browsers (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+    width: 6px; /* Scrollbar width */
+    height: 6px; /* For horizontal scrollbar */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.5); /* Scrollbar thumb color */
+    border-radius: 10px; /* Rounded corners */
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.8); /* Hover effect */
+}
+
+::-webkit-scrollbar-track {
+    background: #1118285a; /* Track color */
+    border-radius: 10px;
+}
