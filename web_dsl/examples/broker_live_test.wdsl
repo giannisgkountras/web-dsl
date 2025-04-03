@@ -167,3 +167,29 @@ webpage Vroomitor
         endrow
         useComponent infoNotification
     end
+
+    Screen Charts
+        title: "Charts"
+        url: "/charts"
+
+        Entity TireData
+            source: HomeBroker
+            attributes: 
+                - timestamp: float
+                - tire1: float
+                - tire2: float
+                - tire3: float
+                - tire4: float
+        end
+
+        row
+            col
+                LiveComponent
+                        topic: "speedlog"
+                        dataName: "speedLogs"
+                        content: Logs speedLogs
+                        entity: TireData
+                end
+            endcol
+        endrow
+    end
