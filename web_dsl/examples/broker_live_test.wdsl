@@ -98,7 +98,7 @@ webpage Vroomitor
                 endrow
                 row
                     LiveComponent
-                        topic: "view"
+                        topic: "jsonview"
                         dataName: "jsonData"
                         content:
                             JsonViewer dataViewer

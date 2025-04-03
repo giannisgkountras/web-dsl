@@ -1,6 +1,6 @@
-{% macro render_element(element, live_state=None) %}
+{% macro render_element(element, live_state=None, topic=None) %}
     {% if element.__class__.__name__ == 'LiveComponent' %}
-        {{ render_element(element.definition, live_state=element.dataName) }}
+        {{ render_element(element.definition, live_state=element.dataName, topic=element.topic) }}
 
     {% elif element.__class__.__name__ == 'p' %}
         <p>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</p>
@@ -42,15 +42,23 @@
         <GaugeComponent value={ {{ live_state }} } />
 
     {% elif element.__class__.__name__ == 'JsonViewer'%}
-        <JsonView value={ {{ live_state }} } style={darkTheme} />
+        <div className="flex justify-center flex-col items-center p-4 w-fit bg-[#111828] rounded-2xl">
+            <h1 className="mb-2 text-lg font-semibold text-gray-200">
+                Watching {" "}
+                <span className="text-pink-400">{{topic}}</span>
+            </h1>
+            <JsonView value={jsonData} style={customTheme} />
+        </div>
 
     {% elif element.__class__.__name__ == 'Alive' %}
         <Alive />
     
     {% elif element.__class__.__name__ == 'Publish' %}
         <Publish brokerName={"{{element.ref.name}}"}/>
+
     {% elif element.__class__.__name__ == 'ReusableComponent' %}
         {{ render_element(element.ref.definition, live_state=live_state) }}
+        
     {% elif element.__class__.__name__ in ('Row', 'Column') %}
 
         <div className="{{ element.__class__.__name__.lower() }}">
