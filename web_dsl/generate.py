@@ -73,9 +73,8 @@ def generate(model_path, gen_path):
     # ========= Generate frontend files============
     # Prepare the output directories
     screens_dir = os.path.join(gen_path, "frontend", "src", "screens")
-    if os.path.exists(screens_dir):
-        subprocess.run(["rm", "-rf", screens_dir])
-    os.makedirs(screens_dir, exist_ok=True)
+    if not os.path.exists(screens_dir):
+        os.makedirs(screens_dir, exist_ok=True)
 
     # Generate the screen components
     for screen in model.screens:
