@@ -157,10 +157,12 @@ webpage Vroomitor
                 end
             endcol
             col
-                row
-                    Publish HomeBrokerPublisher
-                        broker: HomeBroker
-                endrow
+                Publish HomeBrokerPublisher
+                    broker: HomeBroker
+            endcol
+            col
+                Publish LabBrokerPublisher
+                    broker: LabRedis 
             endcol
         endrow
         useComponent infoNotification
