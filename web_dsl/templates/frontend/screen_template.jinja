@@ -7,6 +7,7 @@ import CustomLineChart from "../components/CustomLineChart";
 import Logs from "../components/Logs";
 import Publish from "../components/Publish";
 import Alive from "../components/Alive";
+import LiveNotification from "../components/LiveNotification";
 import { GaugeComponent } from "react-gauge-component";
 import JsonView from "@uiw/react-json-view";
 import { darkTheme } from "@uiw/react-json-view/dark";
@@ -34,7 +35,7 @@ const {{screen.name}} = () => {
     {# Generate state and WebSocket hooks for each live component #}
     {% for lc in live_components %}
 
-    {% if lc.definition.__class__.__name__ in ('LineChart', 'Logs', 'Alive')  %}
+    {% if lc.definition.__class__.__name__ in ('LineChart', 'Logs', 'Alive', 'Notification')  %}
         {% continue %}
     {% endif %}
 
@@ -46,26 +47,6 @@ const {{screen.name}} = () => {
     {% endif %}
     const [{{ lc.dataName }}, set{{ lc.dataName | capitalize }}] = useState("{{default_content}}");
 
-    {% if lc.definition.__class__.__name__ == 'Notification' %}
-    {% if lc.definition.type == 'info' %}
-        // Give a unique name to the notification function
-        const notify{{lc.definition.name | capitalize}} = () => toast.info({{ lc.dataName }});
-    {% elif lc.definition.type == 'warning' %}
-        const notify{{lc.definition.name | capitalize}} = () => toast.warning({{ lc.dataName }});
-    {% elif lc.definition.type == 'error' %}
-        const notify{{lc.definition.name | capitalize}} = () => toast.error({{ lc.dataName }});
-    {% elif lc.definition.type == 'success' %}
-        const notify{{lc.definition.name | capitalize}} = () => toast.success({{ lc.dataName }});
-    {% else %}
-        // Default case when type is not specified
-        const notify{{lc.definition.name | capitalize}} = () => toast({{ lc.dataName }});
-    {% endif %}
-    useEffect(() => {
-        if ({{ lc.dataName }} !== "") { // Only trigger if it has a value
-            notify{{lc.definition.name | capitalize}}();
-        }
-    }, [{{ lc.dataName }}]);
-    {% endif %}
 
     {# // WebSocket handler: Build an object based on the entity's attribute definitions. #}
     useWebsocket(ws, "{{ lc.topic }}", (msg) => {

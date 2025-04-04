@@ -84,6 +84,9 @@
     {% elif element.__class__.__name__ == 'Publish' %}
         <Publish brokerName={"{{element.ref.name}}"}/>
 
+    {% elif element.__class__.__name__ == 'Notification' %}
+        <LiveNotification type={ "{{ element.type }}" } topic={"{{live_parent.topic}}"} attribute={ {name: "{{live_parent.entity.attributes[0].name}}" , type: "{{live_parent.entity.attributes[0].__class__.__name__}}"} }/>
+
     {% elif element.__class__.__name__ == 'ReusableComponent' %}
         {{ render_element(element.ref.definition, live_state=live_state) }}
 
