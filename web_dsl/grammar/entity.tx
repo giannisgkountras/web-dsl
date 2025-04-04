@@ -5,6 +5,7 @@ EntitySource: (ref=[MessageBroker]);
 Entity:
     'Entity' name=ID
     'source:' source=EntitySource
+    'topic:' topic=STRING
     'attributes:' '-' attributes*=Attribute['-']
     ('description:' description=STRING)?
     'end'

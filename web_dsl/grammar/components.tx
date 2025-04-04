@@ -2,26 +2,17 @@ import entity
 import utils
 import communication
 
-// Define a generic Component that can be one of several types
-BasicComponent:
-    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer | Alive | Publish
-;
-
-// A live component that connects to a topic on a broker
-LiveComponent:
-    'LiveComponent'
-    (
-        ('topic:' topic=STRING)       
-        ('dataName:' dataName=STRING)
-        ('content:' definition=BasicComponent)
-        ('entity:' entity=[Entity|FQN])
-    )#
+Component:
+    'Component' name=ID
+    'type:' type=ComponentType
+    'refersTo:'  entity=[Entity] 
     'end'
 ;
 
+// 'schema:' attributes+=[Attribute|ID] (',' attributes+=[Attribute|ID])*
 
-Component:
-    BasicComponent | LiveComponent
+ComponentType:
+    Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer | Alive | Publish
 ;
 
 ReusableComponentDefinition:
@@ -34,12 +25,10 @@ ReusableComponent:
     'useComponent' ref=[ReusableComponentDefinition|ID]
 ;
 
-// A button with a name and text label
 Button:
     'Button' (name=ID)? content=STRING
 ;
 
-// A text field with a name and placeholder text
 Input:
     'Input' (name=ID)?
     (
@@ -53,25 +42,21 @@ InputType:
     'text' | 'password' | 'number' | 'email' | 'checkbox' | 'radio'
 ;
 
-// A label with a name and content
 Label:
     'Label' (name=ID)? 'content:' content=STRING
 ;
 
-// A form component with an action, method, and nested structural elements
 Form:
     'Form' (name=ID)?
     elements*=FormElement
     'endform'
 ;
 
-// A form element that can be either an input or a label
 FormElement:
     Input | Label | Button
 ;
 
 
-// An image with a name and source URL
 Image:
     'Image' (name=ID)?
     ( 
@@ -81,24 +66,20 @@ Image:
     )#
 ;
 
-// A header with content
 h1:
     'h1' (name=ID)? content=STRING
 ;
 
-// A smaller header with content
 h2:
     'h2' (name=ID)? content=STRING
 ;
 
-// A text with content
 p:
     'p' (name=ID)? content=STRING
 ;
 
-// A notification component
 Notification:
-    'Notification' name=ID
+    'Notification'
     ('type:' type=NotificationType)?
 ;
 
@@ -106,20 +87,19 @@ NotificationType:
     'info' | 'warning' | 'error' | 'success'
 ;
 
-// A line chart compoenent
 LineChart:
     'LineChart' (name=ID)? 
     'xLabel:' xLabel=STRING
     'yLabel:' yLabel=STRING
 ;
 
-// A table of live Logs
 Logs:
     'Logs' (name=ID)?
 ;
 
 Gauge:
-    'Gauge' (name=ID)?
+    'Gauge' 
+    'value:' value=[Attribute|ID]
 ;
 
 JsonViewer:
