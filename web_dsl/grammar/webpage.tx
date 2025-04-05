@@ -13,7 +13,7 @@ WebPage:
         (brokers+=MessageBroker)*
         (api=API)?
         (websocket=Websocket)?
-        (reusableComponents*=ReusableComponentDefinition)*
+        (reusableComponents*=Component)*
         (screens+=Screen)*
         (globalEntities*=Entity)*
     )#

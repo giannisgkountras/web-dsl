@@ -5,24 +5,18 @@ import communication
 Component:
     'Component' name=ID
     (
-        ('entity:'  entity=[Entity])
+        ('entity:'  entity=[Entity])?
         ('type:' type=ComponentType)
     )#
     'end'
 ;
 
+ComponentRef:
+    'use' ref=[Component]
+;
+
 ComponentType:
     Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer | Alive | Publish
-;
-
-ReusableComponentDefinition:
-    'DefineComponent' name=ID 
-    'as' definition = Component
-    'end'
-;
-
-ReusableComponent:
-    'useComponent' ref=[ReusableComponentDefinition|ID]
 ;
 
 Button:
@@ -67,15 +61,15 @@ Image:
 ;
 
 h1:
-    'h1' (name=ID)? content=STRING
+    'h1' content=STRING
 ;
 
 h2:
-    'h2' (name=ID)? content=STRING
+    'h2' content=STRING
 ;
 
 p:
-    'p' (name=ID)? content=STRING
+    'p' content=STRING
 ;
 
 Notification:

@@ -42,6 +42,10 @@ webpage Vroomitor
             - state: str
     end
 
+    Component title
+        type: h1 "Hello World"
+    end
+    
     Screen Dashboard
         title: "Dashboard"
         url: "/"
@@ -71,4 +75,6 @@ webpage Vroomitor
             type: Image
                 source: frame
         end
+
+        use title
     end
