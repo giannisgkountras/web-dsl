@@ -1,0 +1,28 @@
+{% macro render_element(element, row_parent=True) %}
+    {% if element.__class__.__name__ == 'Row' %}
+            {% if row_parent %}
+                <div className="row row-parent">
+            {% else %}
+                <div className="row row-child">
+            {% endif %}
+                {% for child in element.elements %}
+                    {{ render_element(child, row_parent=False) }}
+                {% endfor %}
+            </div>
+        
+    {% elif element.__class__.__name__ == 'Column'%}
+            <div className="column">
+                {% for child in element.elements %}
+                    {{ render_element(child, row_parent=False) }}
+                {% endfor %}
+            </div>
+    
+    {% elif element.__class__.__name__ == 'Component' %}
+        {% set type = element.type %}
+        {% set topic = element.entity.topic if element.entity else None%}
+        
+        {% if type=="Gauge"%}
+            <Gauge topic={" {{topic}} "} attribute={ {name: " {{element.value.name}} ", type: " {{element.value.__class__.__name__}} "  } />
+        {% endif %}
+    {% endif %}
+{% endmacro %}
