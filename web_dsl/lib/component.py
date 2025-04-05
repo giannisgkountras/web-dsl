@@ -134,3 +134,11 @@ class LineChart(ComponentType):
                 resolve_reference(item, ref_attr="yValues")
         else:
             resolve_reference(self, ref_attr="yValues")
+
+
+class Publish(ComponentType):
+    def __init__(self, parent=None, name=None, broker=None, topic=None, json=None):
+        super().__init__(parent, name)
+        self.broker = broker
+        self.topic = topic
+        self.json = json

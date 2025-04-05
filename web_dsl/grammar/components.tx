@@ -113,4 +113,8 @@ Alive:
 Publish:
     'Publish' (name=ID)?
     'broker:' ref=[MessageBroker]
+    (
+        ('topic:' topic=STRING)?
+        ('json:' json=STRING)?
+    )#
 ;
