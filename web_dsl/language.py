@@ -6,7 +6,7 @@ from textx import (
     get_children_of_type,
 )
 from os.path import join, dirname
-from .lib.component import Component, ComponentType, Gauge, Notification
+from .lib.component import Component, ComponentType, Gauge, Notification, Image
 
 # Map grammar rules to Python classes
 custom_classes = [
@@ -14,6 +14,7 @@ custom_classes = [
     ComponentType,
     Gauge,
     Notification,
+    Image,
     # Add other classes here
 ]
 

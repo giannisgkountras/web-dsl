@@ -30,6 +30,16 @@ webpage Vroomitor
         attributes:
             - jetson: float
             - rpi: float 
+            - laptop: float
+    end
+
+    Entity carInformation
+        source: HomeBroker
+        topic: "carinfo"
+        attributes:
+            - frame: str
+            - speed: float 
+            - state: str
     end
 
     Screen Dashboard
@@ -50,10 +60,15 @@ webpage Vroomitor
         end
 
         Component InfoNotification
+            entity: cpuMetrics 
             type: Notification
                     type: info
                     message: rpi
-            entity: cpuMetrics 
         end
 
+        Component Camera
+            entity: carInformation
+            type: Image
+                source: frame
+        end
     end

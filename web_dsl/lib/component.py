@@ -91,3 +91,11 @@ class Notification(ComponentType):
 
     def resolve_references(self):
         resolve_reference(self, ref_attr="message")
+
+
+class Image(ComponentType):
+    def __init__(self, parent=None, name=None, width=300, height=300, source=None):
+        super().__init__(parent, name)
+        self.width = width  # This could be a string or an expression
+        self.height = height
+        self.source = source

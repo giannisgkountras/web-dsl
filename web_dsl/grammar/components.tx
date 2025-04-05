@@ -11,8 +11,6 @@ Component:
     'end'
 ;
 
-// 'schema:' attributes+=[Attribute|ID] (',' attributes+=[Attribute|ID])*
-
 ComponentType:
     Button | Form | Image | h1 | h2 | p | Notification | LineChart | Logs | Gauge | JsonViewer | Alive | Publish
 ;
@@ -60,11 +58,11 @@ FormElement:
 
 
 Image:
-    'Image' (name=ID)?
+    'Image'
     ( 
         ('width:' width=INT)?
         ('height:' height=INT)?
-        ('source:' content=STRING)?
+        ('source:' source=[Attribute|ID])?
     )#
 ;
 
