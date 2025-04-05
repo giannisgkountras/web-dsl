@@ -32,14 +32,6 @@ webpage Vroomitor
             - rpi: float 
     end
 
-    Entity tempMetrics
-        source: HomeBroker
-        topic: "temp"
-        attributes:
-            - jetson: float
-            - rpi: float 
-    end
-
     Screen Dashboard
         title: "Dashboard"
         url: "/"
@@ -57,10 +49,5 @@ webpage Vroomitor
             refersTo: cpuMetrics
         end
 
-        Component JetsonGaugeTemp
-            type: Gauge
-                    value: jetson
-            refersTo: tempMetrics
-        end
 
     end
