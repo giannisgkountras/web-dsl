@@ -5,7 +5,7 @@ import communication
 Component:
     'Component' name=ID
     'type:' type=ComponentType
-    'refersTo:'  entity=[Entity] 
+    'entity:'  entity=[Entity] 
     'end'
 ;
 

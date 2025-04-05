@@ -39,14 +39,14 @@ webpage Vroomitor
         Component JetsonGaugeCPU
             type: Gauge
                     value: jetson
-            refersTo: cpuMetrics
+            entity: cpuMetrics
         end
 
 
         Component RPIGaugeCPU
             type: Gauge
                     value: rpi
-            refersTo: cpuMetrics
+            entity: cpuMetrics
         end
 
 
