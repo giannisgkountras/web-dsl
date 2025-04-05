@@ -28,6 +28,7 @@ webpage Vroomitor
         source: HomeBroker
         topic: "cpu"
         attributes:
+            - timestamp: int
             - jetson: float
             - rpi: float 
             - laptop: float
@@ -45,7 +46,7 @@ webpage Vroomitor
     Component title
         type: h1 "Hello World"
     end
-    
+
     Screen Dashboard
         title: "Dashboard"
         url: "/"
@@ -76,5 +77,15 @@ webpage Vroomitor
                 source: frame
         end
 
+        Component CPUChart
+            entity: cpuMetrics
+            type: LineChart
+                xLabel: "X Axis Test"
+                yLabel: "Y Axis Test"
+                xValue: timestamp
+                yValues: jetson, rpi
+        end
+
         use title
+        
     end

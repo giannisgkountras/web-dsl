@@ -83,9 +83,13 @@ NotificationType:
 ;
 
 LineChart:
-    'LineChart' (name=ID)? 
-    'xLabel:' xLabel=STRING
-    'yLabel:' yLabel=STRING
+    'LineChart' 
+    (
+        ('xLabel:' xLabel=STRING)
+        ('yLabel:' yLabel=STRING)
+        ('xValue:' xValue=[Attribute|ID])
+        ('yValues:' yValues+=[Attribute|ID][','])
+    )#
 ;
 
 Logs:

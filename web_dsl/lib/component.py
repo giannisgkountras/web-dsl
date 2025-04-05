@@ -99,3 +99,38 @@ class Image(ComponentType):
         self.width = width  # This could be a string or an expression
         self.height = height
         self.source = source
+
+    def resolve_references(self):
+        resolve_reference(self, ref_attr="source")
+
+
+class Alive(ComponentType):
+    def __init__(self, parent=None, name=None, timeout=5000):
+        super().__init__(parent, name)
+        self.timeout = timeout
+
+
+class LineChart(ComponentType):
+    def __init__(
+        self,
+        parent=None,
+        name=None,
+        xLabel="X-Axis",
+        yLabel="Y-Axis",
+        xValue=None,
+        yValues=None,
+    ):
+        super().__init__(parent, name)
+        self.xLabel = xLabel
+        self.yLabel = yLabel
+        self.xValue = xValue
+        self.yValues = yValues
+
+    def resolve_references(self):
+        resolve_reference(self, ref_attr="xValue")
+        # Assuming yValue is a list of references, we might need to resolve each one
+        if isinstance(self.yValues, list):
+            for item in self.yValues:
+                resolve_reference(item, ref_attr="yValues")
+        else:
+            resolve_reference(self, ref_attr="yValues")
