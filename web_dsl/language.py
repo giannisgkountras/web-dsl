@@ -6,13 +6,14 @@ from textx import (
     get_children_of_type,
 )
 from os.path import join, dirname
-from .lib.component import Component, ComponentType, Gauge
+from .lib.component import Component, ComponentType, Gauge, Notification
 
 # Map grammar rules to Python classes
 custom_classes = [
     Component,
     ComponentType,
     Gauge,
+    Notification,
     # Add other classes here
 ]
 

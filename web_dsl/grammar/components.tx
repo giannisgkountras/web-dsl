@@ -4,8 +4,10 @@ import communication
 
 Component:
     'Component' name=ID
-    'type:' type=ComponentType
-    'entity:'  entity=[Entity] 
+    (
+        ('entity:'  entity=[Entity])
+        ('type:' type=ComponentType)
+    )#
     'end'
 ;
 
@@ -81,6 +83,7 @@ p:
 Notification:
     'Notification'
     ('type:' type=NotificationType)?
+    'message:' message=[Attribute|ID]
 ;
 
 NotificationType:

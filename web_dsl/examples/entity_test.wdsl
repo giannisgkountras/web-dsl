@@ -37,17 +37,23 @@ webpage Vroomitor
         url: "/"
 
         Component JetsonGaugeCPU
+            entity: cpuMetrics
             type: Gauge
                     value: jetson
-            entity: cpuMetrics
         end
 
 
         Component RPIGaugeCPU
+            entity: cpuMetrics
             type: Gauge
                     value: rpi
-            entity: cpuMetrics
         end
 
+        Component InfoNotification
+            type: Notification
+                    type: info
+                    message: rpi
+            entity: cpuMetrics 
+        end
 
     end
