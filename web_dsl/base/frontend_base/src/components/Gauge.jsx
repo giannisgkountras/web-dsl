@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
@@ -6,8 +6,8 @@ import { GaugeComponent } from "react-gauge-component";
 
 const Gauge = ({ topic, attribute }) => {
     const ws = useContext(WebsocketContext);
-    const [currentValue, setCurrentValue] = useState();
-
+    const [currentValue, setCurrentValue] = useState(0);
+    console.log(currentValue);
     useWebsocket(ws, topic, (msg) => {
         try {
             setCurrentValue(

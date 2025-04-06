@@ -51,6 +51,8 @@ webpage Vroomitor
         title: "Dashboard"
         url: "/"
 
+        row
+
         Component JetsonGaugeCPU
             entity: cpuMetrics
             type: Gauge
@@ -86,6 +88,18 @@ webpage Vroomitor
                 yValues: jetson, rpi
         end
 
-        use title
+        Component MyPublisher
+            type: Publish
+                broker: HomeBroker
+        end
+
+            row
+            endrow
+            row
+                col
+                    use title
+                endcol
+            endrow
+        endrow
         
     end

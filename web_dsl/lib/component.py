@@ -51,6 +51,7 @@ def resolve_reference(
 
 class Component:
     def __init__(self, parent=None, name=None, entity=None, type=None):
+        self.isComponent = True
         self.parent = parent
         self.name = name
         self.entity = entity  # This should point to an Entity
@@ -73,7 +74,7 @@ class ComponentType:
 
 
 class Gauge(ComponentType):
-    def __init__(self, parent=None, name=None, value=None):
+    def __init__(self, parent=None, name="Gauge", value=None):
         super().__init__(parent, name)
         self.value = value  # Will be resolved to an Attribute
 
@@ -85,7 +86,7 @@ class Gauge(ComponentType):
 
 
 class Notification(ComponentType):
-    def __init__(self, parent=None, name=None, type="info", message=None):
+    def __init__(self, parent=None, name="Notification", type="info", message=None):
         super().__init__(parent, name)
         self.message = message  # This could be a string or an expression
 
@@ -94,7 +95,7 @@ class Notification(ComponentType):
 
 
 class Image(ComponentType):
-    def __init__(self, parent=None, name=None, width=300, height=300, source=None):
+    def __init__(self, parent=None, name="Image", width=300, height=300, source=None):
         super().__init__(parent, name)
         self.width = width  # This could be a string or an expression
         self.height = height
@@ -105,7 +106,7 @@ class Image(ComponentType):
 
 
 class Alive(ComponentType):
-    def __init__(self, parent=None, name=None, timeout=5000):
+    def __init__(self, parent=None, name="Alive", timeout=5000):
         super().__init__(parent, name)
         self.timeout = timeout
 
@@ -114,7 +115,7 @@ class LineChart(ComponentType):
     def __init__(
         self,
         parent=None,
-        name=None,
+        name="LineChart",
         xLabel="X-Axis",
         yLabel="Y-Axis",
         xValue=None,
@@ -137,7 +138,7 @@ class LineChart(ComponentType):
 
 
 class Publish(ComponentType):
-    def __init__(self, parent=None, name=None, broker=None, topic=None, json=None):
+    def __init__(self, parent=None, name="Publish", broker=None, topic=None, json=None):
         super().__init__(parent, name)
         self.broker = broker
         self.topic = topic

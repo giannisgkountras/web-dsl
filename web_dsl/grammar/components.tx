@@ -93,7 +93,7 @@ LineChart:
 ;
 
 Logs:
-    'Logs' (name=ID)?
+    'Logs'
 ;
 
 Gauge:
@@ -102,16 +102,16 @@ Gauge:
 ;
 
 JsonViewer:
-    'JsonViewer' (name=ID)?
+    'JsonViewer'
 ;
 
 Alive:
-    'Alive' (name=ID)?
+    'Alive'
     'timeout:' timeout=INT
 ;
 
 Publish:
-    'Publish' (name=ID)?
+    'Publish'
     'broker:' ref=[MessageBroker]
     (
         ('topic:' topic=STRING)?
