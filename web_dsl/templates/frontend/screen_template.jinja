@@ -1,18 +1,11 @@
 {%import 'component.jinja' as component_macros%}
-import { useState, useContext, useEffect } from "react";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { WebsocketContext } from "../context/WebsocketContext";
-import { toast } from 'react-toastify';
 import CustomLineChart from "../components/CustomLineChart"; 
 import LiveTable from "../components/LiveTable";
 import Publish from "../components/Publish";
 import Alive from "../components/Alive";
 import Gauge from "../components/Gauge";
-import JsonViewer from "../components/JsonViewer";
 import CustomImage from "../components/CustomImage";
 import LiveNotification from "../components/LiveNotification";
-import { darkTheme } from "@uiw/react-json-view/dark";
-import convertTypeValue from "../utils/convertTypeValue";
 
 const {{screen.name}} = () => {
      return (

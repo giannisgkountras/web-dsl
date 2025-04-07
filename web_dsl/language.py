@@ -17,7 +17,7 @@ from .lib.component import (
     Publish,
     LiveTable,
     JsonViewer,
-    h1,
+    Text,
 )
 
 # Map grammar rules to Python classes
@@ -32,7 +32,7 @@ custom_classes = [
     Publish,
     LiveTable,
     JsonViewer,
-    h1,
+    Text,
     # Add other classes here
 ]
 

@@ -164,7 +164,7 @@ class JsonViewer(ComponentType):
         self.json = json
 
 
-class h1(ComponentType):
-    def __init__(self, parent=None, name="h1", content=None):
+class Text(ComponentType):
+    def __init__(self, parent=None, name="Text", content=None):
         super().__init__(parent, name)
         self.content = content

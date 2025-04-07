@@ -19,7 +19,10 @@ const CustomImage = ({ topic, width, height, source }) => {
     });
     return (
         <img
-            className={`w-[${width}px] h-[${height}px]`}
+            style={{
+                width: `${width}px`,
+                height: `${height}px`
+            }}
             src={`data:image/png;base64,${frame}`}
         ></img>
     );

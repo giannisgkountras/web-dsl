@@ -43,60 +43,87 @@ webpage Vroomitor
             - state: str
     end
 
-    Component title
-        type: h1 "Hello World"
+    Entity allLogsRedis
+        source: LabRedis
+        topic: "alllogs"
+        attributes:
+            - error: str
+            - info: str
+            - warning: str
     end
 
+    Component title
+        type: Text "Hello World"
+    end
+
+    Component JetsonGaugeCPU
+        entity: cpuMetrics
+        type: Gauge
+                value: jetson
+    end
+
+    Component RPIGaugeCPU
+        entity: cpuMetrics
+        type: Gauge
+        value: rpi
+    end
+
+    Component ErrorNotification
+        entity: allLogsRedis 
+        type: Notification
+            type: error
+            message: error
+    end
+
+    Component Camera
+        entity: carInformation
+        type: Image
+            width:  450
+            height: 300
+            source: frame
+    end
+
+    Component CPUChart
+        entity: cpuMetrics
+        type: LineChart
+            xLabel: "Time"
+            yLabel: "CPU Usage"
+            xValue: timestamp
+            yValues: jetson, rpi
+    end
     Screen Dashboard
         title: "Dashboard"
         url: "/"
 
+        use ErrorNotification
         row
             col 
                 row
-                    Component JetsonGaugeCPU
-                    entity: cpuMetrics
-                    type: Gauge
-                            value: jetson
-                    end
+                    use JetsonGaugeCPU
                 endrow
                 row
-                    Component RPIGaugeCPU
-                    entity: cpuMetrics
-                    type: Gauge
-                            value: rpi
-                    end
+                   use RPIGaugeCPU 
                 endrow
             endcol
-            Component InfoNotification
-                entity: carInformation 
-                type: Notification
-                        type: info
-                        message: state
-            end
+           
             col
-                Component Camera
-                    entity: carInformation
-                    type: Image
-                        source: frame
-                end
+                use Camera     
             endcol
             col
-                Component CPUChart
-                    entity: cpuMetrics
-                    type: LineChart
-                        xLabel: "X Axis Test"
-                        yLabel: "Y Axis Test"
-                        xValue: timestamp
-                        yValues: jetson, rpi
-                end
+                use CPUChart
             endcol
         endrow
         row
             col
-                Component MyPublisher
+                Component MQTTPublisher
                     type: Publish
                         broker: HomeBroker
+                end
+            endcol
+            col
+                Component RedisPublisher
+                    type: Publish
+                        broker: LabRedis
                 end
             endcol
             col

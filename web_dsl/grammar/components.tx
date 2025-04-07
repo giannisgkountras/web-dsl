@@ -16,7 +16,7 @@ ComponentRef:
 ;
 
 ComponentType:
-    Button | Form | Image | h1 | h2 | p | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish
+    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish
 ;
 
 Button:
@@ -60,16 +60,8 @@ Image:
     )#
 ;
 
-h1:
-    'h1' content=STRING
-;
-
-h2:
-    'h2' content=STRING
-;
-
-p:
-    'p' content=STRING
+Text:
+    'Text' content=STRING
 ;
 
 Notification:
