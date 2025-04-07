@@ -96,6 +96,7 @@ Gauge:
 
 JsonViewer:
     'JsonViewer'
+    ('attributes:' attributes+=[Attribute|ID][','])?
 ;
 
 Alive:

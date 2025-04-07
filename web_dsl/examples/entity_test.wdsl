@@ -91,6 +91,12 @@ webpage Vroomitor
             xValue: timestamp
             yValues: jetson, rpi
     end
+
+    Component RedisJsonViewer
+        entity: allLogsRedis
+        type: JsonViewer
+    end
+
     Screen Dashboard
         title: "Dashboard"
         url: "/"
@@ -127,6 +133,9 @@ webpage Vroomitor
                 end
             endcol
             col
+                row
+                    use RedisJsonViewer
+                endrow
                 row
                     use title
                 endrow

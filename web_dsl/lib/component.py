@@ -159,9 +159,11 @@ class LiveTable(ComponentType):
 
 
 class JsonViewer(ComponentType):
-    def __init__(self, parent=None, name="JsonViewer", json=None):
+    def __init__(self, parent=None, name="JsonViewer", attributes=None):
         super().__init__(parent, name)
-        self.json = json
+        self.attributes = attributes
+
+        resolve_reference(self, ref_attr="attributes")
 
 
 class Text(ComponentType):
