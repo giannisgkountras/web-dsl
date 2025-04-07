@@ -2,6 +2,7 @@ import screens
 import components
 import communication
 import entity
+import utils
 
 WebPage:
     'webpage' name=ID 
@@ -18,4 +19,5 @@ WebPage:
         (globalEntities*=Entity)*
     )#
 ;
+
 

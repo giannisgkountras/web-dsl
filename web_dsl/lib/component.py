@@ -12,7 +12,7 @@ def resolve_reference(
     - target_item_attr: the attribute of items in that collection used for matching (default "name")
 
     This method looks for an object reference inside self.<ref_attr> that has an attribute 'obj_name'.
-    It then finds the parent component's 'refersTo' entity and searches its target_collection for an item
+    It then finds the parent component's entity and searches its target_collection for an item
     where the target_item_attr equals the ref's obj_name. If found, it replaces self.<ref_attr> with that item.
     """
     ref = getattr(self, ref_attr, None)
@@ -21,11 +21,11 @@ def resolve_reference(
 
     ref_name = ref.obj_name
     parent = getattr(self, "parent", None)
-    if not parent or not getattr(parent, "refersTo", None):
+    if not parent or not getattr(parent, "entity", None):
         raise TextXSemanticError(
-            f"Component '{getattr(parent, 'name', 'unknown')}' has no refersTo entity defined"
+            f"Component '{getattr(parent, 'name', 'unknown')}' has no entity defined"
         )
-    entity = parent.refersTo
+    entity = parent.entity
 
     if not hasattr(entity, target_collection_attr):
         raise TextXSemanticError(
@@ -80,7 +80,7 @@ class Gauge(ComponentType):
 
     def resolve_references(self):
         # Here, we assume that Gauge's 'value' should resolve from the parent's
-        # refersTo entity's attributes. For a different component, you might
+        # entity's attributes. For a different component, you might
         # pass different parameters (e.g. 'message', 'price', etc.).
         resolve_reference(self)
 

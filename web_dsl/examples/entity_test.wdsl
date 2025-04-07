@@ -38,6 +38,7 @@ webpage Vroomitor
         source: HomeBroker
         topic: "carinfo"
         attributes:
+            - rpi: int
             - frame: str
             - speed: float 
             - state: str
@@ -96,6 +97,8 @@ webpage Vroomitor
         entity: allLogsRedis
         type: JsonViewer
     end
+
+    // this is a comment test mpla mpla
 
     Screen Dashboard
         title: "Dashboard"
