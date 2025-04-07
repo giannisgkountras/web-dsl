@@ -88,7 +88,8 @@ class Gauge(ComponentType):
 class Notification(ComponentType):
     def __init__(self, parent=None, name="Notification", type="info", message=None):
         super().__init__(parent, name)
-        self.message = message  # This could be a string or an expression
+        self.type = type
+        self.message = message
 
     def resolve_references(self):
         resolve_reference(self, ref_attr="message")
@@ -97,7 +98,7 @@ class Notification(ComponentType):
 class Image(ComponentType):
     def __init__(self, parent=None, name="Image", width=300, height=300, source=None):
         super().__init__(parent, name)
-        self.width = width  # This could be a string or an expression
+        self.width = width
         self.height = height
         self.source = source
 
@@ -143,3 +144,27 @@ class Publish(ComponentType):
         self.broker = broker
         self.topic = topic
         self.json = json
+
+
+class LiveTable(ComponentType):
+    def __init__(self, parent=None, name="LiveTable", columns=None):
+        super().__init__(parent, name)
+        self.columns = columns  # This could be a list of Column objects
+
+        if isinstance(self.columns, list):
+            for item in self.columns:
+                resolve_reference(item, ref_attr="columns")
+        else:
+            resolve_reference(self, ref_attr="columns")
+
+
+class JsonViewer(ComponentType):
+    def __init__(self, parent=None, name="JsonViewer", json=None):
+        super().__init__(parent, name)
+        self.json = json
+
+
+class h1(ComponentType):
+    def __init__(self, parent=None, name="h1", content=None):
+        super().__init__(parent, name)
+        self.content = content

@@ -4,20 +4,13 @@ import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from "react-toastify";
 import convertTypeValue from "../utils/convertTypeValue";
 
-const Alive = ({ topic, attributes, timeout }) => {
+const Alive = ({ topic, timeout }) => {
     const ws = useContext(WebsocketContext);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [status, setStatus] = useState("Offline");
 
     // When a new message is received, build an object based on the entity's attributes.
     useWebsocket(ws, topic, (msg) => {
-        let newData = {};
-        attributes.forEach((attr) => {
-            newData[attr.name.toLowerCase()] = convertTypeValue(
-                msg[attr.name],
-                attr.type
-            );
-        });
         try {
             const now = new Date();
             setStatus("Active");

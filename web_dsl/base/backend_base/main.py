@@ -71,9 +71,13 @@ async def main():
     broker_threads = []
 
     for broker_info in broker_configs:
-        topics = []
-        for topic in broker_info.get("topics", []):
-            topics.append(topic.get("topic"))
+        raw_topics = (
+            broker_info.get("topics") or []
+        )  # this ensures it's a list, even if None
+        topics = [topic.get("topic") for topic in raw_topics if topic.get("topic")]
+        if not topics:
+            continue
+
         try:
             # Attempt to create a broker client
             broker_client = BrokerCommlibClient(

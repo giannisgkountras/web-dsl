@@ -14,6 +14,10 @@ from .lib.component import (
     Image,
     Alive,
     LineChart,
+    Publish,
+    LiveTable,
+    JsonViewer,
+    h1,
 )
 
 # Map grammar rules to Python classes
@@ -25,6 +29,10 @@ custom_classes = [
     Image,
     Alive,
     LineChart,
+    Publish,
+    LiveTable,
+    JsonViewer,
+    h1,
     # Add other classes here
 ]
 

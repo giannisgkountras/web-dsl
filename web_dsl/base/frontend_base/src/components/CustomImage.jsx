@@ -2,16 +2,14 @@ import React, { useState, useContext } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
-import { GaugeComponent } from "react-gauge-component";
-
-const Gauge = ({ topic, attribute }) => {
+import placeholder from "../assets/placeholderimage";
+const CustomImage = ({ topic, width, height, source }) => {
     const ws = useContext(WebsocketContext);
-    const [currentValue, setCurrentValue] = useState(0);
+    const [frame, setFrame] = useState(placeholder);
+
     useWebsocket(ws, topic, (msg) => {
         try {
-            setCurrentValue(
-                convertTypeValue(msg[attribute.name], attribute.type)
-            );
+            setFrame(convertTypeValue(msg[source.name], source.type));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -19,7 +17,12 @@ const Gauge = ({ topic, attribute }) => {
             console.error("Error updating status:", error);
         }
     });
-    return <GaugeComponent value={currentValue} />;
+    return (
+        <img
+            className={`w-[${width}px] h-[${height}px]`}
+            src={`data:image/png;base64,${frame}`}
+        ></img>
+    );
 };
 
-export default Gauge;
+export default CustomImage;

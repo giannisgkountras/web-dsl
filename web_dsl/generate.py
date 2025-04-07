@@ -1,7 +1,8 @@
 import os
 import subprocess
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
+import traceback
 
 # Set up the Jinja2 environment and load templates
 frontend_env = Environment(
@@ -65,7 +66,11 @@ def generate(model_path, gen_path):
 
     # Generate the screen components
     for screen in model.screens:
-        html_content = screen_template.render(screen=screen)
+        try:
+            html_content = screen_template.render(screen=screen)
+        except TemplateError as e:
+            print("Jinja2 Template Error:", e)
+            traceback.print_exc()
         output_file = os.path.join(screens_dir, f"{screen.name}.jsx")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)

@@ -52,54 +52,72 @@ webpage Vroomitor
         url: "/"
 
         row
-
-        Component JetsonGaugeCPU
-            entity: cpuMetrics
-            type: Gauge
-                    value: jetson
-        end
-
-
-        Component RPIGaugeCPU
-            entity: cpuMetrics
-            type: Gauge
-                    value: rpi
-        end
-
-        Component InfoNotification
-            entity: cpuMetrics 
-            type: Notification
-                    type: info
-                    message: rpi
-        end
-
-        Component Camera
-            entity: carInformation
-            type: Image
-                source: frame
-        end
-
-        Component CPUChart
-            entity: cpuMetrics
-            type: LineChart
-                xLabel: "X Axis Test"
-                yLabel: "Y Axis Test"
-                xValue: timestamp
-                yValues: jetson, rpi
-        end
-
-        Component MyPublisher
-            type: Publish
-                broker: HomeBroker
-        end
-
-            row
-            endrow
-            row
-                col
+            col 
+                row
+                    Component JetsonGaugeCPU
+                    entity: cpuMetrics
+                    type: Gauge
+                            value: jetson
+                    end
+                endrow
+                row
+                    Component RPIGaugeCPU
+                    entity: cpuMetrics
+                    type: Gauge
+                            value: rpi
+                    end
+                endrow
+            endcol
+            Component InfoNotification
+                entity: carInformation 
+                type: Notification
+                        type: info
+                        message: state
+            end
+            col
+                Component Camera
+                    entity: carInformation
+                    type: Image
+                        source: frame
+                end
+            endcol
+            col
+                Component CPUChart
+                    entity: cpuMetrics
+                    type: LineChart
+                        xLabel: "X Axis Test"
+                        yLabel: "Y Axis Test"
+                        xValue: timestamp
+                        yValues: jetson, rpi
+                end
+            endcol
+        endrow
+        row
+            col
+                Component MyPublisher
+                    type: Publish
+                        broker: HomeBroker
+                end
+            endcol
+            col
+                row
                     use title
-                endcol
-            endrow
+                endrow
+                row
+                    Component cpuAlive
+                        entity: cpuMetrics
+                        type: Alive
+                            timeout: 5000
+                    end
+                endrow
+            endcol
+            col
+                Component myLiveTable
+                    entity: cpuMetrics
+                    type: LiveTable
+                        columns: jetson, rpi, laptop
+                end
+            endcol
         endrow
         
     end

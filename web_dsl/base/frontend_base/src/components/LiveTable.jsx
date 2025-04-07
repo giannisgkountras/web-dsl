@@ -3,7 +3,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useEffect, useRef, useState } from "react";
 import convertTypeValue from "../utils/convertTypeValue";
 
-const Logs = ({ topic, attributes }) => {
+const LiveTable = ({ topic, attributes }) => {
     const [logs, setLogs] = useState([]);
 
     const ws = useContext(WebsocketContext);
@@ -64,4 +64,4 @@ const Logs = ({ topic, attributes }) => {
     );
 };
 
-export default Logs;
+export default LiveTable;

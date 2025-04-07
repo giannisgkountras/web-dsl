@@ -3,7 +3,7 @@ import ObjectEditor from "./ObjectEditor";
 import { IoSend } from "react-icons/io5";
 import { publish } from "../api/publish";
 
-const Publish = ({ brokerName }) => {
+const Publish = ({ brokerName, destinationTopic = None, json = None }) => {
     const [dataToPublish, setDataToPublish] = useState({ key: "value" });
     const [topic, setTopic] = useState("");
     const [jsonError, setJsonError] = useState(null);
