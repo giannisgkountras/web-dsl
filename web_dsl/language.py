@@ -69,7 +69,7 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
     )
     # Register the reference resolver
 
-    metamodel.register_model_processor(validate_model)
+    metamodel.register_model_processor(resolve_references_post_build)
     return metamodel
 
 
@@ -77,36 +77,34 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
 #     pass
 
 
-def validate_entities(model):
-    for entity in model.globalEntities:
-        attr_names = set()
-        for attr in entity.attributes:
-            print(f"Validating attribute: {attr.name}")
-            if attr.name in attr_names:
-                raise TextXSemanticError(
-                    f"Duplicate attribute name '{attr.name}' in entity '{entity.name}'"
-                )
-            attr_names.add(attr.name)
-    for screen in model.screens:
-        for entity in screen.localEntities:
-            attr_names = set()
-            for attr in entity.attributes:
-                print(f"Validating attribute: {attr.name}")
-                if attr.name in attr_names:
-                    raise TextXSemanticError(
-                        f"Duplicate attribute name '{attr.name}' in entity '{entity.name}'"
-                    )
-                attr_names.add(attr.name)
+# def validate_entities(model):
+#     for entity in model.globalEntities:
+#         attr_names = set()
+#         for attr in entity.attributes:
+#             print(f"Validating attribute: {attr.name}")
+#             if attr.name in attr_names:
+#                 raise TextXSemanticError(
+#                     f"Duplicate attribute name '{attr.name}' in entity '{entity.name}'"
+#                 )
+#             attr_names.add(attr.name)
+#     for screen in model.screens:
+#         for entity in screen.localEntities:
+#             attr_names = set()
+#             for attr in entity.attributes:
+#                 print(f"Validating attribute: {attr.name}")
+#                 if attr.name in attr_names:
+#                     raise TextXSemanticError(
+#                         f"Duplicate attribute name '{attr.name}' in entity '{entity.name}'"
+#                     )
+#                 attr_names.add(attr.name)
 
 
-def validate_model(model):
-    """Validates the model."""
-    # Check for duplicate attribute names in global entities
-    validate_entities(model)
-    resolve_references_post_build(model)
-
-    # Add more validation logic as needed
-    # For example, check for required attributes, etc.
+# def validate_model(model):
+#     """Validates the model."""
+#     pass
+# Check for duplicate attribute names in global entities
+# Add more validation logic as needed
+# For example, check for required attributes, etc.
 
 
 def build_model(model_path: str):

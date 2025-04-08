@@ -2,8 +2,9 @@ import asyncio
 import threading
 import logging
 import uvicorn
+import httpx
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
@@ -124,6 +125,17 @@ class PublishRequest(BaseModel):
     topic: str
 
 
+class RESTCallRequest(BaseModel):
+    host: str
+    port: int
+    path: str
+    base_url: str
+    method: str
+    headers: dict
+    params: dict
+    body: dict
+
+
 # Publish API endpoint
 @app.post("/publish")
 async def publish_message(request: PublishRequest):
@@ -143,6 +155,44 @@ async def publish_message(request: PublishRequest):
                 return {"status": "error", "message": str(e)}
 
     return {"status": "error", "message": f"Broker {broker} not found"}
+
+
+# Endpoint to make rest calls
+@app.post("/restcall")
+async def rest_call(request: RESTCallRequest):
+    """Make a REST call to a specified endpoint."""
+    url = f"{request.base_url}:{request.port}{request.path}"
+    logging.info(f"Making {request.method} request to {url}")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method=request.method.upper(),
+                url=url,
+                headers=request.headers,
+                params=request.params,
+                json=request.body,  # use `data=` if it's form-encoded or raw
+            )
+
+        return {
+            "status_code": response.status_code,
+            "headers": dict(response.headers),
+            "body": (
+                response.json()
+                if response.headers.get("content-type", "").startswith(
+                    "application/json"
+                )
+                else response.text
+            ),
+        }
+
+    except httpx.RequestError as e:
+        logging.error(f"HTTP request failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Request error: {str(e)}")
+
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Unexpected error occurred.")
 
 
 if __name__ == "__main__":

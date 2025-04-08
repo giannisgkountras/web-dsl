@@ -2,11 +2,15 @@ MessageBroker:
     AMQPBroker | MQTTBroker | RedisBroker
 ;
 
-Authentication: AuthPlain;
+Authentication: AuthPlain | AuthApiKey;
 
 AuthPlain:
     'username' ':' username=STRING
     'password' ':' password=STRING
+;
+
+AuthApiKey:
+    'key' ':' key=STRING
 ;
 
 MQTTBroker:
@@ -60,4 +64,30 @@ API:
         ('auth:' auth=Authentication)?
     )#
     'end'
+;
+
+RESTEndpoint:
+    'RESTEndpoint' name=ID
+    (
+        ('verb:' verb=RESTVerb)
+        ('host:' host=STRING)
+        ('port:' port=INT)
+        ('path:' path=STRING)
+        ('base_url:' baseUrl=STRING)?
+        (
+        'params:'
+            ('query:' query=STRING)?
+            ('path:' path=STRING)?
+            ('body:' body=STRING)?
+        ('headers:' headers=STRING)?
+        )?
+    )#
+    'end'
+;
+
+RESTVerb:
+    'GET'       |
+    'POST'      |
+    'PUT'       |
+    'DELETE'
 ;

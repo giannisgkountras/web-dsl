@@ -56,6 +56,15 @@ class Component:
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
+        self.sourceOfContent = (
+            "broker"
+            if entity.source.ref.__class__.__name__ == "MessageBroker"
+            else (
+                "rest"
+                if entity.source.ref.__class__.__name__ == "RESTEndpoint"
+                else "unknown"
+            )
+        )
 
     def __str__(self):
         return self.name

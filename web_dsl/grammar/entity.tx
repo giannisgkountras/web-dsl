@@ -1,11 +1,11 @@
 import communication
 
-EntitySource: (ref=[MessageBroker]);
+EntitySource: (ref=[MessageBroker]) | (ref=[RESTEndpoint]);
 
 Entity:
     'Entity' name=ID
     'source:' source=EntitySource
-    'topic:' topic=STRING
+    ('topic:' topic=STRING)?
     'attributes:' '-' attributes*=Attribute['-']
     ('description:' description=STRING)?
     'end'
