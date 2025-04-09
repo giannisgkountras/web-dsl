@@ -17,6 +17,7 @@ from utils import load_config
 load_dotenv()
 
 API_KEY = os.getenv("API_KEY", "API_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "SECRET_KEY")
 api_keys = [API_KEY]
 api_key_header = APIKeyHeader(name="X-API-Key")
 
@@ -82,7 +83,9 @@ async def main():
 
     # Create a WebSocket server instance
     ws_server = WebSocketServer(
-        host=ws_config.get("host", "0.0.0.0"), port=ws_config.get("port", 8765)
+        host=ws_config.get("host", "0.0.0.0"),
+        port=ws_config.get("port", 8765),
+        secret_key=SECRET_KEY,
     )
 
     # Extract multiple broker connection settings

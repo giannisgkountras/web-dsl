@@ -111,8 +111,9 @@ def generate(model_path, gen_path):
 
     # Generate .env frontend file
     api_key = generate_api_key()
+    secret_key = generate_api_key()
     env_frontend_content = dot_env_frontend_template.render(
-        api=model.api, api_key=api_key
+        api=model.api, api_key=api_key, secret_key=secret_key
     )
     env_frontend_output_file = os.path.join(gen_path, "frontend", ".env")
     with open(env_frontend_output_file, "w", encoding="utf-8") as f:
@@ -122,7 +123,9 @@ def generate(model_path, gen_path):
     # ========= Generate backend files============
 
     # Generate .env backend file
-    env_backend_content = dot_env_backend_template.render(api_key=api_key)
+    env_backend_content = dot_env_backend_template.render(
+        api_key=api_key, secret_key=secret_key
+    )
     env_backend_output_file = os.path.join(gen_path, "backend", ".env")
     with open(env_backend_output_file, "w", encoding="utf-8") as f:
         f.write(env_backend_content)
