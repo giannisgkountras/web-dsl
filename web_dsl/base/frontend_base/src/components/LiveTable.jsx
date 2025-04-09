@@ -7,7 +7,6 @@ const LiveTable = ({ topic, attributes }) => {
     const [logs, setLogs] = useState([]);
 
     const ws = useContext(WebsocketContext);
-    const scrollRef = useRef(null);
 
     // Handle incoming WebSocket messages using the 'topic' prop
     useWebsocket(ws, topic, (msg) => {
@@ -21,13 +20,6 @@ const LiveTable = ({ topic, attributes }) => {
         });
         setLogs((prevLogs) => [...prevLogs, newData]);
     });
-
-    // Auto-scroll to the bottom when new logs are added
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-        }
-    }, [logs]);
 
     // Utility function to capitalize attribute names for display
     const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);
@@ -45,8 +37,8 @@ const LiveTable = ({ topic, attributes }) => {
                 </div>
             </div>
             {/* Scrollable Data */}
-            <div ref={scrollRef} className="w-full max-h-80 overflow-y-auto">
-                {logs.map((log, index) => (
+            <div className="w-full max-h-80 overflow-y-auto">
+                {[...logs].reverse().map((log, index) => (
                     <div
                         key={index}
                         className={`grid grid-cols-[repeat(auto-fit,minmax(100px,1fr))] gap-4 p-2 text-center 

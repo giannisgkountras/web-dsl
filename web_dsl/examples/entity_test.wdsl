@@ -113,7 +113,13 @@ webpage Vroomitor
                    use RPIGaugeCPU 
                 endrow
             endcol
-           
+            col
+                Component cpuLogs
+                    entity: cpuMetrics
+                    type: Logs
+                        attributes: jetson, rpi, laptop
+                end
+            endcol
             col
                 use Camera     
             endcol
@@ -135,14 +141,6 @@ webpage Vroomitor
                 end
             endcol
             col
-                Component autoPublish
-                    type: Publish
-                        broker: HomeBroker
-                        topic: "test"
-                        json:"{\"signal\":\"stop_car\"}"
-                end
-            endcol
-            col
                 row
                     use RedisJsonViewer
                 endrow
@@ -154,6 +152,14 @@ webpage Vroomitor
                         entity: cpuMetrics
                         type: Alive
                             timeout: 5000
+                    end
+                endrow
+                row
+                    Component autoPublish
+                        type: Publish
+                            broker: HomeBroker
+                            topic: "test"
+                            json:"{\"signal\":\"stop_car\"}"
                     end
                 endrow
             endcol

@@ -179,3 +179,10 @@ class Text(ComponentType):
     def __init__(self, parent=None, name="Text", content=None):
         super().__init__(parent, name)
         self.content = content
+
+
+class Logs(ComponentType):
+    def __init__(self, parent=None, name="Logs", attributes=None):
+        super().__init__(parent, name)
+        self.attributes = attributes
+        resolve_reference(self, ref_attr="attributes")

@@ -75,7 +75,15 @@
             />
 
         {% elif type.name=="Publish" %}
-            <Publish brokerName={"{{type.broker.name}}"} destinationTopic="{{type.topic}}" json={ {{type.json}} }/>
+            <Publish 
+                brokerName={"{{type.broker.name}}"} 
+                {% if type.destinationTopic %}
+                    destinationTopic={ "{{type.topic}}" }  
+                {% endif %}
+                {% if type.json %}
+                    json={ {{type.json}} }
+                {% endif %} 
+                />
 
         {% elif type.name=="Notification" %}
             <LiveNotification
@@ -96,6 +104,19 @@
         {% elif type.name=="Text" %}
             <Text content={"{{type.content}}"}/>
 
+        {% elif type.name=="Logs" %}
+            <Logs 
+                topic={"{{topic}}"} 
+                attributes={[ 
+                    {% for attr in type.attributes %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+            ]}/>
+        
         {% endif %}
+
     {% endif %}
 {% endmacro %}

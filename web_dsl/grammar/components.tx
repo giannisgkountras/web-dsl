@@ -16,7 +16,7 @@ ComponentRef:
 ;
 
 ComponentType:
-    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish
+    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs
 ;
 
 Button:
@@ -111,4 +111,9 @@ Publish:
         ('topic:' topic=STRING)?
         ('json:' json=STRING)?
     )#
+;
+
+Logs:
+    'Logs'
+    ('attributes:' attributes+=[Attribute|ID][','])
 ;
