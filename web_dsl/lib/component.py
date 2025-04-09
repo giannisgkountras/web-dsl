@@ -56,14 +56,14 @@ class Component:
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
+        try:
+            entityRef = entity.source.ref.__class__.__name__
+        except AttributeError:
+            entityRef = None  # or "Unknown", or whatever fallback you prefer
         self.sourceOfContent = (
             "broker"
-            if entity.source.ref.__class__.__name__ == "MessageBroker"
-            else (
-                "rest"
-                if entity.source.ref.__class__.__name__ == "RESTEndpoint"
-                else "unknown"
-            )
+            if entityRef == "MessageBroker"
+            else ("rest" if entityRef == "RESTEndpoint" else "static")
         )
 
     def __str__(self):

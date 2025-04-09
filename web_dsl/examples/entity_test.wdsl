@@ -135,6 +135,14 @@ webpage Vroomitor
                 end
             endcol
             col
+                Component autoPublish
+                    type: Publish
+                        broker: HomeBroker
+                        topic: "test"
+                        json:"{\"signal\":\"stop_car\"}"
+                end
+            endcol
+            col
                 row
                     use RedisJsonViewer
                 endrow
