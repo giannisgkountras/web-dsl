@@ -70,17 +70,9 @@ RESTEndpoint:
     'RESTEndpoint' name=ID
     (
         ('verb:' verb=RESTVerb)
-        ('host:' host=STRING)
-        ('port:' port=INT)
-        ('path:' path=STRING)
-        ('base_url:' baseUrl=STRING)?
-        (
-        'params:'
-            ('query:' query=STRING)?
-            ('path:' path=STRING)?
-            ('body:' body=STRING)?
+        ('url:' url=STRING)
+        ('auth:' auth=[AuthApiKey])?
         ('headers:' headers=STRING)?
-        )?
     )#
     'end'
 ;
