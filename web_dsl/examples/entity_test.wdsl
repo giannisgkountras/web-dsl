@@ -24,6 +24,21 @@ webpage Vroomitor
         port: 8080
     end
 
+    RESTEndpoint todosEndpoint
+        host: "jsonplaceholder.typicode.com"
+        path: "/todos/1"
+        headers: {"Content-Type": "application/json"}
+    end
+
+    Entity todos
+        source: todosEndpoint
+        attributes:
+            - userId: int
+            - id: int
+            - title: str
+            - completed: bool
+    end
+
     Entity cpuMetrics
         source: HomeBroker
         topic: "cpu"

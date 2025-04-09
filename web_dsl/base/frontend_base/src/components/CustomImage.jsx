@@ -3,6 +3,8 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
 import placeholder from "../assets/placeholderimage";
+import { toast } from "react-toastify";
+
 const CustomImage = ({ topic, width, height, source }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);

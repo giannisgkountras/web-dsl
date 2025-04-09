@@ -1,0 +1,19 @@
+List:
+    '[' items*=ListItem[','] ']'
+;
+
+ListItem:
+    NUMBER | STRING | BOOL | List | Dict | OBJECT
+;
+
+Dict:
+    '{' items*=DictItem[','] '}'
+;
+
+DictItem:
+    name=STRING ':' value=DictType
+;
+
+DictType:
+    NUMBER | STRING | BOOL | Dict | List | OBJECT
+;

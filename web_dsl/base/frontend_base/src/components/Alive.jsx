@@ -2,7 +2,6 @@ import React, { useContext, useEffect, useState } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from "react-toastify";
-import convertTypeValue from "../utils/convertTypeValue";
 
 const Alive = ({ topic, timeout }) => {
     const ws = useContext(WebsocketContext);

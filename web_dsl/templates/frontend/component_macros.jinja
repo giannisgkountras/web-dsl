@@ -102,7 +102,7 @@
             />
 
         {% elif type.name=="Text" %}
-            <Text content={"{{type.content}}"}/>
+            <Text topic={"{{topic}}"} attribute={ { name: "{{type.content.name}}" ,  type: "{{type.content.__class__.__name__}}"} }/>
 
         {% elif type.name=="Logs" %}
             <Logs 

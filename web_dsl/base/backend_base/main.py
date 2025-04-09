@@ -174,7 +174,6 @@ class RESTCallRequest(BaseModel):
     host: str
     port: int
     path: str
-    base_url: str
     method: str
     headers: dict
     params: dict
@@ -184,7 +183,7 @@ class RESTCallRequest(BaseModel):
 @app.post("/restcall")
 async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
     """Make a REST call to a specified endpoint."""
-    url = f"{request.base_url}:{request.port}{request.path}"
+    url = f"{request.host}:{request.port}{request.path}"
     logging.info(f"Making {request.method} request to {url}")
 
     try:

@@ -1,3 +1,5 @@
+import types
+
 MessageBroker:
     AMQPBroker | MQTTBroker | RedisBroker
 ;
@@ -73,9 +75,9 @@ RESTEndpoint:
         ('port:' port=INT)?
         ('path:' path=STRING)?
         ('method:' method=RESTVerb)?
-        ('headers:' header=STRING)?
-        ('params:' params=STRING)?
-        ('body:' body=STRING)?
+        ('headers:' header=Dict)?
+        ('params:' params=Dict)?
+        ('body:' body=Dict)?
         ('auth:' auth=[AuthApiKey])?
     )#
     'end'

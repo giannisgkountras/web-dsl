@@ -11,7 +11,8 @@ WebPage:
     ('description:' description=STRING)?
     ('navbar:'  navbar=BOOL)?
     (
-        (brokers+=MessageBroker)*
+        (brokers*=MessageBroker)*
+        (endpoints*=RESTEndpoint)*
         (api=API)?
         (websocket=Websocket)?
         (reusableComponents*=Component)*

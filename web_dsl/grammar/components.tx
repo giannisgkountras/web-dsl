@@ -1,5 +1,4 @@
 import entity
-import utils
 import communication
 
 Component:
@@ -61,7 +60,7 @@ Image:
 ;
 
 Text:
-    'Text' content=STRING
+    'Text' content=[Attribute|ID]
 ;
 
 Notification:

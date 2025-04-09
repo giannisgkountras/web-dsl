@@ -3,6 +3,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
 import { GaugeComponent } from "react-gauge-component";
+import { toast } from "react-toastify";
 
 const Gauge = ({ topic, attribute }) => {
     const ws = useContext(WebsocketContext);

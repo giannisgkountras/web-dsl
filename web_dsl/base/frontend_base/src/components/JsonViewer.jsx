@@ -4,6 +4,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
 import customTheme from "../utils/jsonviewtheme";
+import { toast } from "react-toastify";
 
 const JsonViewer = ({ topic, attributes = [] }) => {
     const [jsonData, setJsonData] = React.useState({});
