@@ -77,7 +77,7 @@
         {% elif type.name=="Publish" %}
             <Publish 
                 brokerName={"{{type.broker.name}}"} 
-                {% if type.destinationTopic %}
+                {% if type.topic %}
                     destinationTopic={ "{{type.topic}}" }  
                 {% endif %}
                 {% if type.json %}

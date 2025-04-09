@@ -1,21 +1,12 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ObjectEditor from "./ObjectEditor";
 import { IoSend } from "react-icons/io5";
 import { publish } from "../api/publish";
 
-const Publish = ({ brokerName, destinationTopic = null, json = null }) => {
+const Publish = ({ brokerName, destinationTopic, json }) => {
     const [dataToPublish, setDataToPublish] = useState({ key: "value" });
     const [topic, setTopic] = useState("");
     const [jsonError, setJsonError] = useState(null);
-
-    useEffect(() => {
-        if (destinationTopic) {
-            setTopic(destinationTopic);
-        }
-        if (json) {
-            setDataToPublish(json);
-        }
-    }, []);
 
     return (
         <>
@@ -52,10 +43,10 @@ const Publish = ({ brokerName, destinationTopic = null, json = null }) => {
             ) : (
                 <button
                     className="btn text-[#fff] flex cursor-pointer items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => publish(brokerName, topic, dataToPublish)}
-                    disabled={!!jsonError || topic === ""} // Disable when JSON is invalid or topic is empty
+                    onClick={() => publish(brokerName, destinationTopic, json)}
+                    disabled={!!jsonError || destinationTopic === ""} // Disable when JSON is invalid or topic is empty
                 >
-                    Publish to {topic} <IoSend className="ml-2" />
+                    Publish to {destinationTopic} <IoSend className="ml-2" />
                 </button>
             )}
         </>
