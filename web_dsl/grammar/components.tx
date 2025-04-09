@@ -60,7 +60,8 @@ Image:
 ;
 
 Text:
-    'Text' content=[Attribute|ID]
+    'Text' 
+    'content:' content=[Attribute|ID]
 ;
 
 Notification:

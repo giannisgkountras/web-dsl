@@ -25,7 +25,7 @@ webpage Vroomitor
     end
 
     RESTEndpoint todosEndpoint
-        host: "jsonplaceholder.typicode.com"
+        host: "https://jsonplaceholder.typicode.com"
         path: "/todos/1"
         headers: {"Content-Type": "application/json"}
     end
@@ -34,9 +34,7 @@ webpage Vroomitor
         source: todosEndpoint
         attributes:
             - userId: int
-            - id: int
             - title: str
-            - completed: bool
     end
 
     Entity cpuMetrics
@@ -68,7 +66,9 @@ webpage Vroomitor
     end
 
     Component title
-        type: Text "Hello World"
+        entity: todos
+        type: Text 
+            content: title
     end
 
     Component JetsonGaugeCPU
@@ -187,4 +187,20 @@ webpage Vroomitor
             endcol
         endrow
         
+    end
+
+    Screen RestScreen
+        title: "Rest Screen"
+        url: "/rest"
+
+        row
+            col
+                Component RestGauge
+                    entity: todos
+                    type: Gauge
+                            value: userId
+                end
+            endcol
+        endrow
+
     end

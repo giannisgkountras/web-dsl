@@ -3,7 +3,6 @@ import { WebsocketContext } from "../context/WebsocketContext";
 import { useContext, useState, useEffect, use } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import convertTypeValue from "../utils/convertTypeValue";
-import { toast } from "react-toastify";
 
 const LiveNotification = ({ type = "info", topic, attribute }) => {
     const ws = useContext(WebsocketContext);
