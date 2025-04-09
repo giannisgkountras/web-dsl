@@ -147,17 +147,6 @@ class PublishRequest(BaseModel):
     topic: str
 
 
-class RESTCallRequest(BaseModel):
-    host: str
-    port: int
-    path: str
-    base_url: str
-    method: str
-    headers: dict
-    params: dict
-    body: dict
-
-
 # Publish API endpoint
 @app.post("/publish")
 async def publish_message(
@@ -181,7 +170,17 @@ async def publish_message(
     return {"status": "error", "message": f"Broker {broker} not found"}
 
 
-# Endpoint to make rest calls
+class RESTCallRequest(BaseModel):
+    host: str
+    port: int
+    path: str
+    base_url: str
+    method: str
+    headers: dict
+    params: dict
+    body: dict
+
+
 @app.post("/restcall")
 async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
     """Make a REST call to a specified endpoint."""
@@ -198,17 +197,10 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
                 json=request.body,  # use `data=` if it's form-encoded or raw
             )
 
-        return {
-            "status_code": response.status_code,
-            "headers": dict(response.headers),
-            "body": (
-                response.json()
-                if response.headers.get("content-type", "").startswith(
-                    "application/json"
-                )
-                else response.text
-            ),
-        }
+            if response.headers.get("content-type", "").startswith("application/json"):
+                return response.json()
+            else:
+                return response.text
 
     except httpx.RequestError as e:
         logging.error(f"HTTP request failed: {e}")

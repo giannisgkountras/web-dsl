@@ -143,7 +143,7 @@ def generate(model_path, gen_path):
         topic_configs.append(
             {
                 "topic": entity.topic,
-                "broker": entity.source.ref.name,
+                "broker": entity.source.name,
             }
         )
     print("Topic Configs: ", topic_configs)
@@ -195,7 +195,6 @@ def collect_entities(node, entities):
     """
     # Get the class name of the node
     node_type = node.__class__.__name__
-    print(f"Node type: {node_type}")
     # Handle Entity nodes
     if node_type == "Entity":
         entities.add(node)

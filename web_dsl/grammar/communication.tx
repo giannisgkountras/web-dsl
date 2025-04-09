@@ -69,10 +69,14 @@ API:
 RESTEndpoint:
     'RESTEndpoint' name=ID
     (
-        ('verb:' verb=RESTVerb)
-        ('url:' url=STRING)
+        ('host:' host=STRING)
+        ('port:' port=INT)?
+        ('path:' path=STRING)?
+        ('method:' method=RESTVerb)?
+        ('headers:' header=STRING)?
+        ('params:' params=STRING)?
+        ('body:' body=STRING)?
         ('auth:' auth=[AuthApiKey])?
-        ('headers:' headers=STRING)?
     )#
     'end'
 ;
