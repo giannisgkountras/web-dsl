@@ -3,12 +3,31 @@ import threading
 import logging
 import uvicorn
 import httpx
+import os
+from dotenv import load_dotenv
 from pydantic import BaseModel
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from utils import load_config
+
+# Load the .env file
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY", "API_KEY")
+api_keys = [API_KEY]
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+
+def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
+    if api_key_header in api_keys:
+        return api_key_header
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API Key"
+    )
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -138,7 +157,9 @@ class RESTCallRequest(BaseModel):
 
 # Publish API endpoint
 @app.post("/publish")
-async def publish_message(request: PublishRequest):
+async def publish_message(
+    request: PublishRequest, api_key: str = Security(get_api_key)
+):
     """Publish a message to a specific topic of a broker."""
     broker = request.broker
     message = request.message
@@ -159,7 +180,7 @@ async def publish_message(request: PublishRequest):
 
 # Endpoint to make rest calls
 @app.post("/restcall")
-async def rest_call(request: RESTCallRequest):
+async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
     """Make a REST call to a specified endpoint."""
     url = f"{request.base_url}:{request.port}{request.path}"
     logging.info(f"Making {request.method} request to {url}")

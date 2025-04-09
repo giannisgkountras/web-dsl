@@ -5,3 +5,4 @@ websockets
 fastapi
 uvicorn
 httpx
+dotenv

@@ -1,8 +1,16 @@
 import os
+import secrets
+import base64
 import subprocess
 from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
 import traceback
+
+
+def generate_api_key(length=32):
+    key = secrets.token_bytes(length)
+    return base64.urlsafe_b64encode(key).rstrip(b"=").decode("utf-8")
+
 
 # Set up the Jinja2 environment and load templates
 frontend_env = Environment(
@@ -28,6 +36,7 @@ websocket_context_config_template = frontend_env.get_template(
     "websocket_context_config.jinja"
 )
 dot_env_frontend_template = frontend_env.get_template("dot_env_template.jinja")
+dot_env_backend_template = backend_env.get_template("dot_env_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
@@ -101,13 +110,23 @@ def generate(model_path, gen_path):
     print(f"Generated: {websocket_context_config_output_file}")
 
     # Generate .env frontend file
-    env_frontend_content = dot_env_frontend_template.render(api=model.api)
+    api_key = generate_api_key()
+    env_frontend_content = dot_env_frontend_template.render(
+        api=model.api, api_key=api_key
+    )
     env_frontend_output_file = os.path.join(gen_path, "frontend", ".env")
     with open(env_frontend_output_file, "w", encoding="utf-8") as f:
         f.write(env_frontend_content)
     print(f"Generated {env_frontend_output_file}")
 
     # ========= Generate backend files============
+
+    # Generate .env backend file
+    env_backend_content = dot_env_backend_template.render(api_key=api_key)
+    env_backend_output_file = os.path.join(gen_path, "backend", ".env")
+    with open(env_backend_output_file, "w", encoding="utf-8") as f:
+        f.write(env_backend_content)
+    print(f"Generated {env_backend_output_file}")
 
     # Gather all topics from the model
     entities = set()
