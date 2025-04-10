@@ -140,10 +140,16 @@ def generate(model_path, gen_path):
 
     topic_configs = []
     for entity in entities:
+        # collect attributes
+        attributes = []
+        for attribute in entity.attributes:
+            attributes.append(attribute.name)
+
         topic_configs.append(
             {
                 "topic": entity.topic,
                 "broker": entity.source.name,
+                "attributes": attributes,
             }
         )
     print("Topic Configs: ", topic_configs)
