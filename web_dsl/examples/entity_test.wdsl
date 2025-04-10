@@ -189,6 +189,11 @@ webpage Vroomitor
         
     end
 
+
+    
+
+    
+
     Screen RestScreen
         title: "Rest Screen"
         url: "/rest"
@@ -199,6 +204,12 @@ webpage Vroomitor
                     entity: todos
                     type: Gauge
                             value: userId
+                end
+            endcol
+            col
+                Component RestJsonViewer
+                    entity: todos
+                    type: JsonViewer
                 end
             endcol
         endrow

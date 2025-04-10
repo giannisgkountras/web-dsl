@@ -16,8 +16,8 @@ WebPage:
         (api=API)?
         (websocket=Websocket)?
         (reusableComponents*=Component)*
-        (screens+=Screen)*
         (globalEntities*=Entity)*
+        (screens+=Screen)*
     )#
 ;
 
