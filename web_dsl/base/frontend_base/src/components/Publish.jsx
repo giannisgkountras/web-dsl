@@ -19,7 +19,7 @@ const Publish = ({ brokerName, apiName, destinationTopic, json, restData }) => {
             host,
             port,
             path,
-            method: "POST",
+            method: method || "POST",
             headers,
             params,
             body: dataToPublish

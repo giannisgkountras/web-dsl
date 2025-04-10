@@ -165,9 +165,6 @@ webpage Vroomitor
                     use RedisJsonViewer
                 endrow
                 row
-                    use title
-                endrow
-                row
                     Component cpuAlive
                         entity: cpuMetrics
                         type: Alive
@@ -224,11 +221,16 @@ webpage Vroomitor
                 end
             endcol
             col
+                row
                 Component restPublishWithJson
                     type: Publish
                         api: echoEndpoint
                         json:"{\"signal\":\"stop_car\"}"
                 end
+                endrow
+                row
+                    use title
+                endrow
             endcol
         endrow
 
