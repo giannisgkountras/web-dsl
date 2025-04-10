@@ -30,6 +30,11 @@ webpage Vroomitor
         headers: {"Content-Type": "application/json"}
     end
 
+    RESTEndpoint echoEndpoint
+        host: "https://httpbin.org/anything"
+        headers: {"Content-Type": "application/json"}
+    end
+
     Entity todos
         source: todosEndpoint
         attributes:
@@ -210,6 +215,19 @@ webpage Vroomitor
                 Component RestJsonViewer
                     entity: todos
                     type: JsonViewer
+                end
+            endcol
+            col
+                Component restPublish
+                    type: Publish
+                        api: echoEndpoint
+                end
+            endcol
+            col
+                Component restPublishWithJson
+                    type: Publish
+                        api: echoEndpoint
+                        json:"{\"signal\":\"stop_car\"}"
                 end
             endcol
         endrow

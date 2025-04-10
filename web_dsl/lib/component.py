@@ -148,9 +148,12 @@ class LineChart(ComponentType):
 
 
 class Publish(ComponentType):
-    def __init__(self, parent=None, name="Publish", broker=None, topic=None, json=None):
+    def __init__(
+        self, parent=None, name="Publish", broker=None, api=None, topic=None, json=None
+    ):
         super().__init__(parent, name)
         self.broker = broker
+        self.api = api
         self.topic = topic
         self.json = json
 

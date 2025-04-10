@@ -27,7 +27,6 @@ export const proxyRestCall = async ({
             toast.error("No response from proxy.");
             return { status: "error", message: "No response from proxy" };
         }
-
         return response;
     } catch (error) {
         toast.error("Proxy REST call failed: " + error.message);

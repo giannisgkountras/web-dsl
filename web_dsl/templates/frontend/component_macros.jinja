@@ -100,15 +100,33 @@
             />
 
         {% elif type.name=="Publish" %}
+            {% if type.api %}
+                {% set publishRestData = {
+                    "host": type.api.host or 'localhost',
+                    "port": type.api.port or 443,
+                    "path": type.api.path or '',
+                    "method": type.api.method or 'POST',
+                    "headers":type.api.headers or {},
+                    "params": type.api.params or {},
+                } %}
+            {% else %}
+                {% set publishRestData = {} %}
+            {% endif %}
             <Publish 
-                brokerName={"{{type.broker.name}}"} 
+                {% if type.broker %}
+                    brokerName={"{{type.broker.name}}"} 
+                {% endif %}
+                {% if type.api %}
+                    apiName={"{{type.api.name}}"} 
+                {% endif %}
                 {% if type.topic %}
                     destinationTopic={ "{{type.topic}}" }  
                 {% endif %}
                 {% if type.json %}
                     json={ {{type.json}} }
                 {% endif %} 
-                />
+                restData={ {{publishRestData}} }
+            />
 
         {% elif type.name=="Notification" %}
             <LiveNotification
