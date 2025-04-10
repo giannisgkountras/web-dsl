@@ -8,7 +8,7 @@ import { toast } from "react-toastify";
 import { IoReload } from "react-icons/io5";
 import { proxyRestCall } from "../api/proxyRestCall";
 
-const JsonViewer = ({ topic, attributes = [], sourceOfContent, restData }) => {
+const JsonViewer = ({ topic, attributes, sourceOfContent, restData }) => {
     const [jsonData, setJsonData] = useState({});
     const ws = useContext(WebsocketContext);
 

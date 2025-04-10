@@ -35,6 +35,7 @@ webpage Vroomitor
         headers: {"Content-Type": "application/json"}
     end
 
+
     Entity todos
         source: todosEndpoint
         attributes:
@@ -188,7 +189,6 @@ webpage Vroomitor
                 end
             endcol
         endrow
-        
     end
 
 
@@ -231,6 +231,15 @@ webpage Vroomitor
                 row
                     use title
                 endrow
+            endcol
+        endrow
+        row
+            col
+                Component restImage
+                    entity: todos
+                        type: Image
+                            source: title
+                end
             endcol
         endrow
 

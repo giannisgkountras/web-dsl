@@ -62,12 +62,36 @@ class Component:
             entityRef = None  # or "Unknown", or whatever fallback you prefer
         self.sourceOfContent = (
             "broker"
-            if entityRef == "MessageBroker"
+            if entityRef in ("MQTTBroker", "AMQPBroker", "RedisBroker")
             else ("rest" if entityRef == "RESTEndpoint" else "static")
         )
 
     def __str__(self):
         return self.name
+
+
+# class ComponentRef:
+#     def __init__(self, ref=None, parent=None, name=None):
+#         self.isComponent = True
+#         self.parent = parent
+#         self.name = name
+#         self.entity = ref.entity  # This should point to an Entity
+#         self.type = ref.type  # This could be Gauge, etc.
+#         try:
+#             print(
+#                 f"I AM A REFERENCE COMPONENT TO {ref.name} with {ref.entity} and {ref.entity.source.__class__.__name__}"
+#             )
+#             entityRef = ref.entity.source.__class__.__name__
+#         except AttributeError:
+#             entityRef = None  # or "Unknown", or whatever fallback you prefer
+#         self.sourceOfContent = (
+#             "broker"
+#             if entityRef == "MessageBroker"
+#             else ("rest" if entityRef == "RESTEndpoint" else "static")
+#         )
+
+#     def __str__(self):
+#         return self.name
 
 
 class ComponentType:
