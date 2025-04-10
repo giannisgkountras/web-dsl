@@ -5,7 +5,7 @@ from textx import (
     get_metamodel,
     get_children_of_type,
 )
-from textx.scoping.providers import RelativeName
+
 from os.path import join, dirname
 from .lib.component import (
     Component,
@@ -43,6 +43,34 @@ custom_classes = [
 THIS_DIR = dirname(__file__)
 
 
+def component_entity_attributes_scope(obj, attr, attr_ref):
+    component = obj.parent  # obj is ComponentType (e.g., Gauge), parent is Component
+    # attr is the attribute of the component (e.g., value)
+    # attr_ref is the reference to the attribute
+
+    if component and hasattr(component, "entity") and component.entity:
+        entity = component.entity
+        entity_attributes = entity.attributes
+        entity_attributes_names = [a.name for a in entity_attributes]
+
+        # Check if the attribute reference is valid
+        if attr_ref.obj_name not in entity_attributes_names:
+            raise TextXSemanticError(
+                f"Attribute '{attr_ref.obj_name}' not found in entity '{entity.name}'"
+            )
+        # Find the matching attribute
+        matching_attribute = next(
+            (a for a in entity_attributes if a.name == attr_ref.obj_name), None
+        )
+        if not matching_attribute:
+            raise TextXSemanticError(
+                f"No attribute '{attr_ref.obj_name}' found in entity '{entity.name}'"
+            )
+        return matching_attribute
+    else:
+        raise TextXSemanticError("Component has no entity defined")
+
+
 def get_metamodel(debug: bool = False, global_repo: bool = True):
     """Creates and configures the textX metamodel."""
     grammar_path = join(THIS_DIR, "grammar", "webpage.tx")  # Adjust path if needed
@@ -55,6 +83,20 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
         global_repository=global_repo,
         debug=debug,
         classes=custom_classes,
+    )
+
+    metamodel.register_scope_providers(
+        {
+            "Gauge.value": component_entity_attributes_scope,
+            "Text.content": component_entity_attributes_scope,
+            "Notification.message": component_entity_attributes_scope,
+            "LineChart.xValue": component_entity_attributes_scope,
+            "LineChart.yValues": component_entity_attributes_scope,
+            "LiveTable.columns": component_entity_attributes_scope,
+            "JsonViewer.attributes": component_entity_attributes_scope,
+            "Logs.attributes": component_entity_attributes_scope,
+            "Image.source": component_entity_attributes_scope,
+        }
     )
 
     return metamodel
