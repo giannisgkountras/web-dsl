@@ -98,6 +98,12 @@ async def main():
             broker_info.get("topics") or []
         )  # this ensures it's a list, even if None
         topics = [topic.get("topic") for topic in raw_topics if topic.get("topic")]
+        allowed_attributes = {
+            topic_info.get("topic"): topic_info.get("attributes")
+            for topic_info in raw_topics
+            if topic_info.get("attributes") is not None
+        }
+        print(f"Allowed attributes: {allowed_attributes}")
         if not topics:
             continue
 
@@ -112,6 +118,7 @@ async def main():
                 topics=topics,
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
+                allowed_topic_attributes=allowed_attributes,
             )
             broker_client.subscribe()
 
