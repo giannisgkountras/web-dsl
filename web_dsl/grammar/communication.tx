@@ -89,3 +89,32 @@ RESTVerb:
     'PUT'       |
     'DELETE'
 ;
+
+Database: MySQL | Mongo
+;
+
+MySQL:
+    'Database<MySQL>' name=ID
+    (
+        ('host:' host=STRING)
+        ('port:' port=INT)
+        ('auth:' auth=AuthPlain)
+        ('db:' db=STRING)
+        ('table:' table=STRING)
+        ('query:' query=STRING)
+    )#
+    'end'
+;
+
+Mongo:
+    'Database<Mongo>' name=ID
+    (
+        ('host:' host=STRING)
+        ('port:' port=INT)
+        ('auth:' auth=AuthPlain)
+        ('db:' db=STRING)
+        ('collection:' collection=STRING)
+        ('query:' query=STRING)
+    )#
+    'end'
+;

@@ -13,6 +13,7 @@ WebPage:
     (
         (brokers*=MessageBroker)*
         (endpoints*=RESTEndpoint)*
+        (databases*=Database)*
         (api=API)?
         (websocket=Websocket)?
         (reusableComponents*=Component)*

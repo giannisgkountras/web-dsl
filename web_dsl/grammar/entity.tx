@@ -1,6 +1,6 @@
 import communication
 
-EntitySource: (MessageBroker | RESTEndpoint);
+EntitySource: (MessageBroker | RESTEndpoint | Database);
 
 Entity:
     'Entity' name=ID
