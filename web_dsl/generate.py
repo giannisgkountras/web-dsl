@@ -4,7 +4,9 @@ import base64
 import subprocess
 from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
+from textx.model import get_children_of_type
 import traceback
+from collections import defaultdict
 
 
 def generate_api_key(length=32):
@@ -131,13 +133,13 @@ def generate(model_path, gen_path):
         f.write(env_backend_content)
     print(f"Generated {env_backend_output_file}")
 
-    # Gather all topics from the model
-    entities = set()
-    for element in model.globalEntities:
-        collect_entities(element, entities)
-    for element in model.screens:
-        collect_entities(element, entities)
+    # Collect all components from the model to get what attributes of entities are actually used
+    components = get_children_of_type("Component", model)
+    for component in components:
+        print(component.type.__dict__)
 
+    # Gather all topic from the model
+    entities = get_children_of_type("Entity", model)
     topic_configs = []
     for entity in entities:
         # collect attributes
@@ -152,7 +154,7 @@ def generate(model_path, gen_path):
                 "attributes": attributes,
             }
         )
-    print("Topic Configs: ", topic_configs)
+
     # Collect all brokers
     all_brokers = set()
     for broker in model.brokers:
@@ -189,26 +191,6 @@ def generate(model_path, gen_path):
     print(f"Generated: {docker_compose_output_file}")
 
     return gen_path
-
-
-def collect_entities(node, entities):
-    """
-    Recursively collect Entity nodes into a list.
-
-    Args:
-        node: A node in the parsed tree.
-        entities: A list to store Entity nodes.
-    """
-    # Get the class name of the node
-    node_type = node.__class__.__name__
-    # Handle Entity nodes
-    if node_type == "Entity":
-        entities.add(node)
-
-    # Handle structural nodes like Row or Column
-    elif node_type in ("Row", "Column"):
-        for element in node.elements:
-            collect_entities(element, entities)
 
 
 def map_attribute_class_names_to_types(attribute):
