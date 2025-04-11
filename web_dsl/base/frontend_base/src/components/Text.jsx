@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { IoReload } from "react-icons/io5";
 
-const Text = ({ topic, attribute, sourceOfContent, restData }) => {
+const Text = ({ topic, attribute, size, color, sourceOfContent, restData }) => {
     const [content, setContent] = useState("");
     const ws = useContext(WebsocketContext);
 
@@ -68,7 +68,9 @@ const Text = ({ topic, attribute, sourceOfContent, restData }) => {
                     <IoReload size={24} />
                 </button>
             )}
-            <h1>{content}</h1>
+            <h1 style={{ fontSize: `${size}px`, color: `${color}` }}>
+                {content}
+            </h1>
         </div>
     );
 };

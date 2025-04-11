@@ -76,6 +76,8 @@ webpage Vroomitor
         entity: todos
         type: Text 
             content: title
+            size: 50
+            color: "#00BDFE"
     end
 
     Component JetsonGaugeCPU

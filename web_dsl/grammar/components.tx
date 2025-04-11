@@ -62,6 +62,10 @@ Image:
 Text:
     'Text' 
     'content:' content=[Attribute|ID]
+    (
+        ('size:' size=INT)?
+        ('color:' color=STRING)?
+    )#
 ;
 
 Notification:
