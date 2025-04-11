@@ -96,9 +96,18 @@ class JsonViewer(ComponentType):
 
 
 class Text(ComponentType):
-    def __init__(self, parent=None, name="Text", content=None, size=18, color="#fff"):
+    def __init__(
+        self,
+        parent=None,
+        name="Text",
+        content=None,
+        content_static=None,
+        size=None,
+        color="#fff",
+    ):
         super().__init__(parent, name)
         self.content = content
+        self.content_static = content_static
         self.size = size
         self.color = color
 

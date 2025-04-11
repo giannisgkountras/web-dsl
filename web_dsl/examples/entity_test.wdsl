@@ -244,6 +244,13 @@ webpage Vroomitor
                             source: title
                 end
             endcol
+            col
+                Component staticText
+                    type: Text
+                        content: "Hello world test"
+                        size: 20
+                end
+            endcol
         endrow
 
     end

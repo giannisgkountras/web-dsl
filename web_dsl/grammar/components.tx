@@ -61,7 +61,7 @@ Image:
 
 Text:
     'Text' 
-    'content:' content=[Attribute|ID]
+    'content:' (content=[Attribute|ID] | content_static=STRING)
     (
         ('size:' size=INT)?
         ('color:' color=STRING)?

@@ -149,10 +149,11 @@
             <Text 
                 topic={"{{topic}}"} 
                 attribute={ { name: "{{type.content.name}}" ,  type: "{{type.content.__class__.__name__}}"} }
-                size={ {{type.size}} }
+                size={ {{ type.size | default(18) }} }
                 color={"{{type.color}}"}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
+                staticContent={"{{type.content_static}}"}
             />
 
         {% elif type.name=="Logs" %}
