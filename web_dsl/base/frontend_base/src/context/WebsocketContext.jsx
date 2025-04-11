@@ -7,6 +7,7 @@ export const WebsocketContext = createContext(null);
 
 // Provider component to establish and provide the WebSocket connection
 export const WebsocketProvider = ({ children }) => {
+    const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
     const [ws, setWs] = useState(null);
     const retryCountRef = useRef(0); // Use useRef to persist retry count across re-renders
     const maxRetries = 5; // Max retry attempts
@@ -30,6 +31,16 @@ export const WebsocketProvider = ({ children }) => {
             console.log("WebSocket is connected");
             toast.success("WebSocket is connected!");
             retryCountRef.current = 0; // Reset retry count on successful connection
+
+            // Send the secret key immediately after connection is established.
+            if (SECRET_KEY) {
+                console.log("Sending secret key for authentication...");
+                websocket.send(SECRET_KEY);
+            } else {
+                console.warn(
+                    "No secret key configured to send over WebSocket."
+                );
+            }
         };
 
         websocket.onclose = () => {

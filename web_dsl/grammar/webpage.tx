@@ -2,6 +2,7 @@ import screens
 import components
 import communication
 import entity
+import utils
 
 WebPage:
     'webpage' name=ID 
@@ -10,12 +11,15 @@ WebPage:
     ('description:' description=STRING)?
     ('navbar:'  navbar=BOOL)?
     (
-        (brokers+=MessageBroker)*
+        (brokers*=MessageBroker)*
+        (endpoints*=RESTEndpoint)*
+        (databases*=Database)*
         (api=API)?
         (websocket=Websocket)?
-        (reusableComponents*=ReusableComponentDefinition)*
-        (screens+=Screen)*
+        (reusableComponents*=Component)*
         (globalEntities*=Entity)*
+        (screens+=Screen)*
     )#
 ;
+
 

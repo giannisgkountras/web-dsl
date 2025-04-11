@@ -1,109 +1,171 @@
-{% macro render_element(element, live_state=None, topic=None, row_parent=True, live_parent=None) %}
-    {% if element.__class__.__name__ == 'LiveComponent' %}
-        {{ render_element(element=element.definition, live_state=element.dataName, topic=element.topic, live_parent=element) }}
-
-    {% elif element.__class__.__name__ == 'p' %}
-        <p>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</p>
-
-    {% elif element.__class__.__name__ == 'Button' %}
-        <button className="btn">{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.text }}{% endif %}</button>
-
-    {% elif element.__class__.__name__ == 'Image' %}
-        <img className="w-{% if element.width %}[{{ element.width }}px]{% else %}full{% endif %} h-{% if element.height %}[{{ element.height }}px]{% else %}full{% endif %}" 
-           src={ {% if live_state %}`data:image/png;base64,${ {{ live_state }}} `{% else %}{{ element.source }}{% endif %} } />
-
-    {% elif element.__class__.__name__ == 'h1' %}
-        <h1>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</h1>
-
-    {% elif element.__class__.__name__ == 'h2' %}
-        <h2>{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</h2>
-
-    {% elif element.__class__.__name__ == 'Form' %}
-        <form name="{{ element.name }}">
-            {% for child in element.elements %}
-                {{ render_element(child, live_state=live_state) }}
-            {% endfor %}
-            <input type="submit"/>
-        </form>
-
-    {% elif element.__class__.__name__ == 'Input' %}
-        <input type="{{ element.type }}" name="{{ element.name }}" placeholder="{{ element.placeholder }}" required="{{ element.required }}"/>
-
-    {% elif element.__class__.__name__ == 'Label' %}
-        <label htmlFor="{{ element.name }}">{% if live_state %}{{ '{' + live_state + '}' }}{% else %}{{ element.content }}{% endif %}</label>
-
-    {% elif element.__class__.__name__ == 'LineChart' %}
-        <CustomLineChart
-            topic={ "{{ live_parent.topic }}" }
-            xLabel={ "{{ element.xLabel }}" }
-            yLabel={ "{{ element.yLabel }}" }
-            attributes={ [
-                {% for attr in live_parent.entity.attributes %}
-                    {
-                    name: "{{ attr.name }}",
-                    type: "{{ attr.__class__.__name__ }}"
-                    },
+{% macro render_element(element, row_parent=True) %}
+    {% if element.__class__.__name__ == 'Row' %}
+            {% if row_parent %}
+                <div className="row row-parent">
+            {% else %}
+                <div className="row row-child">
+            {% endif %}
+                {% for child in element.elements %}
+                    {{ render_element(child, row_parent=False) }}
                 {% endfor %}
-            ]}/>
-    
-    {% elif element.__class__.__name__ == 'Logs' %}
-
-        <Logs topic={"{{ live_parent.topic }}"} attributes={ [
-            {% for attr in live_parent.entity.attributes %}
-                {
-                name: "{{ attr.name }}",
-                type: "{{ attr.__class__.__name__ }}"
-                },
-            {% endfor %}
-        ]}/>
-    
-    {% elif element.__class__.__name__ == 'Gauge'%}
-        <GaugeComponent value={ {{ live_state }} } />
-
-    {% elif element.__class__.__name__ == 'JsonViewer'%}
-        <div className="flex justify-center flex-col items-center p-4 w-fit bg-[#111828] rounded-2xl">
-            <h1 className="mb-2 text-lg font-semibold text-gray-200">
-                Watching {" "}
-                <span className="text-pink-400">{{topic}}</span>
-            </h1>
-            <JsonView value={jsonData} style={customTheme} />
-        </div>
-
-    {% elif element.__class__.__name__ == 'Alive' %}
-        <Alive topic={ "{{ live_parent.topic }}" }
-               attributes={[
-            {% for attr in live_parent.entity.attributes %}
-                {
-                name: "{{ attr.name }}",
-                type: "{{ attr.__class__.__name__ }}"
-                },
-            {% endfor %}
-        ]}    timeout={ {{ element.timeout }} }
-        />
-    
-    {% elif element.__class__.__name__ == 'Publish' %}
-        <Publish brokerName={"{{element.ref.name}}"}/>
-
-    {% elif element.__class__.__name__ == 'ReusableComponent' %}
-        {{ render_element(element.ref.definition, live_state=live_state) }}
-
-    {% elif element.__class__.__name__ == 'Row' %}
-        {% if row_parent %}
-            <div className="row row-parent">
-        {% else %}
-            <div className="row row-child">
-        {% endif %}
-            {% for child in element.elements %}
-                {{ render_element(child, live_state=live_state, row_parent=False) }}
-            {% endfor %}
-        </div>
-    
+            </div>
+        
     {% elif element.__class__.__name__ == 'Column'%}
-        <div className="column">
-            {% for child in element.elements %}
-                {{ render_element(child, live_state=live_state, row_parent=False) }}
-            {% endfor %}
-        </div>
+            <div className="column">
+                {% for child in element.elements %}
+                    {{ render_element(child, row_parent=False) }}
+                {% endfor %}
+            </div>
+    {% elif element.__class__.__name__ == 'ComponentRef'%}
+        {{ render_element(element.ref) }}
     
+    {% elif element.isComponent %}
+        
+        {% set sourceOfContent = element.sourceOfContent %}
+
+        {% if sourceOfContent=="rest" %}
+            {% set restData = {
+                "host": element.entity.source.host or 'localhost',
+                "port": element.entity.source.port or 443,
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "headers": element.entity.source.headers or {},
+                "params": element.entity.source.params or {},
+            } %}
+        {% else %}
+            {% set restData = {} %}
+        {% endif %}
+
+        {% set sourceOfContent = element.sourceOfContent %}
+
+        {% set type = element.type %}
+        {% set topic = element.entity.topic if element.entity else None%}
+
+        {% if type.name=="Gauge"%}
+            <Gauge 
+                topic={"{{topic}}"} 
+                attribute={ {name: "{{type.value.name}}", type: "{{type.value.__class__.__name__}}"  } } 
+                sourceOfContent={"{{sourceOfContent}}"} 
+                restData={ {{restData}} }
+            />
+        
+        {% elif type.name=="LineChart"%}
+
+            <CustomLineChart 
+                topic={"{{topic}}"} 
+                xLabel={"{{type.xLabel}}"} 
+                yLabel={"{{type.yLabel}}"} 
+                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.value.__class__.__name__}}" },
+                    {% for attr in type.yValues %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+                  ]}
+            />
+
+        {% elif type.name=="LiveTable"%}
+            <LiveTable 
+                topic={"{{topic}}"} 
+                attributes={[ 
+                    {% for attr in type.columns %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+                ]}
+            />
+
+        {% elif type.name=="JsonViewer"%}
+            <JsonViewer 
+                topic={"{{topic}}"} 
+                attributes={[ 
+                    {% for attr in type.attributes %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+                ]}
+                sourceOfContent={"{{sourceOfContent}}"} 
+                restData={ {{restData}} }
+            />
+
+        {% elif type.name=="Alive"%}
+            <Alive 
+                topic={"{{topic}}"} 
+                timeout={ {{type.timeout}} }
+            />
+
+        {% elif type.name=="Publish" %}
+            {% if type.api %}
+                {% set publishRestData = {
+                    "host": type.api.host or 'localhost',
+                    "port": type.api.port or 443,
+                    "path": type.api.path or '',
+                    "method": type.api.method or 'POST',
+                    "headers":type.api.headers or {},
+                    "params": type.api.params or {},
+                } %}
+            {% else %}
+                {% set publishRestData = {} %}
+            {% endif %}
+            <Publish 
+                {% if type.broker %}
+                    brokerName={"{{type.broker.name}}"} 
+                {% endif %}
+                {% if type.api %}
+                    apiName={"{{type.api.name}}"} 
+                {% endif %}
+                {% if type.topic %}
+                    destinationTopic={ "{{type.topic}}" }  
+                {% endif %}
+                {% if type.json %}
+                    json={ {{type.json}} }
+                {% endif %} 
+                restData={ {{publishRestData}} }
+            />
+
+        {% elif type.name=="Notification" %}
+            <LiveNotification
+                type={"{{type.type}}"}
+                topic={"{{topic}}"} 
+                attribute={ { name: "{{type.message.name}}" ,  type: "{{type.message.__class__.__name__}}"} }
+            />
+
+        {% elif type.name=="Image" %}
+            <CustomImage 
+                topic={"{{topic}}"} 
+                source={ { name: "{{type.source.name}}" ,  type: "{{type.source.__class__.__name__}}" } }
+                width={ {{type.width}} }
+                height={ {{type.height}} }
+                sourceOfContent={"{{sourceOfContent}}"} 
+                restData={ {{restData}} }    
+            />
+
+        {% elif type.name=="Text" %}
+            <Text 
+                topic={"{{topic}}"} 
+                attribute={ { name: "{{type.content.name}}" ,  type: "{{type.content.__class__.__name__}}"} }
+                sourceOfContent={"{{sourceOfContent}}"} 
+                restData={ {{restData}} }    
+            />
+
+        {% elif type.name=="Logs" %}
+            <Logs 
+                topic={"{{topic}}"} 
+                attributes={[ 
+                    {% for attr in type.attributes %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+            ]}/>
+        
+        {% endif %}
+
     {% endif %}
 {% endmacro %}

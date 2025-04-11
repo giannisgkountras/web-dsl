@@ -10,6 +10,7 @@ class BrokerCommlibClient:
         broker_connection_parameters,
         type: str,
         topics: list,
+        allowed_topic_attributes: dict,
         ws_server,
         global_event_loop,
     ):
@@ -35,18 +36,39 @@ class BrokerCommlibClient:
         self.subscribers = []
         self.global_event_loop = global_event_loop
         self.pub = self.node.create_mpublisher()
+        self.allowed_topic_attributes = allowed_topic_attributes or {}
 
     def on_message_callback(self, topic: str):
         """Generate a callback for a specific topic."""
 
         def callback(msg):
-            try:
-                json_msg_with_prefix = f'{{"{topic}": {json.dumps(msg)}}}'
-            except Exception as e:
-                print(f"Failed to convert message to JSON: {e}")
+            # Retrieve the allowed attributes for the given topic
+            allowed_attributes = self.allowed_topic_attributes.get(topic)
+            if allowed_attributes is None:
+                print(
+                    f"No allowed attributes defined for topic '{topic}'. Message dropped."
+                )
                 return
-            # print(f"Sending to WebSocket: {json_msg_with_prefix}")
-            # Schedule the coroutine in the main event loop
+
+            # Filter message to include only allowed keys
+            filtered_msg = {
+                key: value for key, value in msg.items() if key in allowed_attributes
+            }
+
+            if not filtered_msg:
+                print(
+                    f"No allowed attributes found in the incoming message for topic '{topic}'."
+                )
+                return
+
+            try:
+                # Convert the filtered message to a JSON string with topic as a prefix.
+                json_msg_with_prefix = f'{{"{topic}": {json.dumps(filtered_msg)}}}'
+            except Exception as e:
+                print(
+                    f"Failed to convert filtered message to JSON for topic '{topic}': {e}"
+                )
+                return
             asyncio.run_coroutine_threadsafe(
                 self.ws_server.send_message(json_msg_with_prefix),
                 self.global_event_loop,

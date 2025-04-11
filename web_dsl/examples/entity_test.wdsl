@@ -1,0 +1,247 @@
+webpage Vroomitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A live dashboard"
+    navbar: true
+
+    API publisherAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Broker<MQTT> HomeBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    Broker<Redis> LabRedis
+        host: "192.168.1.6"
+        port: 6379
+    end
+
+    Websocket HomeWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    RESTEndpoint todosEndpoint
+        host: "https://jsonplaceholder.typicode.com"
+        path: "/todos/1"
+        headers: {"Content-Type": "application/json"}
+    end
+
+    RESTEndpoint echoEndpoint
+        host: "https://httpbin.org/anything"
+        headers: {"Content-Type": "application/json"}
+    end
+
+
+    Entity todos
+        source: todosEndpoint
+        attributes:
+            - userId: int
+            - title: str
+    end
+
+    Entity cpuMetrics
+        source: HomeBroker
+        topic: "cpu"
+        attributes:
+            - timestamp: int
+            - jetson: float
+            - rpi: float 
+            - laptop: float
+    end
+
+    Entity carInformation
+        source: HomeBroker
+        topic: "carinfo"
+        attributes:
+            - rpi: float
+            - frame: str
+            - speed: float 
+            - state: str
+    end
+
+    Entity allLogsRedis
+        source: LabRedis
+        topic: "alllogs"
+        attributes:
+            - error: str
+            - info: str
+            - warning: str
+    end
+
+    Component title
+        entity: todos
+        type: Text 
+            content: title
+    end
+
+    Component JetsonGaugeCPU
+        entity: cpuMetrics
+        type: Gauge
+                value: jetson
+    end
+
+    Component RPIGaugeCPU
+        entity: cpuMetrics
+        type: Gauge
+        value: rpi
+    end
+
+    Component ErrorNotification
+        entity: allLogsRedis 
+        type: Notification
+            type: error
+            message: error
+    end
+
+    Component Camera
+        entity: carInformation
+        type: Image
+            width:  450
+            height: 300
+            source: frame
+    end
+
+    Component CPUChart
+        entity: cpuMetrics
+        type: LineChart
+            xLabel: "Time"
+            yLabel: "CPU Usage"
+            xValue: timestamp
+            yValues: jetson, rpi
+    end
+
+    Component RedisJsonViewer
+        entity: allLogsRedis
+        type: JsonViewer
+    end
+
+    // this is a comment test mpla mpla
+
+    Screen Dashboard
+        title: "Dashboard"
+        url: "/"
+
+        use ErrorNotification
+        row
+            col 
+                row
+                    use JetsonGaugeCPU
+                endrow
+                row
+                   use RPIGaugeCPU 
+                endrow
+            endcol
+            col
+                Component cpuLogs
+                    entity: cpuMetrics
+                    type: Logs
+                        attributes: jetson, rpi, laptop
+                end
+            endcol
+            col
+                use Camera     
+            endcol
+            col
+                use CPUChart
+            endcol
+        endrow
+        row
+            col
+                Component MQTTPublisher
+                    type: Publish
+                        broker: HomeBroker
+                end
+            endcol
+            col
+                Component RedisPublisher
+                    type: Publish
+                        broker: LabRedis
+                end
+            endcol
+            col
+                row
+                    use RedisJsonViewer
+                endrow
+                row
+                    Component cpuAlive
+                        entity: cpuMetrics
+                        type: Alive
+                            timeout: 5000
+                    end
+                endrow
+                row
+                    Component autoPublish
+                        type: Publish
+                            broker: HomeBroker
+                            topic: "test"
+                            json:"{\"signal\":\"stop_car\"}"
+                    end
+                endrow
+            endcol
+            col
+                Component myLiveTable
+                    entity: cpuMetrics
+                    type: LiveTable
+                        columns: jetson, rpi, laptop
+                end
+            endcol
+        endrow
+    end
+
+
+    
+
+    
+
+    Screen RestScreen
+        title: "Rest Screen"
+        url: "/rest"
+
+        row
+            col
+                Component RestGauge
+                    entity: todos
+                    type: Gauge
+                            value: userId
+                end
+            endcol
+            col
+                Component RestJsonViewer
+                    entity: todos
+                    type: JsonViewer
+                end
+            endcol
+            col
+                Component restPublish
+                    type: Publish
+                        api: echoEndpoint
+                end
+            endcol
+            col
+                row
+                Component restPublishWithJson
+                    type: Publish
+                        api: echoEndpoint
+                        json:"{\"signal\":\"stop_car\"}"
+                end
+                endrow
+                row
+                    use title
+                endrow
+            endcol
+        endrow
+        row
+            col
+                Component restImage
+                    entity: todos
+                        type: Image
+                            source: title
+                end
+            endcol
+        endrow
+
+    end

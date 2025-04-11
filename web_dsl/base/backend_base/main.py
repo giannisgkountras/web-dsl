@@ -2,12 +2,33 @@ import asyncio
 import threading
 import logging
 import uvicorn
+import httpx
+import os
+from dotenv import load_dotenv
 from pydantic import BaseModel
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from utils import load_config
+
+# Load the .env file
+load_dotenv()
+
+API_KEY = os.getenv("API_KEY", "API_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY", "SECRET_KEY")
+api_keys = [API_KEY]
+api_key_header = APIKeyHeader(name="X-API-Key")
+
+
+def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
+    if api_key_header in api_keys:
+        return api_key_header
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API Key"
+    )
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -62,7 +83,9 @@ async def main():
 
     # Create a WebSocket server instance
     ws_server = WebSocketServer(
-        host=ws_config.get("host", "0.0.0.0"), port=ws_config.get("port", 8765)
+        host=ws_config.get("host", "0.0.0.0"),
+        port=ws_config.get("port", 8765),
+        secret_key=SECRET_KEY,
     )
 
     # Extract multiple broker connection settings
@@ -71,9 +94,19 @@ async def main():
     broker_threads = []
 
     for broker_info in broker_configs:
-        topics = []
-        for topic in broker_info.get("topics", []):
-            topics.append(topic.get("topic"))
+        raw_topics = (
+            broker_info.get("topics") or []
+        )  # this ensures it's a list, even if None
+        topics = [topic.get("topic") for topic in raw_topics if topic.get("topic")]
+        allowed_attributes = {
+            topic_info.get("topic"): topic_info.get("attributes")
+            for topic_info in raw_topics
+            if topic_info.get("attributes") is not None
+        }
+        print(f"Allowed attributes: {allowed_attributes}")
+        if not topics:
+            continue
+
         try:
             # Attempt to create a broker client
             broker_client = BrokerCommlibClient(
@@ -85,6 +118,7 @@ async def main():
                 topics=topics,
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
+                allowed_topic_attributes=allowed_attributes,
             )
             broker_client.subscribe()
 
@@ -122,7 +156,9 @@ class PublishRequest(BaseModel):
 
 # Publish API endpoint
 @app.post("/publish")
-async def publish_message(request: PublishRequest):
+async def publish_message(
+    request: PublishRequest, api_key: str = Security(get_api_key)
+):
     """Publish a message to a specific topic of a broker."""
     broker = request.broker
     message = request.message
@@ -139,6 +175,46 @@ async def publish_message(request: PublishRequest):
                 return {"status": "error", "message": str(e)}
 
     return {"status": "error", "message": f"Broker {broker} not found"}
+
+
+class RESTCallRequest(BaseModel):
+    host: str
+    port: int
+    path: str
+    method: str
+    headers: dict
+    params: dict
+    body: dict
+
+
+@app.post("/restcall")
+async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
+    """Make a REST call to a specified endpoint."""
+    url = f"{request.host}:{request.port}{request.path}"
+    logging.info(f"Making {request.method} request to {url}")
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method=request.method.upper(),
+                url=url,
+                headers=request.headers,
+                params=request.params,
+                json=request.body,  # use `data=` if it's form-encoded or raw
+            )
+
+            if response.headers.get("content-type", "").startswith("application/json"):
+                return response.json()
+            else:
+                return response.text
+
+    except httpx.RequestError as e:
+        logging.error(f"HTTP request failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Request error: {str(e)}")
+
+    except Exception as e:
+        logging.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Unexpected error occurred.")
 
 
 if __name__ == "__main__":

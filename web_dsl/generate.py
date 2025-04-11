@@ -1,7 +1,16 @@
 import os
+import secrets
+import base64
 import subprocess
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
+import traceback
+
+
+def generate_api_key(length=32):
+    key = secrets.token_bytes(length)
+    return base64.urlsafe_b64encode(key).rstrip(b"=").decode("utf-8")
+
 
 # Set up the Jinja2 environment and load templates
 frontend_env = Environment(
@@ -27,6 +36,7 @@ websocket_context_config_template = frontend_env.get_template(
     "websocket_context_config.jinja"
 )
 dot_env_frontend_template = frontend_env.get_template("dot_env_template.jinja")
+dot_env_backend_template = backend_env.get_template("dot_env_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
@@ -57,13 +67,6 @@ def generate(model_path, gen_path):
         ["cp", "-r", f"{backend_base_dir}/.", os.path.join(gen_path, "backend")]
     )
 
-    # Gather all live copmonents from the model
-    live_components = set()
-    for screen in model.screens:
-        for element in screen.elements:
-            collect_live_components(element, live_components)
-    live_components = list(live_components)
-
     # ========= Generate frontend files============
     # Prepare the output directories
     screens_dir = os.path.join(gen_path, "frontend", "src", "screens")
@@ -72,7 +75,11 @@ def generate(model_path, gen_path):
 
     # Generate the screen components
     for screen in model.screens:
-        html_content = screen_template.render(screen=screen)
+        try:
+            html_content = screen_template.render(screen=screen)
+        except TemplateError as e:
+            print("Jinja2 Template Error:", e)
+            traceback.print_exc()
         output_file = os.path.join(screens_dir, f"{screen.name}.jsx")
         with open(output_file, "w", encoding="utf-8") as f:
             f.write(html_content)
@@ -103,7 +110,11 @@ def generate(model_path, gen_path):
     print(f"Generated: {websocket_context_config_output_file}")
 
     # Generate .env frontend file
-    env_frontend_content = dot_env_frontend_template.render(api=model.api)
+    api_key = generate_api_key()
+    secret_key = generate_api_key()
+    env_frontend_content = dot_env_frontend_template.render(
+        api=model.api, api_key=api_key, secret_key=secret_key
+    )
     env_frontend_output_file = os.path.join(gen_path, "frontend", ".env")
     with open(env_frontend_output_file, "w", encoding="utf-8") as f:
         f.write(env_frontend_content)
@@ -111,13 +122,34 @@ def generate(model_path, gen_path):
 
     # ========= Generate backend files============
 
+    # Generate .env backend file
+    env_backend_content = dot_env_backend_template.render(
+        api_key=api_key, secret_key=secret_key
+    )
+    env_backend_output_file = os.path.join(gen_path, "backend", ".env")
+    with open(env_backend_output_file, "w", encoding="utf-8") as f:
+        f.write(env_backend_content)
+    print(f"Generated {env_backend_output_file}")
+
     # Gather all topics from the model
+    entities = set()
+    for element in model.globalEntities:
+        collect_entities(element, entities)
+    for element in model.screens:
+        collect_entities(element, entities)
+
     topic_configs = []
-    for component in live_components:
+    for entity in entities:
+        # collect attributes
+        attributes = []
+        for attribute in entity.attributes:
+            attributes.append(attribute.name)
+
         topic_configs.append(
             {
-                "topic": component.topic,
-                "broker": component.entity.source.ref.name,
+                "topic": entity.topic,
+                "broker": entity.source.name,
+                "attributes": attributes,
             }
         )
     print("Topic Configs: ", topic_configs)
@@ -159,31 +191,24 @@ def generate(model_path, gen_path):
     return gen_path
 
 
-def collect_live_components(node, live_components):
+def collect_entities(node, entities):
     """
-    Recursively collect LiveComponent nodes into a list.
+    Recursively collect Entity nodes into a list.
 
     Args:
         node: A node in the parsed tree.
-        live_components: A list to store LiveComponent nodes.
+        entities: A list to store Entity nodes.
     """
     # Get the class name of the node
     node_type = node.__class__.__name__
-
-    # Handle LiveComponent nodes
-    if node_type == "LiveComponent":
-        live_components.add(node)
-
-    # Handle ReusableComponent nodes
-    elif node_type == "ReusableComponent":
-        referenced_component = node.ref.definition  # Resolve the reference
-        if referenced_component.__class__.__name__ == "LiveComponent":
-            live_components.add(referenced_component)
+    # Handle Entity nodes
+    if node_type == "Entity":
+        entities.add(node)
 
     # Handle structural nodes like Row or Column
     elif node_type in ("Row", "Column"):
         for element in node.elements:
-            collect_live_components(element, live_components)
+            collect_entities(element, entities)
 
 
 def map_attribute_class_names_to_types(attribute):
