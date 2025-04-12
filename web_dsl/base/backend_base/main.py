@@ -6,12 +6,14 @@ import httpx
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from typing import Any, List, Dict
 from fastapi import FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
-from utils import load_config, load_endpoint_config
+from db_connector import DBConnector
+from utils import load_config, load_endpoint_config, load_db_config
 
 # Load the .env file
 load_dotenv()
@@ -36,6 +38,7 @@ logging.basicConfig(level=logging.INFO)
 # Load configuration from config.yaml
 config = load_config()
 endpoint_config = load_endpoint_config()
+db_config = load_db_config()
 
 # Global variable to hold the main event loop
 global_event_loop = None
@@ -52,6 +55,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
+
+db_connector = DBConnector(db_config)
 
 
 async def start_fastapi():
@@ -229,6 +234,53 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Unexpected error occurred.")
+
+
+# Request Body Model
+class QueryRequest(BaseModel):
+    connection_name: str
+    database: str = None  # For MySQL: target database; ignored for Mongo queries.
+    table: str  # For MySQL this is a table; for Mongo, treat as collection.
+    query: str  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    params: Dict[str, Any] = {}
+
+
+@app.post("/query/mysql/")
+async def mysql_query(request: QueryRequest, api_key: str = Security(get_api_key)):
+    """
+    Endpoint to run MySQL queries.
+    Expects:
+      - connection_name: the name of the MySQL connection (e.g., "HomeSQL")
+      - database: the database to switch to
+      - query: the SQL query string containing a "{table}" placeholder if needed
+      - params: query parameters
+    """
+    result = db_connector.mysql_query(
+        connection_name=request.connection_name,
+        database=request.database,
+        query=request.query,
+        params=request.params,
+    )
+    if result is None:
+        raise HTTPException(status_code=500, detail="Error executing MySQL query")
+    return result
+
+
+@app.post("/query/mongo/")
+async def mongo_query(request: QueryRequest, api_key: str = Security(get_api_key)):
+    """
+    Endpoint to run MongoDB queries.
+    Here, 'table' is used as the collection name and 'params' as the filter.
+    The 'database' and 'query' fields are ignored for Mongo queries.
+    """
+    result = db_connector.mongo_find(
+        connection_name=request.connection_name,
+        collection=request.table,
+        filter=request.params,
+    )
+    if result is None:
+        raise HTTPException(status_code=500, detail="Error executing Mongo query")
+    return result
 
 
 if __name__ == "__main__":

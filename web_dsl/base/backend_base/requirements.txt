@@ -6,3 +6,5 @@ fastapi
 uvicorn
 httpx
 dotenv
+pymysql
+pymongo
