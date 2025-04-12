@@ -9,6 +9,7 @@ Entity:
         ('description:' description=STRING)?
         'source:' source=[EntitySource]
         'attributes:' '-' attributes*=Attribute['-']
+
         ('topic:' topic=STRING)?
 
         ('path:' path=STRING)?
@@ -16,9 +17,10 @@ Entity:
         ('body:' body=Dict)?
         ('params:' params=Dict)?
 
-        ('db:' db=STRING)?
-        ('table:' table=STRING)?
+        ('database:' database=STRING)?
         ('query:' query=STRING)?
+        ('collection:' collection=STRING)?
+        ('filter:' filter=Dict)?
 
     )#
     'end'

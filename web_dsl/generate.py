@@ -135,10 +135,10 @@ def generate(model_path, gen_path):
         f.write(env_backend_content)
     print(f"Generated {env_backend_output_file}")
 
-    # Collect all components from the model to get what attributes of entities are actually used
-    components = get_children_of_type("Component", model)
-    for component in components:
-        print(component.type.__dict__)
+    # # Collect all components from the model to get what attributes of entities are actually used
+    # components = get_children_of_type("Component", model)
+    # for component in components:
+    #     print(component.type.__dict__)
 
     # Gather all topic from the model
     entities = get_children_of_type("Entity", model)

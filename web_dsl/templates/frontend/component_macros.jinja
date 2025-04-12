@@ -22,6 +22,8 @@
     {% elif element.isComponent %}
         
         {% set sourceOfContent = element.sourceOfContent %}
+        {% set restData={}%}
+        {% set dbData={}%}
 
         {% if sourceOfContent=="rest" %}
             {% set restData = {
@@ -30,9 +32,17 @@
                 "method": element.entity.method or 'GET',
                 "params": element.entity.params or {},
             } %}
-        {% else %}
-            {% set restData = {} %}
+        {% elif sourceOfContent=="db" %}
+            {% set dbData = {
+                "connection_name": element.entity.source.name or 'default',
+                "database": element.entity.database or '',
+                "collection": element.entity.collection or '',
+                "query": element.entity.query or {},
+                "filter": element.entity.filter or {},
+            } %}
         {% endif %}
+
+
 
         {% set sourceOfContent = element.sourceOfContent %}
 
@@ -46,6 +56,7 @@
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 staticValue={ {{type.value_static}} }
+                dbData={ {{dbData}} }
             />
         
         {% elif type.name=="LineChart"%}

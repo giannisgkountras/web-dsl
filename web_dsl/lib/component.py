@@ -9,11 +9,17 @@ class Component:
             entityRef = entity.source.__class__.__name__
         except AttributeError:
             entityRef = None  # or "Unknown", or whatever fallback you prefer
-        self.sourceOfContent = (
-            "broker"
-            if entityRef in ("MQTTBroker", "AMQPBroker", "RedisBroker")
-            else ("rest" if entityRef == "RESTEndpoint" else "static")
-        )
+        source_map = {
+            "MQTTBroker": "broker",
+            "AMQPBroker": "broker",
+            "RedisBroker": "broker",
+            "RESTEndpoint": "rest",
+            "Database": "db",
+            "MySQL": "db",
+            "MongoDB": "db",
+        }
+
+        self.sourceOfContent = source_map.get(entityRef, "static")
 
     def __str__(self):
         return self.name

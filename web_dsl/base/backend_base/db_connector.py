@@ -32,9 +32,9 @@ class DBConnector:
             # Use the connection name directly as the key
             conn_name = cfg.get("name")
             self.connections[conn_name] = connection
-            print(f"✅ MySQL connected to {conn_name}")
+            print(f"MySQL connected to {conn_name}")
         except Exception as e:
-            print(f"❌ MySQL connection error for {cfg.get('name')}: {e}")
+            print(f"MySQL connection error for {cfg.get('name')}: {e}")
 
     def _connect_mongo(self, cfg):
         try:
@@ -48,14 +48,14 @@ class DBConnector:
             conn_name = cfg.get("name")
             db = client[conn_name]
             self.connections[conn_name] = db
-            print(f"✅ MongoDB connected to {conn_name}")
+            print(f"MongoDB connected to {conn_name}")
         except Exception as e:
-            print(f"❌ MongoDB connection error for {cfg.get('name')}: {e}")
+            print(f"MongoDB connection error for {cfg.get('name')}: {e}")
 
     # ----------------------
     # MySQL operations
     # ----------------------
-    def mysql_query(self, connection_name, database, query, params=None):
+    def mysql_query(self, connection_name, database, query):
         """
         Executes a MySQL query on the connection identified by connection_name.
         You must provide the target database and table. The method switches to the specified
@@ -69,7 +69,7 @@ class DBConnector:
         """
         connection = self.connections.get(connection_name)
         if connection is None:
-            print(f"❌ No MySQL connection for {connection_name}")
+            print(f"No MySQL connection for {connection_name}")
             return None
 
         try:
@@ -77,13 +77,13 @@ class DBConnector:
             connection.select_db(database)
 
             with connection.cursor() as cursor:
-                cursor.execute(query, params or ())
+                cursor.execute(query)
                 results = cursor.fetchall()
                 return results
 
         except Exception as e:
             print(
-                f"❌ MySQL query error on connection '{connection_name}', database '{database}': {e}"
+                f"MySQL query error on connection '{connection_name}', database '{database}': {e}"
             )
             return None
 
@@ -97,47 +97,47 @@ class DBConnector:
         """
         db = self.connections.get(connection_name)
         if db is None:
-            print(f"❌ No MongoDB connection for {connection_name}")
+            print(f"No MongoDB connection for {connection_name}")
             return None
         try:
             return list(db[collection].find(filter or {}))
         except Exception as e:
             print(
-                f"❌ Mongo find error on connection '{connection_name}', collection '{collection}': {e}"
+                f"Mongo find error on connection '{connection_name}', collection '{collection}': {e}"
             )
             return None
 
     def mongo_insert(self, connection_name, collection, document):
         db = self.connections.get(connection_name)
         if db is None:
-            print(f"❌ No MongoDB connection for {connection_name}")
+            print(f"No MongoDB connection for {connection_name}")
             return None
         try:
             return db[collection].insert_one(document).inserted_id
         except Exception as e:
             print(
-                f"❌ Mongo insert error on connection '{connection_name}', collection '{collection}': {e}"
+                f"Mongo insert error on connection '{connection_name}', collection '{collection}': {e}"
             )
             return None
 
     def mongo_update(self, connection_name, collection, filter, update):
         db = self.connections.get(connection_name)
         if db is None:
-            print(f"❌ No MongoDB connection for {connection_name}")
+            print(f"No MongoDB connection for {connection_name}")
             return None
         try:
             result = db[collection].update_many(filter, {"$set": update})
             return result.modified_count
         except Exception as e:
             print(
-                f"❌ Mongo update error on connection '{connection_name}', collection '{collection}': {e}"
+                f"Mongo update error on connection '{connection_name}', collection '{collection}': {e}"
             )
             return None
 
     def mongo_delete(self, connection_name, collection, filter):
         db = self.connections.get(connection_name)
         if db is None:
-            print(f"❌ No MongoDB connection for {connection_name}")
+            print(f"No MongoDB connection for {connection_name}")
             return None
         try:
             result = db[collection].delete_many(filter)
