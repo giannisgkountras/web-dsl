@@ -1,0 +1,7 @@
+{% for endpoint in endpoints%}
+{{endpoint.name}}:
+    host: {{endpoint.host}}
+    port: {{endpoint.port}}
+    headers: {{endpoint.headers}}
+    auth: {{endpoint.auth}}
+{% endfor %}

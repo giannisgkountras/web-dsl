@@ -26,7 +26,6 @@ webpage Vroomitor
 
     RESTEndpoint todosEndpoint
         host: "https://jsonplaceholder.typicode.com"
-        path: "/todos/1"
         headers: {"Content-Type": "application/json"}
     end
 
@@ -38,6 +37,7 @@ webpage Vroomitor
 
     Entity todos
         source: todosEndpoint
+        path: "/todos/1"
         attributes:
             - userId: int
             - title: str
@@ -245,12 +245,35 @@ webpage Vroomitor
                 end
             endcol
             col
-                Component staticText
-                    type: Text
-                        content: "Hello world test"
-                        size: 20
-                end
+                
             endcol
         endrow
 
+    end
+
+    Screen StaticScreen
+        title: "Static screen"
+        url: "/static"
+
+        row
+            col
+                Component staticText
+                    type: Text
+                            content: "Hello world test"
+                            size: 20
+                end
+            endcol
+            col
+                Component staticImg
+                    type: Image
+                            source: "https://www.elementaryos-fr.org/wp-content/uploads/2013/09/wallpaper-2692643.jpg"
+                end
+            endcol
+            col
+                Component staticGauge
+                    type: Gauge
+                            value: 83.2
+                end
+            endcol
+        endrow
     end

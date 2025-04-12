@@ -29,9 +29,10 @@ class ComponentType:
 
 
 class Gauge(ComponentType):
-    def __init__(self, parent=None, name="Gauge", value=None):
+    def __init__(self, parent=None, name="Gauge", value=None, value_static=None):
         super().__init__(parent, name)
         self.value = value  # Will be resolved to an Attribute
+        self.value_static = value_static  # Static value for the gauge
 
 
 class Notification(ComponentType):
@@ -42,11 +43,20 @@ class Notification(ComponentType):
 
 
 class Image(ComponentType):
-    def __init__(self, parent=None, name="Image", width=300, height=300, source=None):
+    def __init__(
+        self,
+        parent=None,
+        name="Image",
+        width=300,
+        height=300,
+        source=None,
+        source_static=None,
+    ):
         super().__init__(parent, name)
         self.width = width
         self.height = height
         self.source = source
+        self.source_static = source_static
 
 
 class Alive(ComponentType):

@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
-from utils import load_config
+from utils import load_config, load_endpoint_config
 
 # Load the .env file
 load_dotenv()
@@ -35,6 +35,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Load configuration from config.yaml
 config = load_config()
+endpoint_config = load_endpoint_config()
 
 # Global variable to hold the main event loop
 global_event_loop = None
@@ -178,11 +179,9 @@ async def publish_message(
 
 
 class RESTCallRequest(BaseModel):
-    host: str
-    port: int
+    name: str  # Name of the REST call
     path: str
     method: str
-    headers: dict
     params: dict
     body: dict
 
@@ -190,17 +189,32 @@ class RESTCallRequest(BaseModel):
 @app.post("/restcall")
 async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
     """Make a REST call to a specified endpoint."""
-    url = f"{request.host}:{request.port}{request.path}"
-    logging.info(f"Making {request.method} request to {url}")
+    # Load endpoint configuration
+    current_endpoint = endpoint_config.get(request.name)
+    print(f"Endpoint config: {current_endpoint}")
+    if not current_endpoint:
+        raise HTTPException(
+            status_code=404, detail=f"Endpoint '{request.name}' not found"
+        )
+
+    # Use only dict-style access for current_endpoint
+    host = current_endpoint.get("host")
+    port = current_endpoint.get("port")
+
+    # Build the URL – omit port if it is 0, 80, or 443
+    if port and port not in [0, 80, 443]:
+        url = f"{host}:{port}{request.path}"
+    else:
+        url = f"{host}{request.path}"
 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.request(
-                method=request.method.upper(),
+                method=request.method.upper(),  # use dot notation for request
                 url=url,
-                headers=request.headers,
-                params=request.params,
-                json=request.body,  # use `data=` if it's form-encoded or raw
+                headers=current_endpoint.get("headers", {}) or {},
+                params=request.params,  # dot notation here
+                json=request.body,  # dot notation here
             )
 
             if response.headers.get("content-type", "").startswith("application/json"):

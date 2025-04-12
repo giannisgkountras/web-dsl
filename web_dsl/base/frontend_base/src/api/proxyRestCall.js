@@ -2,21 +2,17 @@ import api from "./index";
 import { toast } from "react-toastify";
 
 export const proxyRestCall = async ({
-    host,
-    port = 443,
+    name,
     path,
     method = "GET",
-    headers = {},
     params = {},
     body = {}
 }) => {
     try {
         const restCallPayload = {
-            host,
-            port,
+            name,
             path,
             method,
-            headers,
             params,
             body
         };

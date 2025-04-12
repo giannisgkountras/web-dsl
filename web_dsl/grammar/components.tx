@@ -19,11 +19,11 @@ ComponentType:
 ;
 
 Button:
-    'Button' (name=ID)? content=STRING
+    'Button' content=STRING
 ;
 
 Input:
-    'Input' (name=ID)?
+    'Input'
     (
         ('type:' type=InputType)
         ('placeholder:' placeholder=STRING)
@@ -36,7 +36,8 @@ InputType:
 ;
 
 Label:
-    'Label' (name=ID)? 'content:' content=STRING
+    'Label' 
+        'content:' content=STRING
 ;
 
 Form:
@@ -55,7 +56,7 @@ Image:
     ( 
         ('width:' width=INT)?
         ('height:' height=INT)?
-        ('source:' source=[Attribute|ID])?
+        ('source:' (source=[Attribute|ID] | source_static=STRING))?
     )#
 ;
 
@@ -95,7 +96,7 @@ LiveTable:
 
 Gauge:
     'Gauge' 
-    'value:' value=[Attribute|ID]
+    'value:' (value=[Attribute|ID] |  value_static=FLOAT)
 ;
 
 JsonViewer:

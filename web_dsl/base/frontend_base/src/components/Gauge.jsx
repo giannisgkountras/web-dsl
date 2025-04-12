@@ -8,18 +8,22 @@ import { proxyRestCall } from "../api/proxyRestCall";
 import { useEffect } from "react";
 import { IoReload } from "react-icons/io5";
 
-const Gauge = ({ topic, attribute, sourceOfContent, restData }) => {
+const Gauge = ({
+    topic,
+    attribute,
+    sourceOfContent,
+    restData,
+    staticValue
+}) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(0);
     const fetchValue = () => {
-        const { host, port, path, method, headers, params } = restData;
+        const { name, path, method, params } = restData;
 
         proxyRestCall({
-            host,
-            port,
+            name,
             path,
             method,
-            headers,
             params
         })
             .then((response) => {
@@ -71,7 +75,11 @@ const Gauge = ({ topic, attribute, sourceOfContent, restData }) => {
                     <IoReload size={24} />
                 </button>
             )}
-            <GaugeComponent value={currentValue} />
+            {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
+                <GaugeComponent value={currentValue} />
+            ) : (
+                <GaugeComponent value={staticValue} />
+            )}
         </div>
     );
 };

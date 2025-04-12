@@ -73,11 +73,7 @@ RESTEndpoint:
     (
         ('host:' host=STRING)
         ('port:' port=INT)?
-        ('path:' path=STRING)?
-        ('method:' method=RESTVerb)?
         ('headers:' header=Dict)?
-        ('params:' params=Dict)?
-        ('body:' body=Dict)?
         ('auth:' auth=[AuthApiKey])?
     )#
     'end'
@@ -99,9 +95,6 @@ MySQL:
         ('host:' host=STRING)
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
-        ('db:' db=STRING)
-        ('table:' table=STRING)
-        ('query:' query=STRING)
     )#
     'end'
 ;
@@ -112,9 +105,6 @@ Mongo:
         ('host:' host=STRING)
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
-        ('db:' db=STRING)
-        ('collection:' collection=STRING)
-        ('query:' query=STRING)
     )#
     'end'
 ;

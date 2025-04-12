@@ -13,20 +13,19 @@ const CustomImage = ({
     height,
     source,
     sourceOfContent,
-    restData
+    restData,
+    sourceStatic
 }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
 
     const fetchValue = () => {
-        const { host, port, path, method, headers, params } = restData;
+        const { name, path, method, params } = restData;
 
         proxyRestCall({
-            host,
-            port,
+            name,
             path,
             method: "GET",
-            headers,
             params
         })
             .then((response) => {
@@ -81,13 +80,23 @@ const CustomImage = ({
                     <IoReload size={24} />
                 </button>
             )}
-            <img
-                style={{
-                    width: `${width ? width : 400}px`,
-                    height: `${height ? height : 400}px`
-                }}
-                src={frame}
-            ></img>
+            {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
+                <img
+                    style={{
+                        width: `${width ? width : 400}px`,
+                        height: `${height ? height : 400}px`
+                    }}
+                    src={frame}
+                ></img>
+            ) : (
+                <img
+                    style={{
+                        width: `${width ? width : 400}px`,
+                        height: `${height ? height : 400}px`
+                    }}
+                    src={sourceStatic}
+                ></img>
+            )}
         </div>
     );
 };

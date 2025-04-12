@@ -13,14 +13,12 @@ const JsonViewer = ({ topic, attributes, sourceOfContent, restData }) => {
     const ws = useContext(WebsocketContext);
 
     const fetchValue = () => {
-        const { host, port, path, method, headers, params } = restData;
+        const { name, path, method, params } = restData;
 
         proxyRestCall({
-            host,
-            port,
+            name,
             path,
             method,
-            headers,
             params
         })
             .then((response) => {

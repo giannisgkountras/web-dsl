@@ -25,12 +25,10 @@
 
         {% if sourceOfContent=="rest" %}
             {% set restData = {
-                "host": element.entity.source.host or 'localhost',
-                "port": element.entity.source.port or 443,
-                "path": element.entity.source.path or '',
-                "method": element.entity.source.method or 'GET',
-                "headers": element.entity.source.headers or {},
-                "params": element.entity.source.params or {},
+                "name": element.entity.source.name or 'default',
+                "path": element.entity.path or '',
+                "method": element.entity.method or 'GET',
+                "params": element.entity.params or {},
             } %}
         {% else %}
             {% set restData = {} %}
@@ -47,6 +45,7 @@
                 attribute={ {name: "{{type.value.name}}", type: "{{type.value.__class__.__name__}}"  } } 
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
+                staticValue={ {{type.value_static}} }
             />
         
         {% elif type.name=="LineChart"%}
@@ -143,6 +142,7 @@
                 height={ {{type.height}} }
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
+                sourceStatic={"{{type.source_static}}"}
             />
 
         {% elif type.name=="Text" %}

@@ -1,13 +1,26 @@
 import communication
+import types
 
 EntitySource: (MessageBroker | RESTEndpoint | Database);
 
 Entity:
     'Entity' name=ID
-    'source:' source=[EntitySource]
-    ('topic:' topic=STRING)?
-    'attributes:' '-' attributes*=Attribute['-']
-    ('description:' description=STRING)?
+    (
+        ('description:' description=STRING)?
+        'source:' source=[EntitySource]
+        'attributes:' '-' attributes*=Attribute['-']
+        ('topic:' topic=STRING)?
+
+        ('path:' path=STRING)?
+        ('method:' method=RESTVerb)?
+        ('body:' body=Dict)?
+        ('params:' params=Dict)?
+
+        ('db:' db=STRING)?
+        ('table:' table=STRING)?
+        ('query:' query=STRING)?
+
+    )#
     'end'
 ;
 

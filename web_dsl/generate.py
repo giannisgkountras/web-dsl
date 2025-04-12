@@ -41,6 +41,7 @@ dot_env_frontend_template = frontend_env.get_template("dot_env_template.jinja")
 dot_env_backend_template = backend_env.get_template("dot_env_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
+endpoint_config_template = backend_env.get_template("endpoint_config.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
 
 docker_compose_template = backend_env.get_template("docker_compose_template.jinja")
@@ -172,6 +173,19 @@ def generate(model_path, gen_path):
     with open(config_output_file, "w", encoding="utf-8") as f:
         f.write(config_content)
     print(f"Generated: {config_output_file}")
+
+    # Generate endpoint config file
+    all_endpoints = get_children_of_type("RESTEndpoint", model)
+    endpoint_config_dir = os.path.join(gen_path, "backend")
+    endpoint_config_output_file = os.path.join(
+        endpoint_config_dir, "endpoint_config.yaml"
+    )
+    endpoint_config_content = endpoint_config_template.render(
+        endpoints=all_endpoints,
+    )
+    with open(endpoint_config_output_file, "w", encoding="utf-8") as f:
+        f.write(endpoint_config_content)
+    print(f"Generated: {endpoint_config_output_file}")
 
     dockerfile_output_file = os.path.join(gen_path, "backend", "Dockerfile")
     dockerfile_content = dockerfile_template.render(

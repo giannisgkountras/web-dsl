@@ -13,14 +13,12 @@ const Publish = ({ brokerName, apiName, destinationTopic, json, restData }) => {
     const [jsonError, setJsonError] = useState(null);
 
     const postCall = () => {
-        const { host, port, path, method, headers, params } = restData;
+        const { path, method, params } = restData;
 
         proxyRestCall({
-            host,
-            port,
+            name: apiName,
             path,
             method: method || "POST",
-            headers,
             params,
             body: dataToPublish
         })
