@@ -4,6 +4,7 @@ import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
+import { queryDB } from "../api/dbQuery";
 import { IoReload } from "react-icons/io5";
 
 const Text = ({
@@ -13,7 +14,8 @@ const Text = ({
     color,
     sourceOfContent,
     restData,
-    staticContent
+    staticContent,
+    dbData
 }) => {
     const [content, setContent] = useState("");
     const ws = useContext(WebsocketContext);
@@ -46,9 +48,50 @@ const Text = ({
             });
     };
 
+    const fetchFromDB = () => {
+        const { connection_name, database, query, collection, filter } = dbData;
+
+        queryDB({
+            connection_name,
+            database,
+            query,
+            collection,
+            filter
+        })
+            .then((response) => {
+                try {
+                    // check if response is a list
+                    let responseRow = null;
+                    if (Array.isArray(response)) {
+                        responseRow = response[0];
+                    } else {
+                        responseRow = response;
+                    }
+
+                    const value = convertTypeValue(
+                        responseRow[attribute.name],
+                        attribute.type
+                    );
+                    setContent(value);
+                } catch (error) {
+                    toast.error(
+                        "An error occurred while converting value: " +
+                            error.message
+                    );
+                }
+            })
+            .catch((error) => {
+                toast.error("Error fetching initial value: " + error.message);
+                console.error("Error fetching initial value:", error);
+            });
+    };
+
     useEffect(() => {
         if (sourceOfContent === "rest") {
             fetchValue();
+        }
+        if (sourceOfContent === "db") {
+            fetchFromDB();
         }
     }, []);
 
@@ -62,24 +105,34 @@ const Text = ({
             console.error("Error updating status:", error);
         }
     });
+
+    const reloadContent = () => {
+        if (sourceOfContent === "rest") {
+            fetchValue();
+        }
+        if (sourceOfContent === "db") {
+            fetchFromDB();
+        }
+    };
+
     return (
         <div className="flex relative w-fit h-fit p-5">
-            {"rest" === sourceOfContent && (
+            {(sourceOfContent === "rest" || "db") && (
                 <button
                     className="absolute top-0 right-0 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                    onClick={fetchValue}
+                    onClick={reloadContent}
                     title="Refresh Value"
                 >
                     <IoReload size={24} />
                 </button>
             )}
-            {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
+            {sourceOfContent === "static" ? (
                 <h1 style={{ fontSize: `${size}px`, color: `${color}` }}>
-                    {content}
+                    {staticContent}
                 </h1>
             ) : (
                 <h1 style={{ fontSize: `${size}px`, color: `${color}` }}>
-                    {staticContent}
+                    {content}
                 </h1>
             )}
         </div>

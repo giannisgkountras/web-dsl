@@ -82,8 +82,16 @@ const Gauge = ({
         })
             .then((response) => {
                 try {
+                    // check if response is a list
+                    let responseRow = null;
+                    if (Array.isArray(response)) {
+                        responseRow = response[0];
+                    } else {
+                        responseRow = response;
+                    }
+
                     const value = convertTypeValue(
-                        response[attribute.name],
+                        responseRow[attribute.name],
                         attribute.type
                     );
                     setCurrentValue(value);
@@ -119,10 +127,10 @@ const Gauge = ({
                     <IoReload size={24} />
                 </button>
             )}
-            {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
-                <GaugeComponent value={currentValue} />
-            ) : (
+            {sourceOfContent === "static" ? (
                 <GaugeComponent value={staticValue} />
+            ) : (
+                <GaugeComponent value={currentValue} />
             )}
         </div>
     );

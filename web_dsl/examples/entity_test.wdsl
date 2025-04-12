@@ -262,14 +262,6 @@ webpage Vroomitor
         title: "Static screen"
         url: "/static"
 
-        Entity mysqlUsers
-            source: HomeSQL
-            attributes:
-                - id: int
-            database: "thesis"
-            query: "SELECT * FROM users"
-        end
-        
         row
             col
                 Component staticText
@@ -299,12 +291,29 @@ webpage Vroomitor
         title: "Database screen"
         url: "/db"
 
+        Entity mysqlUsers
+            source: HomeSQL
+            attributes:
+                - id: int
+                - name: str
+            database: "thesis"
+            query: "SELECT * FROM users WHERE id=3"
+        end
+
         row
             col
                 Component DBGauge
                     entity: mysqlUsers
                     type: Gauge
-                        value: id
+                            value: id
+                end
+            endcol
+            col
+                Component DBText
+                    entity: mysqlUsers
+                    type: Text
+                            content: name
+                            size: 30
                 end
             endcol
         endrow
