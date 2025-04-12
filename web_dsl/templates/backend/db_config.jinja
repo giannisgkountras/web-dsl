@@ -1,0 +1,17 @@
+mysql:
+{% for db in mysql_databases %}
+  - name: {{ db.name }}
+        host: {{ db.host }}
+        port: {{ db.port }}
+        user: {{ db.auth.username }}
+        password: {{ db.auth.password }}
+{% endfor %}
+
+mongo:
+{% for db in mongo_databases %}
+  - name: {{ db.name }}
+        host: {{ db.host }}
+        port: {{ db.port }}
+        user: {{ db.auth.username }}
+        password: {{ db.auth.password }}
+{% endfor %}

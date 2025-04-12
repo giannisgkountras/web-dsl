@@ -34,6 +34,13 @@ webpage Vroomitor
         headers: {"Content-Type": "application/json"}
     end
 
+    Database<MySQL> HomeSQL
+        host: "192.168.1.6"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+    end
 
     Entity todos
         source: todosEndpoint
@@ -276,4 +283,9 @@ webpage Vroomitor
                 end
             endcol
         endrow
+    end
+
+    Screen DBScreen
+        title: "Database screen"
+        url: "/db"
     end

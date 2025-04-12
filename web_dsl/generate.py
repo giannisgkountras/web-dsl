@@ -42,6 +42,7 @@ dot_env_backend_template = backend_env.get_template("dot_env_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
 endpoint_config_template = backend_env.get_template("endpoint_config.jinja")
+db_config_template = backend_env.get_template("db_config.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
 
 docker_compose_template = backend_env.get_template("docker_compose_template.jinja")
@@ -187,6 +188,20 @@ def generate(model_path, gen_path):
         f.write(endpoint_config_content)
     print(f"Generated: {endpoint_config_output_file}")
 
+    # Generate Database config
+    mysql_databases = get_children_of_type("MySQL", model)
+    mongo_databases = get_children_of_type("Mongo", model)
+
+    db_config_dir = os.path.join(gen_path, "backend")
+    db_config_output_file = os.path.join(db_config_dir, "db_config.yaml")
+    db_config_content = db_config_template.render(
+        mysql_databases=mysql_databases, mongo_databases=mongo_databases
+    )
+    with open(db_config_output_file, "w", encoding="utf-8") as f:
+        f.write(db_config_content)
+    print(f"Generated: {db_config_output_file}")
+
+    # Generate dockerfile
     dockerfile_output_file = os.path.join(gen_path, "backend", "Dockerfile")
     dockerfile_content = dockerfile_template.render(
         websocket=model.websocket, api=model.api
