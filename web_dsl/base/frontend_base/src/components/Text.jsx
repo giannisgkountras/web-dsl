@@ -3,8 +3,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
 import { toast } from "react-toastify";
-import { proxyRestCall } from "../api/proxyRestCall";
-import { queryDB } from "../api/dbQuery";
+import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 import { IoReload } from "react-icons/io5";
 
 const Text = ({
@@ -19,80 +18,18 @@ const Text = ({
 }) => {
     const [content, setContent] = useState("");
     const ws = useContext(WebsocketContext);
-    const fetchValue = () => {
-        const { name, path, method, params } = restData;
 
-        proxyRestCall({
-            name,
-            path,
-            method: "GET",
-            params
-        })
-            .then((response) => {
-                try {
-                    const newContent = convertTypeValue(
-                        response[attribute.name],
-                        attribute.type
-                    );
-                    setContent(newContent);
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
-    };
-
-    const fetchFromDB = () => {
-        const { connection_name, database, query, collection, filter } = dbData;
-
-        queryDB({
-            connection_name,
-            database,
-            query,
-            collection,
-            filter
-        })
-            .then((response) => {
-                try {
-                    // check if response is a list
-                    let responseRow = null;
-                    if (Array.isArray(response)) {
-                        responseRow = response[0];
-                    } else {
-                        responseRow = response;
-                    }
-
-                    const value = convertTypeValue(
-                        responseRow[attribute.name],
-                        attribute.type
-                    );
-                    setContent(value);
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
+    const reloadContent = () => {
+        if (sourceOfContent === "rest") {
+            fetchValueFromRest(restData, attribute, setContent);
+        }
+        if (sourceOfContent === "db") {
+            fetchValueFromDB(dbData, attribute, setContent);
+        }
     };
 
     useEffect(() => {
-        if (sourceOfContent === "rest") {
-            fetchValue();
-        }
-        if (sourceOfContent === "db") {
-            fetchFromDB();
-        }
+        reloadContent();
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
@@ -105,15 +42,6 @@ const Text = ({
             console.error("Error updating status:", error);
         }
     });
-
-    const reloadContent = () => {
-        if (sourceOfContent === "rest") {
-            fetchValue();
-        }
-        if (sourceOfContent === "db") {
-            fetchFromDB();
-        }
-    };
 
     return (
         <div className="flex relative w-fit h-fit p-5">

@@ -4,10 +4,9 @@ import { WebsocketContext } from "../context/WebsocketContext";
 import convertTypeValue from "../utils/convertTypeValue";
 import { GaugeComponent } from "react-gauge-component";
 import { toast } from "react-toastify";
-import { proxyRestCall } from "../api/proxyRestCall";
-import { queryDB } from "../api/dbQuery";
 import { useEffect } from "react";
 import { IoReload } from "react-icons/io5";
+import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 
 const Gauge = ({
     topic,
@@ -19,43 +18,6 @@ const Gauge = ({
 }) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(0);
-    const fetchValue = () => {
-        const { name, path, method, params } = restData;
-
-        proxyRestCall({
-            name,
-            path,
-            method,
-            params
-        })
-            .then((response) => {
-                try {
-                    const value = convertTypeValue(
-                        response[attribute.name],
-                        attribute.type
-                    );
-                    setCurrentValue(value);
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
-    };
-
-    useEffect(() => {
-        if (sourceOfContent === "rest") {
-            fetchValue();
-        }
-        if (sourceOfContent === "db") {
-            fetchFromDB();
-        }
-    }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
@@ -70,52 +32,19 @@ const Gauge = ({
         }
     });
 
-    const fetchFromDB = () => {
-        const { connection_name, database, query, collection, filter } = dbData;
-
-        queryDB({
-            connection_name,
-            database,
-            query,
-            collection,
-            filter
-        })
-            .then((response) => {
-                try {
-                    // check if response is a list
-                    let responseRow = null;
-                    if (Array.isArray(response)) {
-                        responseRow = response[0];
-                    } else {
-                        responseRow = response;
-                    }
-
-                    const value = convertTypeValue(
-                        responseRow[attribute.name],
-                        attribute.type
-                    );
-                    setCurrentValue(value);
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
-    };
-
     const reloadValue = () => {
         if (sourceOfContent === "rest") {
-            fetchValue();
+            fetchValueFromRest(restData, attribute, setCurrentValue);
         }
         if (sourceOfContent === "db") {
-            fetchFromDB();
+            fetchValueFromDB(dbData, attribute, setCurrentValue);
         }
     };
+
+    useEffect(() => {
+        reloadValue();
+    }, []);
+
     return (
         <div className="flex justify-center items-center relative">
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (

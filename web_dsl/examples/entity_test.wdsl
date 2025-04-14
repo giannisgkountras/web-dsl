@@ -258,6 +258,56 @@ webpage Vroomitor
 
     end
 
+    Screen DBScreen
+        title: "Database screen"
+        url: "/db"
+
+        Entity mysqlUsers
+            source: HomeSQL
+            attributes:
+                - id: int
+                - name: str
+            database: "thesis"
+            query: "SELECT * FROM users"
+        end
+
+        row
+            col
+                Component DBGauge
+                    entity: mysqlUsers
+                    type: Gauge
+                            value: id
+                end
+            endcol
+            col
+                row
+                    Component DBText
+                        entity: mysqlUsers
+                        type: Text
+                                content: name
+                                size: 30
+                    end
+                endrow
+                row
+                    Component dbJsonFirstUser
+                        entity: mysqlUsers
+                        type: JsonViewer
+                            attributes: id, name
+                    end
+                endrow
+                
+            endcol
+            col
+                Component dbJson
+                    entity: mysqlUsers
+                    type: JsonViewer
+                end
+            endcol
+        endrow
+
+
+    end
+
     Screen StaticScreen
         title: "Static screen"
         url: "/static"
@@ -295,40 +345,4 @@ webpage Vroomitor
                 end
             endcol
         endrow
-    end
-
-
-
-    Screen DBScreen
-        title: "Database screen"
-        url: "/db"
-
-        Entity mysqlUsers
-            source: HomeSQL
-            attributes:
-                - id: int
-                - name: str
-            database: "thesis"
-            query: "SELECT * FROM users WHERE id=3"
-        end
-
-        row
-            col
-                Component DBGauge
-                    entity: mysqlUsers
-                    type: Gauge
-                            value: id
-                end
-            endcol
-            col
-                Component DBText
-                    entity: mysqlUsers
-                    type: Text
-                            content: name
-                            size: 30
-                end
-            endcol
-        endrow
-
-
     end
