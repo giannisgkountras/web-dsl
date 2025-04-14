@@ -283,6 +283,18 @@ webpage Vroomitor
                 end
             endcol
         endrow
+        row
+            col
+                Component staticChart
+                    type: LineChart
+                        xLabel: "Age"
+                        yLabel: "Students"
+                        xValue: "age"
+                        yValues: "student_number", "mean_grade"
+                        staticData: [{"age":20, "student_number": 50, "mean_grade": 8.1}, {"age":21, "student_number": 24, "mean_grade": 6.8}, {"age":23, "student_number": 80, "mean_grade": 7.3}]
+                end
+            endcol
+        endrow
     end
 
 

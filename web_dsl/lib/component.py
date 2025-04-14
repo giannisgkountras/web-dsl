@@ -80,12 +80,16 @@ class LineChart(ComponentType):
         yLabel="Y-Axis",
         xValue=None,
         yValues=None,
+        xValue_static=None,
+        yValues_static=None,
+        staticData=[],
     ):
         super().__init__(parent, name)
         self.xLabel = xLabel
         self.yLabel = yLabel
         self.xValue = xValue
         self.yValues = yValues
+        self.staticData = staticData
 
 
 class Publish(ComponentType):

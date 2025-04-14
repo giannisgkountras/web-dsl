@@ -1,5 +1,6 @@
 import entity
 import communication
+import types
 
 Component:
     'Component' name=ID
@@ -84,8 +85,9 @@ LineChart:
     (
         ('xLabel:' xLabel=STRING)
         ('yLabel:' yLabel=STRING)
-        ('xValue:' xValue=[Attribute|ID])
-        ('yValues:' yValues+=[Attribute|ID][','])
+        ('xValue:' (xValue=[Attribute|ID] | xValue_static=STRING))
+        ('yValues:' (yValues+=[Attribute|ID][','] | yValues_static+=STRING[',']))
+        ('staticData:' staticData=List)?
     )#
 ;
 

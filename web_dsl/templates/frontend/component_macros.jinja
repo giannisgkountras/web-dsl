@@ -65,7 +65,7 @@
                 topic={"{{topic}}"} 
                 xLabel={"{{type.xLabel}}"} 
                 yLabel={"{{type.yLabel}}"} 
-                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.value.__class__.__name__}}" },
+                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.xValue.__class__.__name__}}" },
                     {% for attr in type.yValues %}
                         {
                         name: "{{ attr.name }}",
@@ -73,6 +73,22 @@
                         },
                     {% endfor %}    
                   ]}
+                sourceOfContent={"{{sourceOfContent}}"}
+                {% if type.staticData %}
+                    xValue={"{{type.xValue_static}}"}
+                    yValues={[ {% for item in type.yValues_static %}
+                                "{{item}}",
+                            {% endfor %}  ]}
+                    staticData={ [ 
+                        {% for group in type.staticData.items %}
+                            {   
+                                {% for dictItem in group.items %}
+                                    "{{ dictItem.name }}": "{{ dictItem.value }}"{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            }{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    ] }
+                {% endif %}
             />
 
         {% elif type.name=="LiveTable"%}
