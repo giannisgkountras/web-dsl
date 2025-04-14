@@ -42,17 +42,9 @@ const CustomLineChart = ({
     // Define an array of colors for the lines
     const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
-    // Ensure there are at least two attributes: one for X-axis and one for Y-axis
-    if (attributes.length < 2) {
-        return (
-            <div>
-                Error: At least two attributes are required for the chart.
-            </div>
-        );
-    }
-
-    const xDataKey = attributes[0].name || xValue; // First attribute for X-axis or X-value if static content
-    const lineAttributes = attributes.slice(1) || yValues; // Remaining attributes for lines or Y-values if static content
+    const xDataKey = sourceOfContent === "static" ? xValue : attributes[0].name; // First attribute for X-axis or X-value if static content
+    const lineAttributes =
+        sourceOfContent === "static" ? yValues : attributes.slice(1); // Remaining attributes for lines or Y-values if static content
 
     return (
         <LineChart

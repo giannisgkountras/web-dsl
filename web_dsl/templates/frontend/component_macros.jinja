@@ -79,7 +79,7 @@
                     yValues={[ {% for item in type.yValues_static %}
                                 "{{item}}",
                             {% endfor %}  ]}
-                    staticData={ [ 
+                    staticChartData={ [ 
                         {% for group in type.staticData.items %}
                             {   
                                 {% for dictItem in group.items %}

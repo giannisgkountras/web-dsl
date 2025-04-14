@@ -118,7 +118,7 @@ const Gauge = ({
     };
     return (
         <div className="flex justify-center items-center relative">
-            {(sourceOfContent === "rest" || "db") && (
+            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                 <button
                     className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
                     onClick={reloadValue}
