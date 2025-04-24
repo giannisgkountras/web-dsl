@@ -12,8 +12,12 @@ WebPage:
     ('navbar:'  navbar=BOOL)?
     (
         (brokers*=MessageBroker)*
-        (endpoints*=RESTEndpoint)*
         (databases*=Database)*
+        (restapis*=RESTApi)*
+        (endpoints*=RESTEndpoint)*
+        (mysqlqueries*=MySQLQuery)*
+        (mongodbqueries*=MongoDBQuery)*
+        (brokertopics*=BrokerTopic)*
         (api=API)?
         (websocket=Websocket)?
         (reusableComponents*=Component)*

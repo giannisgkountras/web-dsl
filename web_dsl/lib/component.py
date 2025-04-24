@@ -6,14 +6,14 @@ class Component:
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
         try:
-            entityRef = entity.source.__class__.__name__
+            entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
             entityRef = None  # or "Unknown", or whatever fallback you prefer
         source_map = {
             "MQTTBroker": "broker",
             "AMQPBroker": "broker",
             "RedisBroker": "broker",
-            "RESTEndpoint": "rest",
+            "RESTApi": "rest",
             "Database": "db",
             "MySQL": "db",
             "MongoDB": "db",
@@ -94,11 +94,17 @@ class LineChart(ComponentType):
 
 class Publish(ComponentType):
     def __init__(
-        self, parent=None, name="Publish", broker=None, api=None, topic=None, json=None
+        self,
+        parent=None,
+        name="Publish",
+        broker=None,
+        endpoint=None,
+        topic=None,
+        json=None,
     ):
         super().__init__(parent, name)
         self.broker = broker
-        self.api = api
+        self.endpoint = endpoint
         self.topic = topic
         self.json = json
 

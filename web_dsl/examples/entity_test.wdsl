@@ -24,14 +24,41 @@ webpage Vroomitor
         port: 8080
     end
 
-    RESTEndpoint todosEndpoint
+    RESTApi todosAPI
         host: "https://jsonplaceholder.typicode.com"
         headers: {"Content-Type": "application/json"}
     end
 
-    RESTEndpoint echoEndpoint
+    RESTApi echoAPI
         host: "https://httpbin.org/anything"
         headers: {"Content-Type": "application/json"}
+    end
+
+    // ——— define specific endpoints/topics/queries ———
+
+    RESTEndpoint todosEndpoint
+        connection: todosAPI
+        path: "/todos/1"
+    end
+
+    RESTEndpoint echoEndpoint
+        connection: echoAPI
+        path: "/anything"
+    end
+
+    BrokerTopic cpuTopic
+        connection: HomeBroker
+        topic: "cpu"
+    end
+
+    BrokerTopic carinfoTopic
+        connection: HomeBroker
+        topic: "carinfo"
+    end
+
+    BrokerTopic allLogsTopic
+        connection: LabRedis
+        topic: "alllogs"
     end
 
     Database<MySQL> HomeSQL
@@ -40,48 +67,61 @@ webpage Vroomitor
         auth:
             username: "thesis"
             password: "password"
+        database: "thesis"
     end
+
+    MySQLQuery mysqlUsersQuery
+        connection: HomeSQL
+        query: "SELECT * FROM users"
+    end
+
+    // ——— now each Entity picks exactly one “EntitySource” ———
 
     Entity todos
         source: todosEndpoint
-        path: "/todos/1"
         attributes:
             - userId: int
             - title: str
     end
 
     Entity cpuMetrics
-        source: HomeBroker
-        topic: "cpu"
+        source: cpuTopic
         attributes:
             - timestamp: int
             - jetson: float
-            - rpi: float 
+            - rpi: float
             - laptop: float
     end
 
     Entity carInformation
-        source: HomeBroker
-        topic: "carinfo"
+        source: carinfoTopic
         attributes:
             - rpi: float
             - frame: str
-            - speed: float 
+            - speed: float
             - state: str
     end
 
     Entity allLogsRedis
-        source: LabRedis
-        topic: "alllogs"
+        source: allLogsTopic
         attributes:
             - error: str
             - info: str
             - warning: str
     end
 
+    Entity mysqlUsers
+        source: mysqlUsersQuery
+        attributes:
+            - id: int
+            - name: str
+    end
+
+    // ——— Components & Screens remain the same, just point at the Entities above ———
+
     Component title
         entity: todos
-        type: Text 
+        type: Text
             content: title
             size: 50
             color: "#00BDFE"
@@ -90,17 +130,17 @@ webpage Vroomitor
     Component JetsonGaugeCPU
         entity: cpuMetrics
         type: Gauge
-                value: jetson
+            value: jetson
     end
 
     Component RPIGaugeCPU
         entity: cpuMetrics
         type: Gauge
-        value: rpi
+            value: rpi
     end
 
     Component ErrorNotification
-        entity: allLogsRedis 
+        entity: allLogsRedis
         type: Notification
             type: error
             message: error
@@ -109,7 +149,7 @@ webpage Vroomitor
     Component Camera
         entity: carInformation
         type: Image
-            width:  450
+            width: 450
             height: 300
             source: frame
     end
@@ -128,20 +168,19 @@ webpage Vroomitor
         type: JsonViewer
     end
 
-    // this is a comment test mpla mpla
-
     Screen Dashboard
         title: "Dashboard"
         url: "/"
 
         use ErrorNotification
+
         row
-            col 
+            col
                 row
                     use JetsonGaugeCPU
                 endrow
                 row
-                   use RPIGaugeCPU 
+                   use RPIGaugeCPU
                 endrow
             endcol
             col
@@ -152,12 +191,13 @@ webpage Vroomitor
                 end
             endcol
             col
-                use Camera     
+                use Camera
             endcol
             col
                 use CPUChart
             endcol
         endrow
+
         row
             col
                 Component MQTTPublisher
@@ -187,7 +227,7 @@ webpage Vroomitor
                         type: Publish
                             broker: HomeBroker
                             topic: "test"
-                            json:"{\"signal\":\"stop_car\"}"
+                            json: "{\"signal\":\"stop_car\"}"
                     end
                 endrow
             endcol
@@ -201,11 +241,6 @@ webpage Vroomitor
         endrow
     end
 
-
-    
-
-    
-
     Screen RestScreen
         title: "Rest Screen"
         url: "/rest"
@@ -215,7 +250,7 @@ webpage Vroomitor
                 Component RestGauge
                     entity: todos
                     type: Gauge
-                            value: userId
+                        value: userId
                 end
             endcol
             col
@@ -227,56 +262,46 @@ webpage Vroomitor
             col
                 Component restPublish
                     type: Publish
-                        api: echoEndpoint
+                        endpoint: echoEndpoint
                 end
             endcol
             col
                 row
-                Component restPublishWithJson
-                    type: Publish
-                        api: echoEndpoint
-                        json:"{\"signal\":\"stop_car\"}"
-                end
+                    Component restPublishWithJson
+                        type: Publish
+                            endpoint: echoEndpoint
+                            json: "{\"signal\":\"stop_car\"}"
+                    end
                 endrow
                 row
                     use title
                 endrow
             endcol
         endrow
+
         row
             col
                 Component restImage
                     entity: todos
-                        type: Image
-                            source: title
+                    type: Image
+                        source: title
                 end
             endcol
             col
-                
             endcol
         endrow
-
     end
 
     Screen DBScreen
         title: "Database screen"
         url: "/db"
 
-        Entity mysqlUsers
-            source: HomeSQL
-            attributes:
-                - id: int
-                - name: str
-            database: "thesis"
-            query: "SELECT * FROM users"
-        end
-
         row
             col
                 Component DBGauge
                     entity: mysqlUsers
                     type: Gauge
-                            value: id
+                        value: id
                 end
             endcol
             col
@@ -284,8 +309,8 @@ webpage Vroomitor
                     Component DBText
                         entity: mysqlUsers
                         type: Text
-                                content: name
-                                size: 30
+                            content: name
+                            size: 30
                     end
                 endrow
                 row
@@ -295,7 +320,6 @@ webpage Vroomitor
                             attributes: id, name
                     end
                 endrow
-                
             endcol
             col
                 Component dbJson
@@ -304,8 +328,6 @@ webpage Vroomitor
                 end
             endcol
         endrow
-
-
     end
 
     Screen StaticScreen
@@ -316,20 +338,20 @@ webpage Vroomitor
             col
                 Component staticText
                     type: Text
-                            content: "Hello world test"
-                            size: 20
+                        content: "Hello world test"
+                        size: 20
                 end
             endcol
             col
                 Component staticImg
                     type: Image
-                            source: "https://www.elementaryos-fr.org/wp-content/uploads/2013/09/wallpaper-2692643.jpg"
+                        source: "https://www.elementaryos-fr.org/wp-content/uploads/2013/09/wallpaper-2692643.jpg"
                 end
             endcol
             col
                 Component staticGauge
                     type: Gauge
-                            value: 83.2
+                        value: 83.2
                 end
             endcol
         endrow
@@ -341,7 +363,11 @@ webpage Vroomitor
                         yLabel: "Students"
                         xValue: "age"
                         yValues: "student_number", "mean_grade"
-                        staticData: [{"age":20, "student_number": 50, "mean_grade": 8.1}, {"age":21, "student_number": 24, "mean_grade": 6.8}, {"age":23, "student_number": 80, "mean_grade": 7.3}]
+                        staticData: [
+                            {"age":20, "student_number":50, "mean_grade":8.1},
+                            {"age":21, "student_number":24, "mean_grade":6.8},
+                            {"age":23, "student_number":80, "mean_grade":7.3}
+                        ]
                 end
             endcol
         endrow

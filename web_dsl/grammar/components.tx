@@ -114,7 +114,7 @@ Alive:
 Publish:
     'Publish'
     ('broker:' broker=[MessageBroker])?
-    ('api:' api=[RESTEndpoint])?
+    ('endpoint:' endpoint=[RESTEndpoint])?
     (
         ('topic:' topic=STRING)?
         ('json:' json=STRING)?

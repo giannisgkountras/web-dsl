@@ -24,30 +24,26 @@
         {% set sourceOfContent = element.sourceOfContent %}
         {% set restData={}%}
         {% set dbData={}%}
-
+        {% set topic=None%}
         {% if sourceOfContent=="rest" %}
             {% set restData = {
-                "name": element.entity.source.name or 'default',
-                "path": element.entity.path or '',
-                "method": element.entity.method or 'GET',
-                "params": element.entity.params or {},
+                "name": element.entity.source.connection.name or 'default',
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "params": element.entity.source.params or {},
             } %}
         {% elif sourceOfContent=="db" %}
             {% set dbData = {
-                "connection_name": element.entity.source.name or 'default',
-                "database": element.entity.database or '',
-                "collection": element.entity.collection or '',
-                "query": element.entity.query or {},
-                "filter": element.entity.filter or {},
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
             } %}
+        {% elif sourceOfContent=="broker"%}
+            {% set topic=element.entity.source.topic %}
         {% endif %}
 
-
-
-        {% set sourceOfContent = element.sourceOfContent %}
-
         {% set type = element.type %}
-        {% set topic = element.entity.topic if element.entity else None%}
 
         {% if type.name=="Gauge"%}
             <Gauge 
@@ -127,14 +123,12 @@
             />
 
         {% elif type.name=="Publish" %}
-            {% if type.api %}
+            {% if type.endpoint %}
                 {% set publishRestData = {
-                    "host": type.api.host or 'localhost',
-                    "port": type.api.port or 443,
-                    "path": type.api.path or '',
-                    "method": type.api.method or 'POST',
-                    "headers":type.api.headers or {},
-                    "params": type.api.params or {},
+                    "path": type.endpoint.path or '',
+                    "method": type.endpoint.method or 'POST',
+                    "headers":type.endpoint.headers or {},
+                    "params": type.endpoint.params or {},
                 } %}
             {% else %}
                 {% set publishRestData = {} %}
@@ -143,8 +137,8 @@
                 {% if type.broker %}
                     brokerName={"{{type.broker.name}}"} 
                 {% endif %}
-                {% if type.api %}
-                    apiName={"{{type.api.name}}"} 
+                {% if type.endpoint %}
+                    apiName={"{{type.endpoint.connection.name}}"} 
                 {% endif %}
                 {% if type.topic %}
                     destinationTopic={ "{{type.topic}}" }  

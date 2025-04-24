@@ -1,7 +1,7 @@
-{% for endpoint in endpoints%}
-{{endpoint.name}}:
-    host: {{endpoint.host}}
-    port: {{endpoint.port}}
-    headers: {{endpoint.headers}}
-    auth: {{endpoint.auth}}
+{% for api in all_rest_apis%}
+{{api.name}}:
+    host: {{api.host}}
+    port: {{api.port}}
+    headers: {{api.headers}}
+    auth: {{api.auth}}
 {% endfor %}

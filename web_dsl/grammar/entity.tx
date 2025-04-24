@@ -1,7 +1,7 @@
 import communication
 import types
 
-EntitySource: (MessageBroker | RESTEndpoint | Database);
+EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 
 Entity:
     'Entity' name=ID
@@ -9,19 +9,6 @@ Entity:
         ('description:' description=STRING)?
         'source:' source=[EntitySource]
         'attributes:' '-' attributes*=Attribute['-']
-
-        ('topic:' topic=STRING)?
-
-        ('path:' path=STRING)?
-        ('method:' method=RESTVerb)?
-        ('body:' body=Dict)?
-        ('params:' params=Dict)?
-
-        ('database:' database=STRING)?
-        ('query:' query=STRING)?
-        ('collection:' collection=STRING)?
-        ('filter:' filter=Dict)?
-
     )#
     'end'
 ;

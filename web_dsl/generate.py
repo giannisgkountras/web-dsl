@@ -79,6 +79,7 @@ def generate(model_path, gen_path):
 
     # Generate the screen components
     for screen in model.screens:
+        print(f"Generating screen: {screen.name}")
         try:
             html_content = screen_template.render(screen=screen)
         except TemplateError as e:
@@ -140,7 +141,7 @@ def generate(model_path, gen_path):
     # for component in components:
     #     print(component.type.__dict__)
 
-    # Gather all topic from the model
+    # Gather all topics from the model
     entities = get_children_of_type("Entity", model)
     topic_configs = []
     for entity in entities:
@@ -149,13 +150,14 @@ def generate(model_path, gen_path):
         for attribute in entity.attributes:
             attributes.append(attribute.name)
 
-        topic_configs.append(
-            {
-                "topic": entity.topic,
-                "broker": entity.source.name,
-                "attributes": attributes,
-            }
-        )
+        if entity.source.__class__.__name__ == "BrokerTopic":
+            topic_configs.append(
+                {
+                    "topic": entity.source.topic,
+                    "broker": entity.source.connection.name,
+                    "attributes": attributes,
+                }
+            )
 
     # Collect all brokers
     all_brokers = set()
@@ -175,14 +177,14 @@ def generate(model_path, gen_path):
         f.write(config_content)
     print(f"Generated: {config_output_file}")
 
-    # Generate endpoint config file
-    all_endpoints = get_children_of_type("RESTEndpoint", model)
+    # Generate rest api config file
+    all_rest_apis = get_children_of_type("RESTApi", model)
     endpoint_config_dir = os.path.join(gen_path, "backend")
     endpoint_config_output_file = os.path.join(
         endpoint_config_dir, "endpoint_config.yaml"
     )
     endpoint_config_content = endpoint_config_template.render(
-        endpoints=all_endpoints,
+        all_rest_apis=all_rest_apis,
     )
     with open(endpoint_config_output_file, "w", encoding="utf-8") as f:
         f.write(endpoint_config_content)
@@ -190,7 +192,7 @@ def generate(model_path, gen_path):
 
     # Generate Database config
     mysql_databases = get_children_of_type("MySQL", model)
-    mongo_databases = get_children_of_type("Mongo", model)
+    mongo_databases = get_children_of_type("MongoDB", model)
 
     db_config_dir = os.path.join(gen_path, "backend")
     db_config_output_file = os.path.join(db_config_dir, "db_config.yaml")
