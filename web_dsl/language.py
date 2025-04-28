@@ -20,6 +20,7 @@ from .lib.component import (
     JsonViewer,
     Text,
     Logs,
+    CrudTable,
 )
 
 # Map grammar rules to Python classes
@@ -36,6 +37,7 @@ custom_classes = [
     JsonViewer,
     Text,
     Logs,
+    CrudTable,
     # Add other classes here
 ]
 
@@ -96,6 +98,7 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
             "JsonViewer.attributes": component_entity_attributes_scope,
             "Logs.attributes": component_entity_attributes_scope,
             "Image.source": component_entity_attributes_scope,
+            "CrudTable.attributes": component_entity_attributes_scope,
         }
     )
 

@@ -190,6 +190,21 @@
                         },
                     {% endfor %}    
             ]}/>
+
+        {% elif type.name=="CrudTable" %}
+            <CrudTable
+                attributes={[ 
+                    {% for attr in type.attributes %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+                ]}
+                sourceOfContent={"{{sourceOfContent}}"} 
+                restData={ {{restData}} }
+                dbData={ {{dbData}} }
+            />
         
         {% endif %}
 

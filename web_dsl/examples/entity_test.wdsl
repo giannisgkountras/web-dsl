@@ -41,6 +41,11 @@ webpage Vroomitor
         path: "/todos/1"
     end
 
+    RESTEndpoint allTodosEndpoint
+        connection: todosAPI
+        path: "/todos"
+    end
+
     RESTEndpoint echoEndpoint
         connection: echoAPI
         path: "/anything"
@@ -82,6 +87,14 @@ webpage Vroomitor
         attributes:
             - userId: int
             - title: str
+    end
+
+    Entity allTodos
+        source: allTodosEndpoint
+        attributes:
+            - userId: int
+            - title: str
+            - completed: bool
     end
 
     Entity cpuMetrics
@@ -288,6 +301,10 @@ webpage Vroomitor
                 end
             endcol
             col
+                Component restCrudTable
+                    entity: allTodos
+                    type: CrudTable
+                end
             endcol
         endrow
     end
@@ -326,6 +343,18 @@ webpage Vroomitor
                     entity: mysqlUsers
                     type: JsonViewer
                 end
+            endcol
+        endrow
+        row
+            col
+            endcol
+            col
+                Component dbTable
+                    entity: mysqlUsers
+                    type: CrudTable
+                end
+            endcol
+            col
             endcol
         endrow
     end

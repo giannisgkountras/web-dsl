@@ -16,7 +16,7 @@ ComponentRef:
 ;
 
 ComponentType:
-    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs
+    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable
 ;
 
 Button:
@@ -125,3 +125,9 @@ Logs:
     'Logs'
     ('attributes:' attributes+=[Attribute|ID][','])
 ;
+
+CrudTable:
+    'CrudTable'
+    ('attributes:' attributes+=[Attribute|ID][','])?
+;
+

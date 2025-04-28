@@ -80,6 +80,7 @@ def generate(model_path, gen_path):
     # Generate the screen components
     for screen in model.screens:
         print(f"Generating screen: {screen.name}")
+
         try:
             html_content = screen_template.render(screen=screen)
         except TemplateError as e:

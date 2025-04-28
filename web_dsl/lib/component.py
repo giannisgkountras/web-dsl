@@ -142,3 +142,9 @@ class Logs(ComponentType):
     def __init__(self, parent=None, name="Logs", attributes=None):
         super().__init__(parent, name)
         self.attributes = attributes
+
+
+class CrudTable(ComponentType):
+    def __init__(self, parent=None, name="CrudTable", attributes=None):
+        super().__init__(parent, name)
+        self.attributes = attributes
