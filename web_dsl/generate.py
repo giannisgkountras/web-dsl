@@ -7,6 +7,7 @@ from .language import build_model
 from textx.model import get_children_of_type
 import traceback
 from collections import defaultdict
+from web_dsl.definitions import TEMPLATES_PATH
 
 
 def generate_api_key(length=32):
@@ -16,13 +17,13 @@ def generate_api_key(length=32):
 
 # Set up the Jinja2 environment and load templates
 frontend_env = Environment(
-    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates/frontend"),
+    loader=FileSystemLoader(f"{TEMPLATES_PATH}/frontend"),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
 )
 backend_env = Environment(
-    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates/backend"),
+    loader=FileSystemLoader(f"{TEMPLATES_PATH}/backend"),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
