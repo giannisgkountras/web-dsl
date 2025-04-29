@@ -36,7 +36,7 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
 logging.basicConfig(level=logging.INFO)
 
 # Load configuration from config.yaml
-config = load_config()
+config = load_config() or {}
 endpoint_config = load_endpoint_config()
 db_config = load_db_config()
 
@@ -95,7 +95,7 @@ async def main():
     )
 
     # Extract multiple broker connection settings
-    broker_configs = config.get("brokers", [])
+    broker_configs = config.get("brokers") or []
 
     broker_threads = []
 
