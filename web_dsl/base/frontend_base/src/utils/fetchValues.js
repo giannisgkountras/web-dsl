@@ -2,16 +2,14 @@ import { toast } from "react-toastify";
 import convertTypeValue from "./convertTypeValue";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
+import { getValueByPath } from "../utils/getValueByPath";
 
-export const fetchValueFromRest = async (restData, attribute, setValue) => {
+export const fetchValueFromRest = async (restData, contentPath, setValue) => {
     const { name, path, method, params } = restData;
 
     try {
         const response = await proxyRestCall({ name, path, method, params });
-        const value = convertTypeValue(
-            response[attribute.name],
-            attribute.type
-        );
+        const value = getValueByPath(response, contentPath);
         setValue(value);
     } catch (error) {
         toast.error(
@@ -21,7 +19,7 @@ export const fetchValueFromRest = async (restData, attribute, setValue) => {
     }
 };
 
-export const fetchValueFromDB = async (dbData, attribute, setValue) => {
+export const fetchValueFromDB = async (dbData, contentPath, setValue) => {
     const { connection_name, database, query, collection, filter } = dbData;
 
     try {
@@ -32,11 +30,7 @@ export const fetchValueFromDB = async (dbData, attribute, setValue) => {
             collection,
             filter
         });
-        const responseRow = Array.isArray(response) ? response[0] : response;
-        const value = convertTypeValue(
-            responseRow[attribute.name],
-            attribute.type
-        );
+        const value = getValueByPath(response, contentPath);
         setValue(value);
     } catch (error) {
         toast.error("Error fetching or converting DB value: " + error.message);

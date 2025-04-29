@@ -40,7 +40,9 @@ class ComponentType:
         For example, if the path is "data[0].value", it will be converted to [0, "value"].
         """
         path_array = []
+
         for accessor in path.accessors:
+            print(f"Accessor: {accessor}")
             if hasattr(accessor, "index") and accessor.index is not None:
                 accessor.index = int(accessor.index)
                 path_array.append(accessor.index)
@@ -143,14 +145,13 @@ class Text(ComponentType):
         name="Text",
         content=None,
         content_static=None,
-        content_path=None,
         size=None,
         color="#fff",
     ):
         super().__init__(parent, name)
-        self.content = content
+        if content is not None:
+            self.content = self.format_attribute_path(content)
         self.content_static = content_static
-        self.content_path = self.format_attribute_path(content_path)
         self.size = size
         self.color = color
 

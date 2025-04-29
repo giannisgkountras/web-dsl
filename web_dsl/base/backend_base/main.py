@@ -6,7 +6,7 @@ import httpx
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 from fastapi import FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
@@ -156,7 +156,7 @@ async def main():
 
 class PublishRequest(BaseModel):
     broker: str
-    message: dict
+    message: Any
     topic: str
 
 

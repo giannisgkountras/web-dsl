@@ -81,8 +81,7 @@ Image:
 Text:
     'Text' 
     'content:' (
-        content_path=NestedAccessPath          
-        | content=[Attribute|ID]                  
+        content=NestedAccessPath                   
         | content_static=STRING               
     )
     (

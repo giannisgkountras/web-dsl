@@ -30,6 +30,11 @@ webpage Vroomitor
         database: "thesis"
     end
 
+    Broker<MQTT> WeatherBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
     //============ Specific endpoints/queries =============//
 
     RESTEndpoint allTodosEndpoint
@@ -40,6 +45,11 @@ webpage Vroomitor
     MySQLQuery mysqlUsersQuery
         connection: HomeSQL
         query: "SELECT * FROM users"
+    end
+
+    BrokerTopic weatherTopic
+        connection: WeatherBroker
+        topic: "weather"
     end
 
     //============ Entities ============//
@@ -59,13 +69,46 @@ webpage Vroomitor
             - name: str
     end
 
+    Entity weatherData
+        source: weatherTopic
+        attributes:
+            - id: int
+            - name: str
+            - condition: str
+    end
+
     //============ Components ============//
 
     Component todosTitle
         entity: allTodos
         type: Text
-            content: this[2].title
+            content: this[7].title
             size: 24
+    end
+
+    Component temperatureText
+        entity: weatherData
+        type: Text
+            content: this.data[1].temperatures[3]
+            size: 18
+    end
+
+    Component simpleText
+        entity: weatherData
+        type: Text
+            content: this.simple
+            size: 18
+    end
+
+    Component DBText
+        entity: mysqlUsers
+        type: Text
+            content: this[1].telephone_number
+    end
+
+    Component MQTTPublisher
+        type: Publish
+            broker: WeatherBroker
     end
 
     //============ Screens ============//
@@ -76,6 +119,29 @@ webpage Vroomitor
         url: "/"
 
         row
-            use todosTitle
+            col
+                use todosTitle
+            endcol
+            col
+                use temperatureText
+            endcol
+            col
+                use MQTTPublisher
+            endcol
         endrow
+        row
+            col
+                use simpleText
+            endcol
+            col
+                use DBText
+            endcol
+            col
+                Component staticText
+                    type: Text
+                        content: "This is a static text"
+                end
+            endcol
+        endrow
+
     end

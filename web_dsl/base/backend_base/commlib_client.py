@@ -42,28 +42,29 @@ class BrokerCommlibClient:
         """Generate a callback for a specific topic."""
 
         def callback(msg):
-            # Retrieve the allowed attributes for the given topic
-            allowed_attributes = self.allowed_topic_attributes.get(topic)
-            if allowed_attributes is None:
-                print(
-                    f"No allowed attributes defined for topic '{topic}'. Message dropped."
-                )
-                return
+            # # Retrieve the allowed attributes for the given topic
+            # allowed_attributes = self.allowed_topic_attributes.get(topic)
+            # if allowed_attributes is None:
+            #     print(
+            #         f"No allowed attributes defined for topic '{topic}'. Message dropped."
+            #     )
+            #     return
 
-            # Filter message to include only allowed keys
-            filtered_msg = {
-                key: value for key, value in msg.items() if key in allowed_attributes
-            }
+            # # Filter message to include only allowed keys
+            # filtered_msg = {
+            #     key: value for key, value in msg.items() if key in allowed_attributes
+            # }
 
-            if not filtered_msg:
-                print(
-                    f"No allowed attributes found in the incoming message for topic '{topic}'."
-                )
-                return
+            # if not filtered_msg:
+            #     print(
+            #         f"No allowed attributes found in the incoming message for topic '{topic}'."
+            #     )
+            #     return
 
             try:
                 # Convert the filtered message to a JSON string with topic as a prefix.
-                json_msg_with_prefix = f'{{"{topic}": {json.dumps(filtered_msg)}}}'
+                # SHOULD BE FILTERED MESSAGE REMOVED IT FOR TESTING!!!
+                json_msg_with_prefix = f'{{"{topic}": {json.dumps(msg)}}}'
             except Exception as e:
                 print(
                     f"Failed to convert filtered message to JSON for topic '{topic}': {e}"
