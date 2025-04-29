@@ -2,6 +2,23 @@ import entity
 import communication
 import types
 
+AttributeAccessor:
+    '.' attribute=ID  
+;
+
+IndexAccessor:
+    '[' index=INT ']'
+;
+
+Accessor:
+    // One step in the access path can be either by attribute or by index
+    AttributeAccessor | IndexAccessor
+;
+
+NestedAccessPath:
+    base='this' accessors*=Accessor // Starts with 'this', followed by zero or more accessors
+;
+
 Component:
     'Component' name=ID
     (
@@ -63,7 +80,11 @@ Image:
 
 Text:
     'Text' 
-    'content:' (content=[Attribute|ID] | content_static=STRING)
+    'content:' (
+        content_path=NestedAccessPath          
+        | content=[Attribute|ID]                  
+        | content_static=STRING               
+    )
     (
         ('size:' size=INT)?
         ('color:' color=STRING)?

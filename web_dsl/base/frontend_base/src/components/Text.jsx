@@ -14,9 +14,17 @@ const Text = ({
     sourceOfContent,
     restData,
     staticContent,
-    dbData
+    dbData,
+    contentPath
 }) => {
     const [content, setContent] = useState("");
+    // const setContentGeneral = (value) => {
+    //     if (indexedAttribute) {
+    //         setContent(value[indexedAttribute.index][indexedAttribute.name]);
+    //     } else {
+    //         setContent(value);
+    //     }
+    // };
     const ws = useContext(WebsocketContext);
 
     const reloadContent = () => {

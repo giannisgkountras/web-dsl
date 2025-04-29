@@ -33,6 +33,21 @@ class ComponentType:
     def __str__(self):
         return self.name
 
+    def format_attribute_path(self, path):
+        """
+        This method formats the attribute path for the component.
+        It converts the path into a list of indices and attributes.
+        For example, if the path is "data[0].value", it will be converted to [0, "value"].
+        """
+        path_array = []
+        for accessor in path.accessors:
+            if hasattr(accessor, "index") and accessor.index is not None:
+                accessor.index = int(accessor.index)
+                path_array.append(accessor.index)
+            if hasattr(accessor, "attribute") and accessor.attribute is not None:
+                path_array.append(accessor.attribute)
+        return path_array
+
 
 class Gauge(ComponentType):
     def __init__(self, parent=None, name="Gauge", value=None, value_static=None):
@@ -128,12 +143,14 @@ class Text(ComponentType):
         name="Text",
         content=None,
         content_static=None,
+        content_path=None,
         size=None,
         color="#fff",
     ):
         super().__init__(parent, name)
         self.content = content
         self.content_static = content_static
+        self.content_path = self.format_attribute_path(content_path)
         self.size = size
         self.color = color
 

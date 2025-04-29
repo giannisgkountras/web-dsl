@@ -177,6 +177,9 @@
                 restData={ {{restData}} }    
                 staticContent={"{{type.content_static}}"}
                 dbData={ {{dbData}} }
+                {% if type.content_path %}
+                    contentPath={ {{type.content_path}} }
+                {% endif %}
             />
 
         {% elif type.name=="Logs" %}

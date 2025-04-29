@@ -64,7 +64,7 @@ webpage Vroomitor
     Component todosTitle
         entity: allTodos
         type: Text
-            content: title
+            content: this[2].title
             size: 24
     end
 
