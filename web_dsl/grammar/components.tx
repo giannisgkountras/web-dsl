@@ -1,5 +1,6 @@
 import entity
 import communication
+import types
 
 Component:
     'Component' name=ID
@@ -15,15 +16,15 @@ ComponentRef:
 ;
 
 ComponentType:
-    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs
+    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable
 ;
 
 Button:
-    'Button' (name=ID)? content=STRING
+    'Button' content=STRING
 ;
 
 Input:
-    'Input' (name=ID)?
+    'Input'
     (
         ('type:' type=InputType)
         ('placeholder:' placeholder=STRING)
@@ -36,7 +37,8 @@ InputType:
 ;
 
 Label:
-    'Label' (name=ID)? 'content:' content=STRING
+    'Label' 
+        'content:' content=STRING
 ;
 
 Form:
@@ -55,13 +57,17 @@ Image:
     ( 
         ('width:' width=INT)?
         ('height:' height=INT)?
-        ('source:' source=[Attribute|ID])?
+        ('source:' (source=[Attribute|ID] | source_static=STRING))?
     )#
 ;
 
 Text:
     'Text' 
-    'content:' content=[Attribute|ID]
+    'content:' (content=[Attribute|ID] | content_static=STRING)
+    (
+        ('size:' size=INT)?
+        ('color:' color=STRING)?
+    )#
 ;
 
 Notification:
@@ -79,8 +85,9 @@ LineChart:
     (
         ('xLabel:' xLabel=STRING)
         ('yLabel:' yLabel=STRING)
-        ('xValue:' xValue=[Attribute|ID])
-        ('yValues:' yValues+=[Attribute|ID][','])
+        ('xValue:' (xValue=[Attribute|ID] | xValue_static=STRING))
+        ('yValues:' (yValues+=[Attribute|ID][','] | yValues_static+=STRING[',']))
+        ('staticData:' staticData=List)?
     )#
 ;
 
@@ -91,7 +98,7 @@ LiveTable:
 
 Gauge:
     'Gauge' 
-    'value:' value=[Attribute|ID]
+    'value:' (value=[Attribute|ID] |  value_static=FLOAT)
 ;
 
 JsonViewer:
@@ -107,7 +114,7 @@ Alive:
 Publish:
     'Publish'
     ('broker:' broker=[MessageBroker])?
-    ('api:' api=[RESTEndpoint])?
+    ('endpoint:' endpoint=[RESTEndpoint])?
     (
         ('topic:' topic=STRING)?
         ('json:' json=STRING)?
@@ -118,3 +125,9 @@ Logs:
     'Logs'
     ('attributes:' attributes+=[Attribute|ID][','])
 ;
+
+CrudTable:
+    'CrudTable'
+    ('attributes:' attributes+=[Attribute|ID][','])?
+;
+

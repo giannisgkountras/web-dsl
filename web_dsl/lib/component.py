@@ -6,14 +6,20 @@ class Component:
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
         try:
-            entityRef = entity.source.__class__.__name__
+            entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
             entityRef = None  # or "Unknown", or whatever fallback you prefer
-        self.sourceOfContent = (
-            "broker"
-            if entityRef in ("MQTTBroker", "AMQPBroker", "RedisBroker")
-            else ("rest" if entityRef == "RESTEndpoint" else "static")
-        )
+        source_map = {
+            "MQTTBroker": "broker",
+            "AMQPBroker": "broker",
+            "RedisBroker": "broker",
+            "RESTApi": "rest",
+            "Database": "db",
+            "MySQL": "db",
+            "MongoDB": "db",
+        }
+
+        self.sourceOfContent = source_map.get(entityRef, "static")
 
     def __str__(self):
         return self.name
@@ -29,9 +35,10 @@ class ComponentType:
 
 
 class Gauge(ComponentType):
-    def __init__(self, parent=None, name="Gauge", value=None):
+    def __init__(self, parent=None, name="Gauge", value=None, value_static=None):
         super().__init__(parent, name)
         self.value = value  # Will be resolved to an Attribute
+        self.value_static = value_static  # Static value for the gauge
 
 
 class Notification(ComponentType):
@@ -42,11 +49,20 @@ class Notification(ComponentType):
 
 
 class Image(ComponentType):
-    def __init__(self, parent=None, name="Image", width=300, height=300, source=None):
+    def __init__(
+        self,
+        parent=None,
+        name="Image",
+        width=300,
+        height=300,
+        source=None,
+        source_static=None,
+    ):
         super().__init__(parent, name)
         self.width = width
         self.height = height
         self.source = source
+        self.source_static = source_static
 
 
 class Alive(ComponentType):
@@ -64,21 +80,31 @@ class LineChart(ComponentType):
         yLabel="Y-Axis",
         xValue=None,
         yValues=None,
+        xValue_static=None,
+        yValues_static=None,
+        staticData=[],
     ):
         super().__init__(parent, name)
         self.xLabel = xLabel
         self.yLabel = yLabel
         self.xValue = xValue
         self.yValues = yValues
+        self.staticData = staticData
 
 
 class Publish(ComponentType):
     def __init__(
-        self, parent=None, name="Publish", broker=None, api=None, topic=None, json=None
+        self,
+        parent=None,
+        name="Publish",
+        broker=None,
+        endpoint=None,
+        topic=None,
+        json=None,
     ):
         super().__init__(parent, name)
         self.broker = broker
-        self.api = api
+        self.endpoint = endpoint
         self.topic = topic
         self.json = json
 
@@ -96,12 +122,29 @@ class JsonViewer(ComponentType):
 
 
 class Text(ComponentType):
-    def __init__(self, parent=None, name="Text", content=None):
+    def __init__(
+        self,
+        parent=None,
+        name="Text",
+        content=None,
+        content_static=None,
+        size=None,
+        color="#fff",
+    ):
         super().__init__(parent, name)
         self.content = content
+        self.content_static = content_static
+        self.size = size
+        self.color = color
 
 
 class Logs(ComponentType):
     def __init__(self, parent=None, name="Logs", attributes=None):
+        super().__init__(parent, name)
+        self.attributes = attributes
+
+
+class CrudTable(ComponentType):
+    def __init__(self, parent=None, name="CrudTable", attributes=None):
         super().__init__(parent, name)
         self.attributes = attributes

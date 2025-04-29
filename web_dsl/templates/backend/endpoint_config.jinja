@@ -1,0 +1,7 @@
+{% for api in all_rest_apis%}
+{{api.name}}:
+    host: {{api.host}}
+    port: {{api.port}}
+    headers: {{api.headers}}
+    auth: {{api.auth}}
+{% endfor %}

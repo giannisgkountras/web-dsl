@@ -22,24 +22,28 @@
     {% elif element.isComponent %}
         
         {% set sourceOfContent = element.sourceOfContent %}
-
+        {% set restData={}%}
+        {% set dbData={}%}
+        {% set topic=None%}
         {% if sourceOfContent=="rest" %}
             {% set restData = {
-                "host": element.entity.source.host or 'localhost',
-                "port": element.entity.source.port or 443,
+                "name": element.entity.source.connection.name or 'default',
                 "path": element.entity.source.path or '',
                 "method": element.entity.source.method or 'GET',
-                "headers": element.entity.source.headers or {},
                 "params": element.entity.source.params or {},
             } %}
-        {% else %}
-            {% set restData = {} %}
+        {% elif sourceOfContent=="db" %}
+            {% set dbData = {
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
+            } %}
+        {% elif sourceOfContent=="broker"%}
+            {% set topic=element.entity.source.topic %}
         {% endif %}
 
-        {% set sourceOfContent = element.sourceOfContent %}
-
         {% set type = element.type %}
-        {% set topic = element.entity.topic if element.entity else None%}
 
         {% if type.name=="Gauge"%}
             <Gauge 
@@ -47,6 +51,8 @@
                 attribute={ {name: "{{type.value.name}}", type: "{{type.value.__class__.__name__}}"  } } 
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
+                staticValue={ {{type.value_static}} }
+                dbData={ {{dbData}} }
             />
         
         {% elif type.name=="LineChart"%}
@@ -55,7 +61,7 @@
                 topic={"{{topic}}"} 
                 xLabel={"{{type.xLabel}}"} 
                 yLabel={"{{type.yLabel}}"} 
-                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.value.__class__.__name__}}" },
+                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.xValue.__class__.__name__}}" },
                     {% for attr in type.yValues %}
                         {
                         name: "{{ attr.name }}",
@@ -63,6 +69,22 @@
                         },
                     {% endfor %}    
                   ]}
+                sourceOfContent={"{{sourceOfContent}}"}
+                {% if type.staticData %}
+                    xValue={"{{type.xValue_static}}"}
+                    yValues={[ {% for item in type.yValues_static %}
+                                "{{item}}",
+                            {% endfor %}  ]}
+                    staticChartData={ [ 
+                        {% for group in type.staticData.items %}
+                            {   
+                                {% for dictItem in group.items %}
+                                    "{{ dictItem.name }}": "{{ dictItem.value }}"{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            }{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    ] }
+                {% endif %}
             />
 
         {% elif type.name=="LiveTable"%}
@@ -91,6 +113,7 @@
                 ]}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
+                dbData={ {{dbData}} }
             />
 
         {% elif type.name=="Alive"%}
@@ -100,14 +123,12 @@
             />
 
         {% elif type.name=="Publish" %}
-            {% if type.api %}
+            {% if type.endpoint %}
                 {% set publishRestData = {
-                    "host": type.api.host or 'localhost',
-                    "port": type.api.port or 443,
-                    "path": type.api.path or '',
-                    "method": type.api.method or 'POST',
-                    "headers":type.api.headers or {},
-                    "params": type.api.params or {},
+                    "path": type.endpoint.path or '',
+                    "method": type.endpoint.method or 'POST',
+                    "headers":type.endpoint.headers or {},
+                    "params": type.endpoint.params or {},
                 } %}
             {% else %}
                 {% set publishRestData = {} %}
@@ -116,8 +137,8 @@
                 {% if type.broker %}
                     brokerName={"{{type.broker.name}}"} 
                 {% endif %}
-                {% if type.api %}
-                    apiName={"{{type.api.name}}"} 
+                {% if type.endpoint %}
+                    apiName={"{{type.endpoint.connection.name}}"} 
                 {% endif %}
                 {% if type.topic %}
                     destinationTopic={ "{{type.topic}}" }  
@@ -143,14 +164,19 @@
                 height={ {{type.height}} }
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
+                sourceStatic={"{{type.source_static}}"}
             />
 
         {% elif type.name=="Text" %}
             <Text 
                 topic={"{{topic}}"} 
                 attribute={ { name: "{{type.content.name}}" ,  type: "{{type.content.__class__.__name__}}"} }
+                size={ {{ type.size | default(18) }} }
+                color={"{{type.color}}"}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
+                staticContent={"{{type.content_static}}"}
+                dbData={ {{dbData}} }
             />
 
         {% elif type.name=="Logs" %}
@@ -164,6 +190,21 @@
                         },
                     {% endfor %}    
             ]}/>
+
+        {% elif type.name=="CrudTable" %}
+            <CrudTable
+                attributes={[ 
+                    {% for attr in type.attributes %}
+                        {
+                        name: "{{ attr.name }}",
+                        type: "{{ attr.__class__.__name__ }}"
+                        },
+                    {% endfor %}    
+                ]}
+                sourceOfContent={"{{sourceOfContent}}"} 
+                restData={ {{restData}} }
+                dbData={ {{dbData}} }
+            />
         
         {% endif %}
 

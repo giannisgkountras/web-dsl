@@ -1,23 +1,23 @@
 import api from "./index";
 import { toast } from "react-toastify";
 
-export const proxyRestCall = async ({
-    name,
-    path,
-    method = "GET",
-    params = {},
-    body = {}
+export const queryDB = async ({
+    connection_name,
+    database,
+    query,
+    collection,
+    filter
 }) => {
     try {
-        const restCallPayload = {
-            name,
-            path,
-            method,
-            params,
-            body
+        const payload = {
+            connection_name,
+            database,
+            query,
+            collection,
+            filter
         };
 
-        const response = await api.post("restcall", restCallPayload);
+        const response = await api.post("queryDB", payload);
 
         if (!response) {
             toast.error("No response from proxy.");

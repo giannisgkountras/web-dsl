@@ -4,7 +4,10 @@ import base64
 import subprocess
 from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
+from textx.model import get_children_of_type
 import traceback
+from collections import defaultdict
+from web_dsl.definitions import TEMPLATES_PATH
 
 
 def generate_api_key(length=32):
@@ -14,13 +17,13 @@ def generate_api_key(length=32):
 
 # Set up the Jinja2 environment and load templates
 frontend_env = Environment(
-    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates/frontend"),
+    loader=FileSystemLoader(f"{TEMPLATES_PATH}/frontend"),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
 )
 backend_env = Environment(
-    loader=FileSystemLoader(f"{os.path.dirname(__file__)}/templates/backend"),
+    loader=FileSystemLoader(f"{TEMPLATES_PATH}/backend"),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
@@ -39,6 +42,8 @@ dot_env_frontend_template = frontend_env.get_template("dot_env_template.jinja")
 dot_env_backend_template = backend_env.get_template("dot_env_template.jinja")
 
 config_template = backend_env.get_template("config_template.jinja")
+endpoint_config_template = backend_env.get_template("endpoint_config.jinja")
+db_config_template = backend_env.get_template("db_config.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
 
 docker_compose_template = backend_env.get_template("docker_compose_template.jinja")
@@ -75,6 +80,8 @@ def generate(model_path, gen_path):
 
     # Generate the screen components
     for screen in model.screens:
+        print(f"Generating screen: {screen.name}")
+
         try:
             html_content = screen_template.render(screen=screen)
         except TemplateError as e:
@@ -131,13 +138,13 @@ def generate(model_path, gen_path):
         f.write(env_backend_content)
     print(f"Generated {env_backend_output_file}")
 
-    # Gather all topics from the model
-    entities = set()
-    for element in model.globalEntities:
-        collect_entities(element, entities)
-    for element in model.screens:
-        collect_entities(element, entities)
+    # # Collect all components from the model to get what attributes of entities are actually used
+    # components = get_children_of_type("Component", model)
+    # for component in components:
+    #     print(component.type.__dict__)
 
+    # Gather all topics from the model
+    entities = get_children_of_type("Entity", model)
     topic_configs = []
     for entity in entities:
         # collect attributes
@@ -145,14 +152,15 @@ def generate(model_path, gen_path):
         for attribute in entity.attributes:
             attributes.append(attribute.name)
 
-        topic_configs.append(
-            {
-                "topic": entity.topic,
-                "broker": entity.source.name,
-                "attributes": attributes,
-            }
-        )
-    print("Topic Configs: ", topic_configs)
+        if entity.source.__class__.__name__ == "BrokerTopic":
+            topic_configs.append(
+                {
+                    "topic": entity.source.topic,
+                    "broker": entity.source.connection.name,
+                    "attributes": attributes,
+                }
+            )
+
     # Collect all brokers
     all_brokers = set()
     for broker in model.brokers:
@@ -171,6 +179,33 @@ def generate(model_path, gen_path):
         f.write(config_content)
     print(f"Generated: {config_output_file}")
 
+    # Generate rest api config file
+    all_rest_apis = get_children_of_type("RESTApi", model)
+    endpoint_config_dir = os.path.join(gen_path, "backend")
+    endpoint_config_output_file = os.path.join(
+        endpoint_config_dir, "endpoint_config.yaml"
+    )
+    endpoint_config_content = endpoint_config_template.render(
+        all_rest_apis=all_rest_apis,
+    )
+    with open(endpoint_config_output_file, "w", encoding="utf-8") as f:
+        f.write(endpoint_config_content)
+    print(f"Generated: {endpoint_config_output_file}")
+
+    # Generate Database config
+    mysql_databases = get_children_of_type("MySQL", model)
+    mongo_databases = get_children_of_type("MongoDB", model)
+
+    db_config_dir = os.path.join(gen_path, "backend")
+    db_config_output_file = os.path.join(db_config_dir, "db_config.yaml")
+    db_config_content = db_config_template.render(
+        mysql_databases=mysql_databases, mongo_databases=mongo_databases
+    )
+    with open(db_config_output_file, "w", encoding="utf-8") as f:
+        f.write(db_config_content)
+    print(f"Generated: {db_config_output_file}")
+
+    # Generate dockerfile
     dockerfile_output_file = os.path.join(gen_path, "backend", "Dockerfile")
     dockerfile_content = dockerfile_template.render(
         websocket=model.websocket, api=model.api
@@ -189,26 +224,6 @@ def generate(model_path, gen_path):
     print(f"Generated: {docker_compose_output_file}")
 
     return gen_path
-
-
-def collect_entities(node, entities):
-    """
-    Recursively collect Entity nodes into a list.
-
-    Args:
-        node: A node in the parsed tree.
-        entities: A list to store Entity nodes.
-    """
-    # Get the class name of the node
-    node_type = node.__class__.__name__
-    # Handle Entity nodes
-    if node_type == "Entity":
-        entities.add(node)
-
-    # Handle structural nodes like Row or Column
-    elif node_type in ("Row", "Column"):
-        for element in node.elements:
-            collect_entities(element, entities)
 
 
 def map_attribute_class_names_to_types(attribute):

@@ -6,12 +6,14 @@ import httpx
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
+from typing import Optional
 from fastapi import FastAPI, HTTPException, Security, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
-from utils import load_config
+from db_connector import DBConnector
+from utils import load_config, load_endpoint_config, load_db_config
 
 # Load the .env file
 load_dotenv()
@@ -35,6 +37,8 @@ logging.basicConfig(level=logging.INFO)
 
 # Load configuration from config.yaml
 config = load_config()
+endpoint_config = load_endpoint_config()
+db_config = load_db_config()
 
 # Global variable to hold the main event loop
 global_event_loop = None
@@ -51,6 +55,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
 )
+
+db_connector = DBConnector(db_config)
 
 
 async def start_fastapi():
@@ -178,11 +184,9 @@ async def publish_message(
 
 
 class RESTCallRequest(BaseModel):
-    host: str
-    port: int
+    name: str  # Name of the REST call
     path: str
     method: str
-    headers: dict
     params: dict
     body: dict
 
@@ -190,17 +194,32 @@ class RESTCallRequest(BaseModel):
 @app.post("/restcall")
 async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
     """Make a REST call to a specified endpoint."""
-    url = f"{request.host}:{request.port}{request.path}"
-    logging.info(f"Making {request.method} request to {url}")
+    # Load endpoint configuration
+    current_endpoint = endpoint_config.get(request.name)
+    print(f"Endpoint config: {current_endpoint}")
+    if not current_endpoint:
+        raise HTTPException(
+            status_code=404, detail=f"Endpoint '{request.name}' not found"
+        )
+
+    # Use only dict-style access for current_endpoint
+    host = current_endpoint.get("host")
+    port = current_endpoint.get("port")
+
+    # Build the URL – omit port if it is 0, 80, or 443
+    if port and port not in [0, 80, 443]:
+        url = f"{host}:{port}{request.path}"
+    else:
+        url = f"{host}{request.path}"
 
     try:
         async with httpx.AsyncClient() as client:
             response = await client.request(
-                method=request.method.upper(),
+                method=request.method.upper(),  # use dot notation for request
                 url=url,
-                headers=request.headers,
-                params=request.params,
-                json=request.body,  # use `data=` if it's form-encoded or raw
+                headers=current_endpoint.get("headers", {}) or {},
+                params=request.params,  # dot notation here
+                json=request.body,  # dot notation here
             )
 
             if response.headers.get("content-type", "").startswith("application/json"):
@@ -215,6 +234,58 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
     except Exception as e:
         logging.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Unexpected error occurred.")
+
+
+# Request Body Model
+class QueryRequest(BaseModel):
+    connection_name: str
+    database: Optional[str] = (
+        None  # For MySQL: target database; ignored for Mongo queries.
+    )
+    collection: Optional[str] = (
+        None  # For MySQL this is a table; for Mongo, treat as collection.
+    )
+    query: str  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
+
+
+@app.post("/queryDB")
+async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
+    """
+    Endpoint to run MySQL or MongoDB queries based on the provided request.
+    - For MySQL:
+      - 'database' is the target database.
+      - 'query' contains the SQL query string.
+    - For MongoDB:
+      - 'collection' is the collection to query.
+      - 'filter' is the filter for the Mongo query.
+      - 'database' and 'query' fields are ignored.
+    """
+    if request.database:  # If 'database' is provided, assume it's a MySQL query
+        result = db_connector.mysql_query(
+            connection_name=request.connection_name,
+            database=request.database,
+            query=request.query,
+        )
+        if result is None:
+            raise HTTPException(status_code=500, detail="Error executing MySQL query")
+        return result
+
+    elif request.collection:  # If 'collection' is provided, assume it's a Mongo query
+        result = db_connector.mongo_find(
+            connection_name=request.connection_name,
+            collection=request.collection,
+            filter=request.filter or {},
+        )
+        if result is None:
+            raise HTTPException(status_code=500, detail="Error executing Mongo query")
+        return result
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid request: 'database' or 'collection' must be specified",
+        )
 
 
 if __name__ == "__main__":

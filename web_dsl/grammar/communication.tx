@@ -68,16 +68,12 @@ API:
     'end'
 ;
 
-RESTEndpoint:
-    'RESTEndpoint' name=ID
+RESTApi:
+    'RESTApi' name=ID
     (
         ('host:' host=STRING)
         ('port:' port=INT)?
-        ('path:' path=STRING)?
-        ('method:' method=RESTVerb)?
         ('headers:' header=Dict)?
-        ('params:' params=Dict)?
-        ('body:' body=Dict)?
         ('auth:' auth=[AuthApiKey])?
     )#
     'end'
@@ -90,7 +86,7 @@ RESTVerb:
     'DELETE'
 ;
 
-Database: MySQL | Mongo
+Database: MySQL | MongoDB
 ;
 
 MySQL:
@@ -99,22 +95,50 @@ MySQL:
         ('host:' host=STRING)
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
-        ('db:' db=STRING)
-        ('table:' table=STRING)
-        ('query:' query=STRING)
+        ('database:' database=STRING)
     )#
     'end'
 ;
 
-Mongo:
-    'Database<Mongo>' name=ID
+MongoDB:
+    'Database<MongoDB>' name=ID
     (
         ('host:' host=STRING)
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
-        ('db:' db=STRING)
-        ('collection:' collection=STRING)
-        ('query:' query=STRING)
     )#
+    'end'
+;
+
+MySQLQuery:
+    'MySQLQuery' name=ID
+    'connection:' connection=[MySQL]
+    'query:' query=STRING
+    'end'
+;
+
+MongoDBQuery:
+    'MongoDBQuery' name=ID
+    'connection:' connection=[MongoDB]
+    'query:' query=STRING
+    'end'
+;
+
+RESTEndpoint:
+    'RESTEndpoint' name=ID
+    'connection:' connection=[RESTApi]
+    (
+        ('path:' path=STRING)?
+        ('method:' method=RESTVerb)?
+        ('body:' body=Dict)?
+        ('params:' params=Dict)?
+    )#
+    'end'
+;
+
+BrokerTopic:
+    'BrokerTopic' name=ID
+    'connection:' connection=[MessageBroker]
+    'topic:' topic=STRING
     'end'
 ;
