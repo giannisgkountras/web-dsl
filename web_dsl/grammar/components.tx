@@ -145,7 +145,7 @@ Publish:
 
 Logs:
     'Logs'
-    ('attributes:' attributes+=[Attribute|ID][','])
+    ('attributes:' attributes+=NestedAccessPath[','])
 ;
 
 CrudTable:

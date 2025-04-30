@@ -50,7 +50,9 @@ const LiveTable = ({ topic, columns }) => {
                         {names.map((name) => (
                             <p key={name}>
                                 {log[name] !== undefined && log[name] !== null
-                                    ? log[name]
+                                    ? typeof log[name] === "object"
+                                        ? JSON.stringify(log[name])
+                                        : log[name]
                                     : "-"}
                             </p>
                         ))}

@@ -3,6 +3,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState } from "react";
 import convertTypeValue from "../utils/convertTypeValue";
 import { toast } from "react-toastify";
+import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
 
 const Logs = ({ topic, attributes = [] }) => {
     const [logs, setLogs] = useState([]);
@@ -24,16 +25,15 @@ const Logs = ({ topic, attributes = [] }) => {
             const newJsonData = {};
             attributes.forEach((attribute) => {
                 try {
-                    newJsonData[attribute.name] = convertTypeValue(
-                        msg[attribute.name],
-                        attribute.type
-                    );
+                    const value = getValueByPath(msg, attribute);
+                    const name = getNameFromPath(attribute);
+                    newJsonData[name] = value;
                 } catch (error) {
                     toast.error(
                         "An error occurred while updating value: " +
                             error.message
                     );
-                    console.error("Error updating logs:", error);
+                    console.error("Error updating status:", error);
                 }
             });
             setLogs((prev) => [...prev, newJsonData]);
@@ -52,17 +52,22 @@ const Logs = ({ topic, attributes = [] }) => {
                     className={`grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-4 p-2 rounded-xl transition 
               ${index % 2 === 0 ? "" : "bg-[#161a23]"}`}
                 >
-                    {attributes.map((attr) => (
-                        <div
-                            key={attr.name}
-                            className="flex flex-col items-center text-white text-sm"
-                        >
-                            <p className="font-semibold">{attr.name}</p>
-                            <p className="break-words text-gray-300">
-                                {log[attr.name.toLowerCase()] || "-"}
-                            </p>
-                        </div>
-                    ))}
+                    {attributes.map((attr) => {
+                        const name = getNameFromPath(attr);
+                        return (
+                            <div
+                                key={name}
+                                className="flex flex-col items-center text-white text-sm"
+                            >
+                                <p className="font-semibold">{name}</p>
+                                <p className="break-words text-gray-300">
+                                    {typeof log[name] === "object"
+                                        ? JSON.stringify(log[name])
+                                        : log[name] ?? "-"}
+                                </p>
+                            </div>
+                        );
+                    })}
                 </div>
             ))}
         </div>

@@ -150,6 +150,12 @@ webpage Vroomitor
             attributes: this.data[0]
     end
 
+    Component myLogs
+        entity: weatherData
+        type: Logs
+            attributes: this.data[0]
+    end
+
     //============ Screens ============//
 
 
@@ -209,6 +215,9 @@ webpage Vroomitor
             endcol
             col
                 use myjsonViewer
+            endcol
+            col
+                use myLogs
             endcol
         endrow
     end

@@ -176,14 +176,10 @@
         {% elif type.name=="Logs" %}
             <Logs 
                 topic={"{{topic}}"} 
-                attributes={[ 
-                    {% for attr in type.attributes %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-            ]}/>
+                {% if type.attributes %}
+                    attributes={ {{type.attributes}} }
+                {% endif %}
+            />
 
         {% elif type.name=="CrudTable" %}
             <CrudTable
