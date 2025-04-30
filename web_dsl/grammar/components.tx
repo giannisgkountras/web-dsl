@@ -107,8 +107,8 @@ LineChart:
     (
         ('xLabel:' xLabel=STRING)
         ('yLabel:' yLabel=STRING)
-        ('xValue:' (xValue=[Attribute|ID] | xValue_static=STRING))
-        ('yValues:' (yValues+=[Attribute|ID][','] | yValues_static+=STRING[',']))
+        ('xValue:' (xValue=NestedAccessPath | xValue_static=STRING))
+        ('yValues:' (yValues+=NestedAccessPath | yValues_static+=STRING[',']))
         ('staticData:' staticData=List)?
     )#
 ;

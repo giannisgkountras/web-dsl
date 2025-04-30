@@ -107,8 +107,10 @@ class LineChart(ComponentType):
         super().__init__(parent, name)
         self.xLabel = xLabel
         self.yLabel = yLabel
-        self.xValue = xValue
-        self.yValues = yValues
+        if xValue is not None:
+            self.xValue = self.format_attribute_path(xValue)
+        if yValues is not None:
+            self.yValues = [self.format_attribute_path(yValue) for yValue in yValues]
         self.staticData = staticData
 
 

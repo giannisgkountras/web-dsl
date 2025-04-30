@@ -106,11 +106,13 @@ webpage Vroomitor
             content: this[1].telephone_number
     end
 
-    Component liveNotification
+    Component liveChart
         entity: weatherData
-        type: Notification
-            message: this.data[1].images[2]
-            type: success
+        type: LineChart
+            xLabel: "Temperature"
+            yLabel: "Frequency"
+            xValue: this.data[0].temperature
+            yValues: this.data[0].frequency
     end
 
     Component MQTTPublisher
@@ -159,7 +161,7 @@ webpage Vroomitor
 
         row
             col
-                use liveNotification
+                use liveChart
             endcol
             col
                 use MQTTPublisher

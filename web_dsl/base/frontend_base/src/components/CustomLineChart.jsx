@@ -9,42 +9,43 @@ import {
 import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState } from "react";
-import convertTypeValue from "../utils/convertTypeValue";
+
+const getValueByPath = (obj, path) => {
+    return path.reduce((acc, key) => acc?.[key], obj);
+};
 
 const CustomLineChart = ({
     topic,
-    attributes,
     xLabel,
     yLabel,
     sourceOfContent,
     xValue = null,
-    yValues = null,
+    yValues = [],
     staticChartData = null
 }) => {
-    // Generate initial data dynamically based on attributes
-    const initialData = attributes.reduce((acc, attr) => {
-        acc[attr.name] = "0";
-        return acc;
-    }, {});
-
-    const [chartData, setChartData] = useState([initialData]);
+    const [chartData, setChartData] = useState([]);
     const ws = useContext(WebsocketContext);
+
+    const allData = [xValue, ...yValues]; // Each item is a path array like ['data', 1, 'temperature']
 
     // Handle WebSocket messages
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        let newData = {};
-        attributes.forEach((attr) => {
-            newData[attr.name] = convertTypeValue(msg[attr.name], attr.type);
-        });
-        setChartData((prevData) => [...prevData, newData]);
+        try {
+            const newData = {};
+            allData.forEach((path, index) => {
+                newData[`value${index}`] = getValueByPath(msg, path);
+            });
+            setChartData((prevData) => [...prevData, newData]);
+        } catch (error) {
+            console.error("Error processing WebSocket message:", error);
+        }
     });
 
     // Define an array of colors for the lines
     const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
-    const xDataKey = sourceOfContent === "static" ? xValue : attributes[0].name; // First attribute for X-axis or X-value if static content
-    const lineAttributes =
-        sourceOfContent === "static" ? yValues : attributes.slice(1); // Remaining attributes for lines or Y-values if static content
+    const xDataKey = sourceOfContent === "static" ? xValue : "value0"; // value0 corresponds to xValue path
+    const lineDataKeys = yValues.map((_, index) => `value${index + 1}`); // yValues mapped to value1, value2, ...
 
     return (
         <LineChart
@@ -86,13 +87,12 @@ const CustomLineChart = ({
                 itemStyle={{ color: "#fff" }}
             />
 
-            {/* Generate a <Line> for each attribute beyond the first */}
-            {lineAttributes.map((attr, index) => (
+            {lineDataKeys.map((key, index) => (
                 <Line
-                    key={attr.name || attr} // Use attr.name or attr if static for the key
+                    key={key}
                     isAnimationActive={false}
                     type="monotone"
-                    dataKey={attr.name || attr} // Use attr.name or attr if static for the key
+                    dataKey={key}
                     stroke={colors[index % colors.length]}
                     strokeWidth={2}
                     dot={{ fill: colors[index % colors.length] }}

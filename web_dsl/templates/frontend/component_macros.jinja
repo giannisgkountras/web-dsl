@@ -64,14 +64,8 @@
                 topic={"{{topic}}"} 
                 xLabel={"{{type.xLabel}}"} 
                 yLabel={"{{type.yLabel}}"} 
-                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.xValue.__class__.__name__}}" },
-                    {% for attr in type.yValues %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                  ]}
+                xValue={ {{type.xValue}}}
+                yValues={ {{type.yValues}} }
                 sourceOfContent={"{{sourceOfContent}}"}
                 {% if type.staticData %}
                     xValue={"{{type.xValue_static}}"}
