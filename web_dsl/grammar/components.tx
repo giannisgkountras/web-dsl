@@ -92,8 +92,10 @@ Text:
 
 Notification:
     'Notification'
-    ('type:' type=NotificationType)?
-    'message:' message=[Attribute|ID]
+    (
+        ('type:' type=NotificationType)?
+        'message:' message=NestedAccessPath
+    )#
 ;
 
 NotificationType:

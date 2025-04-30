@@ -63,7 +63,8 @@ class Notification(ComponentType):
     def __init__(self, parent=None, name="Notification", type="info", message=None):
         super().__init__(parent, name)
         self.type = type
-        self.message = message
+        if message is not None:
+            self.message = self.format_attribute_path(message)
 
 
 class Image(ComponentType):

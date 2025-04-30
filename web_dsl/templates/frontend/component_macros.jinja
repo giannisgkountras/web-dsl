@@ -156,7 +156,9 @@
             <LiveNotification
                 type={"{{type.type}}"}
                 topic={"{{topic}}"} 
-                attribute={ { name: "{{type.message.name}}" ,  type: "{{type.message.__class__.__name__}}"} }
+                {% if type.message %}
+                    contentPath={ {{type.message}} }
+                {% endif %}
             />
 
         {% elif type.name=="Image" %}

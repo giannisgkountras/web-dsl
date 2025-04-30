@@ -106,10 +106,11 @@ webpage Vroomitor
             content: this[1].telephone_number
     end
 
-    Component imageLive
+    Component liveNotification
         entity: weatherData
-        type: Image
-            source: this.data[1].images[2]
+        type: Notification
+            message: this.data[1].images[2]
+            type: success
     end
 
     Component MQTTPublisher
@@ -158,7 +159,7 @@ webpage Vroomitor
 
         row
             col
-                use imageLive
+                use liveNotification
             endcol
             col
                 use MQTTPublisher
