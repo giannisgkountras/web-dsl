@@ -53,6 +53,9 @@
                 restData={ {{restData}} }
                 staticValue={ {{type.value_static}} }
                 dbData={ {{dbData}} }
+                {% if type.value %}
+                    contentPath={ {{type.value}} }
+                {% endif %}
             />
         
         {% elif type.name=="LineChart"%}

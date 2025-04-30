@@ -1,12 +1,12 @@
 import React, { useState, useContext } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
-import convertTypeValue from "../utils/convertTypeValue";
 import { GaugeComponent } from "react-gauge-component";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import { IoReload } from "react-icons/io5";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
+import { getValueByPath } from "../utils/getValueByPath";
 
 const Gauge = ({
     topic,
@@ -14,16 +14,15 @@ const Gauge = ({
     sourceOfContent,
     restData,
     staticValue,
-    dbData
+    dbData,
+    contentPath
 }) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(0);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setCurrentValue(
-                convertTypeValue(msg[attribute.name], attribute.type)
-            );
+            setCurrentValue(getValueByPath(msg, contentPath));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -34,10 +33,10 @@ const Gauge = ({
 
     const reloadValue = () => {
         if (sourceOfContent === "rest") {
-            fetchValueFromRest(restData, attribute, setCurrentValue);
+            fetchValueFromRest(restData, contentPath, setCurrentValue);
         }
         if (sourceOfContent === "db") {
-            fetchValueFromDB(dbData, attribute, setCurrentValue);
+            fetchValueFromDB(dbData, contentPath, setCurrentValue);
         }
     };
 

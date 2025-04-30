@@ -118,7 +118,7 @@ LiveTable:
 
 Gauge:
     'Gauge' 
-    'value:' (value=[Attribute|ID] |  value_static=FLOAT)
+    'value:' (value=NestedAccessPath |  value_static=FLOAT)
 ;
 
 JsonViewer:

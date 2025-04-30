@@ -106,6 +106,12 @@ webpage Vroomitor
             content: this[1].telephone_number
     end
 
+    Component tempGauge
+        entity: weatherData
+        type: Gauge
+            value: this.data[1].temperatures[2]
+    end
+
     Component MQTTPublisher
         type: Publish
             broker: WeatherBroker
@@ -114,8 +120,8 @@ webpage Vroomitor
     //============ Screens ============//
 
 
-    Screen Todos
-        title: "Todos"
+    Screen Texts
+        title: "Texts"
         url: "/"
 
         row
@@ -144,4 +150,18 @@ webpage Vroomitor
             endcol
         endrow
 
+    end
+
+    Screen Gauges
+        title: "Gauges"
+        url:"/gauges"
+
+        row
+            col
+                use tempGauge
+            endcol
+            col
+                use MQTTPublisher
+            endcol
+        endrow
     end

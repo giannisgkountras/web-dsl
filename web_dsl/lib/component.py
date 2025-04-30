@@ -54,7 +54,8 @@ class ComponentType:
 class Gauge(ComponentType):
     def __init__(self, parent=None, name="Gauge", value=None, value_static=None):
         super().__init__(parent, name)
-        self.value = value  # Will be resolved to an Attribute
+        if value is not None:
+            self.value = self.format_attribute_path(value)
         self.value_static = value_static  # Static value for the gauge
 
 
