@@ -10,7 +10,7 @@ import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState, useEffect } from "react";
 import { IoReload } from "react-icons/io5";
-import { getValueByPath } from "../utils/getValueByPath";
+import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
@@ -30,7 +30,7 @@ const CustomLineChart = ({
     const ws = useContext(WebsocketContext);
     const allPaths = [xValue, ...yValues];
     const { name, path, method, params } = restData || {};
-
+    const pathNames = allPaths.map(getNameFromPath);
     // Fetch and transform data from REST or DB
     const fetchExternalData = async () => {
         try {
@@ -44,7 +44,7 @@ const CustomLineChart = ({
             const formattedData = response.map((item) => {
                 const point = {};
                 allPaths.forEach((path, index) => {
-                    point[`value${index}`] = getValueByPath(item, path);
+                    point[pathNames[index]] = getValueByPath(item, path);
                 });
                 return point;
             });
@@ -64,7 +64,7 @@ const CustomLineChart = ({
         try {
             const newData = {};
             allPaths.forEach((path, index) => {
-                newData[`value${index}`] = getValueByPath(msg, path);
+                newData[pathNames[index]] = getValueByPath(msg, path);
             });
             setChartData((prevData) => [...prevData, newData]);
         } catch (error) {
@@ -79,8 +79,8 @@ const CustomLineChart = ({
         }
     }, []);
 
-    const xDataKey = sourceOfContent === "static" ? xValue : "value0";
-    const lineDataKeys = yValues.map((_, index) => `value${index + 1}`);
+    const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
+    const lineDataKeys = pathNames.slice(1);
     const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
     return (
