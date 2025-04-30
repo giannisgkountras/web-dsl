@@ -15,3 +15,9 @@ export const getValueByPath = (obj, path) => {
         return undefined;
     }
 };
+
+export const getNameFromPath = (path) => {
+    return typeof path[path.length - 1] === "string"
+        ? path[path.length - 1]
+        : `value_${path.join("_")}`; // fallback if ends in index
+};

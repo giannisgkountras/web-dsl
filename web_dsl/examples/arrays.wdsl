@@ -133,6 +133,12 @@ webpage Vroomitor
             yValues: this.name
     end
 
+    Component myLiveTable
+        entity: weatherData
+        type: LiveTable
+            columns: this.data[0].temperature, this.data[0].humidity, this.data[0].date
+    end
+
     Component MQTTPublisher
         type: Publish
             broker: WeatherBroker
@@ -191,6 +197,9 @@ webpage Vroomitor
         row
             col
                 use dbChart
+            endcol
+            col
+                use myLiveTable
             endcol
         endrow
     end

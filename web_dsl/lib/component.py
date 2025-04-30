@@ -42,7 +42,6 @@ class ComponentType:
         path_array = []
 
         for accessor in path.accessors:
-            print(f"Accessor: {accessor}")
             if hasattr(accessor, "index") and accessor.index is not None:
                 accessor.index = int(accessor.index)
                 path_array.append(accessor.index)
@@ -134,7 +133,8 @@ class Publish(ComponentType):
 class LiveTable(ComponentType):
     def __init__(self, parent=None, name="LiveTable", columns=None):
         super().__init__(parent, name)
-        self.columns = columns  # This could be a list of Column objects
+        if columns is not None:
+            self.columns = [self.format_attribute_path(column) for column in columns]
 
 
 class JsonViewer(ComponentType):

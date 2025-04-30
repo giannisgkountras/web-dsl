@@ -89,14 +89,7 @@
         {% elif type.name=="LiveTable"%}
             <LiveTable 
                 topic={"{{topic}}"} 
-                attributes={[ 
-                    {% for attr in type.columns %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                ]}
+                columns={ {{type.columns}} }
             />
 
         {% elif type.name=="JsonViewer"%}

@@ -115,7 +115,7 @@ LineChart:
 
 LiveTable:
     'LiveTable'
-    'columns:' columns+=[Attribute|ID][',']
+    'columns:' columns+=NestedAccessPath[',']
 ;
 
 Gauge:
