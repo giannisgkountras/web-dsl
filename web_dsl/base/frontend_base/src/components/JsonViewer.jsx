@@ -8,10 +8,11 @@ import { toast } from "react-toastify";
 import { IoReload } from "react-icons/io5";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
+import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
 
 const JsonViewer = ({
     topic,
-    attributes,
+    attributes = [],
     sourceOfContent,
     restData,
     dbData
@@ -45,10 +46,12 @@ const JsonViewer = ({
                         const newJsonData = {};
                         attributes.forEach((attribute) => {
                             try {
-                                newJsonData[attribute.name] = convertTypeValue(
-                                    response[attribute.name],
-                                    attribute.type
+                                const value = getValueByPath(
+                                    response,
+                                    attribute
                                 );
+                                const name = getNameFromPath(attribute);
+                                newJsonData[name] = value;
                             } catch (error) {
                                 toast.error(
                                     "An error occurred while updating value: " +
@@ -99,10 +102,9 @@ const JsonViewer = ({
             const newJsonData = {};
             attributes.forEach((attribute) => {
                 try {
-                    newJsonData[attribute.name] = convertTypeValue(
-                        msg[attribute.name],
-                        attribute.type
-                    );
+                    const value = getValueByPath(msg, attribute);
+                    const name = getNameFromPath(attribute);
+                    newJsonData[name] = value;
                 } catch (error) {
                     toast.error(
                         "An error occurred while updating value: " +
@@ -139,15 +141,14 @@ const JsonViewer = ({
                         }
                     } else {
                         const newJsonData = {};
-                        const responseRow = Array.isArray(response)
-                            ? response[0]
-                            : response;
                         attributes.forEach((attribute) => {
                             try {
-                                newJsonData[attribute.name] = convertTypeValue(
-                                    responseRow[attribute.name],
-                                    attribute.type
+                                const value = getValueByPath(
+                                    response,
+                                    attribute
                                 );
+                                const name = getNameFromPath(attribute);
+                                newJsonData[name] = value;
                             } catch (error) {
                                 toast.error(
                                     "An error occurred while updating value: " +

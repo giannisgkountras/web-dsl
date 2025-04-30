@@ -144,6 +144,12 @@ webpage Vroomitor
             broker: WeatherBroker
     end
 
+    Component myjsonViewer
+        entity: weatherData
+        type: JsonViewer
+            attributes: this.data[0]
+    end
+
     //============ Screens ============//
 
 
@@ -200,6 +206,9 @@ webpage Vroomitor
             endcol
             col
                 use myLiveTable
+            endcol
+            col
+                use myjsonViewer
             endcol
         endrow
     end

@@ -95,14 +95,9 @@
         {% elif type.name=="JsonViewer"%}
             <JsonViewer 
                 topic={"{{topic}}"} 
-                attributes={[ 
-                    {% for attr in type.attributes %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                ]}
+                {% if type.attributes %}
+                    attributes={ {{type.attributes}} }
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 dbData={ {{dbData}} }

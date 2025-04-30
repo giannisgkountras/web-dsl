@@ -140,7 +140,10 @@ class LiveTable(ComponentType):
 class JsonViewer(ComponentType):
     def __init__(self, parent=None, name="JsonViewer", attributes=None):
         super().__init__(parent, name)
-        self.attributes = attributes
+        if attributes is not None:
+            self.attributes = [
+                self.format_attribute_path(attribute) for attribute in attributes
+            ]
 
 
 class Text(ComponentType):

@@ -125,7 +125,7 @@ Gauge:
 
 JsonViewer:
     'JsonViewer'
-    ('attributes:' attributes+=[Attribute|ID][','])?
+    ('attributes:' attributes+=NestedAccessPath[','])?
 ;
 
 Alive:
