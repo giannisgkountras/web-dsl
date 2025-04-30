@@ -49,8 +49,6 @@ const CustomLineChart = ({
                 return point;
             });
 
-            console.log(formattedData);
-
             // 4. set the *whole* array as your chartData
             setChartData(formattedData);
         } catch (err) {
