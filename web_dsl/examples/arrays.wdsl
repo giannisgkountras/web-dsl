@@ -115,6 +115,24 @@ webpage Vroomitor
             yValues: this.data[0].frequency
     end
 
+    Component restChart
+        entity: allTodos
+        type: LineChart
+            xLabel: "userId"
+            yLabel: "id"
+            xValue: this.userId
+            yValues: this.id
+    end
+
+    Component dbChart
+        entity: mysqlUsers
+        type: LineChart
+            xLabel: "userId"
+            yLabel: "id"
+            xValue: this.id
+            yValues: this.name
+    end
+
     Component MQTTPublisher
         type: Publish
             broker: WeatherBroker
@@ -155,16 +173,24 @@ webpage Vroomitor
 
     end
 
-    Screen Images
-        title: "Images"
-        url:"/images"
+    Screen Charts
+        title: "charts"
+        url:"/charts"
 
         row
             col
                 use liveChart
             endcol
             col
+                use restChart
+            endcol
+            col
                 use MQTTPublisher
+            endcol
+        endrow
+        row
+            col
+                use dbChart
             endcol
         endrow
     end
