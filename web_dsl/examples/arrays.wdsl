@@ -106,10 +106,10 @@ webpage Vroomitor
             content: this[1].telephone_number
     end
 
-    Component tempGauge
+    Component imageLive
         entity: weatherData
-        type: Gauge
-            value: this.data[1].temperatures[2]
+        type: Image
+            source: this.data[1].images[2]
     end
 
     Component MQTTPublisher
@@ -152,13 +152,13 @@ webpage Vroomitor
 
     end
 
-    Screen Gauges
-        title: "Gauges"
-        url:"/gauges"
+    Screen Images
+        title: "Images"
+        url:"/images"
 
         row
             col
-                use tempGauge
+                use imageLive
             endcol
             col
                 use MQTTPublisher

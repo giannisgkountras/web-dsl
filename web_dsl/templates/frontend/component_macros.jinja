@@ -168,6 +168,9 @@
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
                 sourceStatic={"{{type.source_static}}"}
+                {% if type.source %}
+                    contentPath={ {{type.source}} }
+                {% endif %}
             />
 
         {% elif type.name=="Text" %}

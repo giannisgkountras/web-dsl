@@ -79,7 +79,8 @@ class Image(ComponentType):
         super().__init__(parent, name)
         self.width = width
         self.height = height
-        self.source = source
+        if source is not None:
+            self.source = self.format_attribute_path(source)
         self.source_static = source_static
 
 

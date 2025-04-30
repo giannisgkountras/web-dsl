@@ -74,7 +74,7 @@ Image:
     ( 
         ('width:' width=INT)?
         ('height:' height=INT)?
-        ('source:' (source=[Attribute|ID] | source_static=STRING))?
+        ('source:' (source=NestedAccessPath | source_static=STRING))?
     )#
 ;
 

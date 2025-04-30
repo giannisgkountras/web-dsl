@@ -6,6 +6,7 @@ import placeholder from "../assets/placeholderimage";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { IoReload } from "react-icons/io5";
+import { getValueByPath } from "../utils/getValueByPath";
 
 const CustomImage = ({
     topic,
@@ -14,53 +15,29 @@ const CustomImage = ({
     source,
     sourceOfContent,
     restData,
-    sourceStatic
+    sourceStatic,
+    contentPath
 }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
 
-    const fetchValue = () => {
-        const { name, path, method, params } = restData;
-
-        proxyRestCall({
-            name,
-            path,
-            method: "GET",
-            params
-        })
-            .then((response) => {
-                try {
-                    const newFrame = `data:image/png;base64,${convertTypeValue(
-                        response[source.name],
-                        source.type
-                    )}`;
-                    setFrame(newFrame);
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
+    const reloadContent = () => {
+        if (sourceOfContent === "rest") {
+            fetchValueFromRest(restData, contentPath, setFrame);
+        }
+        if (sourceOfContent === "db") {
+            fetchValueFromDB(dbData, contentPath, setFrame);
+        }
     };
 
     useEffect(() => {
-        if (sourceOfContent === "rest") {
-            fetchValue();
-        }
+        reloadContent();
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
             setFrame(
-                `data:image/png;base64,${convertTypeValue(
-                    msg[source.name],
-                    source.type
-                )}`
+                `data:image/png;base64,${getValueByPath(msg, contentPath)}`
             );
         } catch (error) {
             toast.error(
