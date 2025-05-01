@@ -4,13 +4,13 @@ import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 import { getValueByPath } from "../utils/getValueByPath";
 
-export const fetchValueFromRest = async (restData, contentPath, setValue) => {
+export const fetchValueFromRest = async (restData, contentPath) => {
     const { name, path, method, params } = restData;
 
     try {
         const response = await proxyRestCall({ name, path, method, params });
         const value = getValueByPath(response, contentPath);
-        setValue(value);
+        return value;
     } catch (error) {
         toast.error(
             "Error fetching or converting REST value: " + error.message
@@ -19,7 +19,7 @@ export const fetchValueFromRest = async (restData, contentPath, setValue) => {
     }
 };
 
-export const fetchValueFromDB = async (dbData, contentPath, setValue) => {
+export const fetchValueFromDB = async (dbData, contentPath) => {
     const { connection_name, database, query, collection, filter } = dbData;
 
     try {
@@ -31,7 +31,7 @@ export const fetchValueFromDB = async (dbData, contentPath, setValue) => {
             filter
         });
         const value = getValueByPath(response, contentPath);
-        setValue(value);
+        return value;
     } catch (error) {
         toast.error("Error fetching or converting DB value: " + error.message);
         console.error("DB fetch error:", error);

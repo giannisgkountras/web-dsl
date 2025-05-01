@@ -1,13 +1,14 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
-import convertTypeValue from "../utils/convertTypeValue";
 import placeholder from "../assets/placeholderimage";
 import { toast } from "react-toastify";
-import { proxyRestCall } from "../api/proxyRestCall";
 import { IoReload } from "react-icons/io5";
 import { getValueByPath } from "../utils/getValueByPath";
-
+import {
+    evaluateCondition,
+    evaluateConditionWithData
+} from "../utils/evaluateCondition";
 const CustomImage = ({
     topic,
     width,
@@ -16,17 +17,22 @@ const CustomImage = ({
     sourceOfContent,
     restData,
     sourceStatic,
-    contentPath
+    contentPath,
+    condition
 }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
-
+    const [componentVisible, setComponentVisible] = useState(true);
     const reloadContent = () => {
         if (sourceOfContent === "rest") {
-            fetchValueFromRest(restData, contentPath, setFrame);
+            const value = fetchValueFromRest(restData, contentPath);
+            setFrame(data);
+            setComponentVisible(evaluateConditionWithData(condition, data));
         }
         if (sourceOfContent === "db") {
-            fetchValueFromDB(dbData, contentPath, setFrame);
+            const data = fetchValueFromDB(dbData, contentPath);
+            setFrame(data);
+            setComponentVisible(evaluateConditionWithData(condition, data));
         }
     };
 
@@ -36,9 +42,9 @@ const CustomImage = ({
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setFrame(
-                `data:image/png;base64,${getValueByPath(msg, contentPath)}`
-            );
+            const data = getValueByPath(msg, contentPath);
+            setFrame(`data:image/png;base64,${data}`);
+            setComponentVisible(evaluateConditionWithData(condition, data));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -47,34 +53,36 @@ const CustomImage = ({
         }
     });
     return (
-        <div className="w-fit h-fit relative">
-            {"rest" === sourceOfContent && (
-                <button
-                    className="absolute top-0 right-0 p-4 z-10 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                    onClick={fetchValue}
-                    title="Refresh Value"
-                >
-                    <IoReload size={24} />
-                </button>
-            )}
-            {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
-                <img
-                    style={{
-                        width: `${width ? width : 400}px`,
-                        height: `${height ? height : 400}px`
-                    }}
-                    src={frame}
-                ></img>
-            ) : (
-                <img
-                    style={{
-                        width: `${width ? width : 400}px`,
-                        height: `${height ? height : 400}px`
-                    }}
-                    src={sourceStatic}
-                ></img>
-            )}
-        </div>
+        componentVisible && (
+            <div className="w-fit h-fit relative">
+                {"rest" === sourceOfContent && (
+                    <button
+                        className="absolute top-0 right-0 p-4 z-10 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
+                        onClick={fetchValue}
+                        title="Refresh Value"
+                    >
+                        <IoReload size={24} />
+                    </button>
+                )}
+                {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
+                    <img
+                        style={{
+                            width: `${width ? width : 400}px`,
+                            height: `${height ? height : 400}px`
+                        }}
+                        src={frame}
+                    ></img>
+                ) : (
+                    <img
+                        style={{
+                            width: `${width ? width : 400}px`,
+                            height: `${height ? height : 400}px`
+                        }}
+                        src={sourceStatic}
+                    ></img>
+                )}
+            </div>
+        )
     );
 };
 

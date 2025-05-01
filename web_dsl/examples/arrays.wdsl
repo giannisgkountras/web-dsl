@@ -170,6 +170,21 @@ webpage Vroomitor
         if this.data[0].simple > 5
     end
 
+    Component conditionalTextRest
+        entity: allTodos
+        type: Text
+            content: this[7].id
+        if this[7].id == 8
+    end
+
+    Component conditionalImage
+        entity: weatherData
+        type: Image
+            source: this.frame
+        if this.data[0].simple > 5
+    end
+
+
     //============ Screens ============//
 
 
@@ -249,7 +264,15 @@ webpage Vroomitor
                 use conditionalText
             endcol
             col
+                use conditionalImage
+            endcol
+            col
                 use MQTTPublisher
+            endcol
+        endrow
+        row
+            col
+                use conditionalTextRest
             endcol
         endrow
     end

@@ -5,7 +5,10 @@ import { toast } from "react-toastify";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 import { IoReload } from "react-icons/io5";
 import { getValueByPath } from "../utils/getValueByPath";
-import { evaluateCondition } from "../utils/evaluateCondition";
+import {
+    evaluateCondition,
+    evaluateConditionWithData
+} from "../utils/evaluateCondition";
 
 const Text = ({
     topic,
@@ -25,10 +28,14 @@ const Text = ({
 
     const reloadContent = () => {
         if (sourceOfContent === "rest") {
-            fetchValueFromRest(restData, contentPath, setContent);
+            const data = fetchValueFromRest(restData, contentPath);
+            setComponentVisible(evaluateConditionWithData(condition, data));
+            setContent(data);
         }
         if (sourceOfContent === "db") {
-            fetchValueFromDB(dbData, contentPath, setContent);
+            const data = fetchValueFromDB(dbData, contentPath);
+            setComponentVisible(evaluateConditionWithData(condition, data));
+            setContent(data);
         }
     };
 
@@ -38,8 +45,9 @@ const Text = ({
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setContent(getValueByPath(msg, contentPath));
-            setComponentVisible(evaluateCondition(condition, msg));
+            const data = getValueByPath(msg, contentPath);
+            setContent(data);
+            setComponentVisible(evaluateConditionWithData(condition, data));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message

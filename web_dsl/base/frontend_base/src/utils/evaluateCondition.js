@@ -41,3 +41,28 @@ export const evaluateCondition = (condition, data) => {
     toast.warn("Invalid condition format:", condition);
     return false;
 };
+
+export const evaluateConditionWithData = (condition, data) => {
+    if (condition === undefined || condition === null) {
+        return true;
+    }
+
+    if (typeof condition === "boolean") {
+        return condition;
+    }
+
+    if (Array.isArray(condition)) {
+        const [conditionPath, conditionOperator, conditionValue] = condition;
+
+        const comparator = operatorMaps[conditionOperator];
+        if (!comparator) {
+            toast.warn(`Unknown operator: ${conditionOperator}`);
+            return false;
+        }
+
+        return comparator(data, conditionValue);
+    }
+
+    toast.warn("Invalid condition format:", condition);
+    return false;
+};

@@ -58,6 +58,9 @@
                 {% if type.value %}
                     contentPath={ {{type.value}} }
                 {% endif %}
+                {% if condition %}
+                    condition={ {{condition}} }
+                {% endif %}
             />
         
         {% elif type.name=="LineChart"%}
@@ -158,6 +161,9 @@
                 sourceStatic={"{{type.source_static}}"}
                 {% if type.source %}
                     contentPath={ {{type.source}} }
+                {% endif %}
+                {% if condition %}
+                    condition={ {{condition}} }
                 {% endif %}
             />
 
