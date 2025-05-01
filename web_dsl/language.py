@@ -23,6 +23,8 @@ from .lib.component import (
     CrudTable,
 )
 
+from .lib.condition import Condition
+
 # Map grammar rules to Python classes
 custom_classes = [
     Component,
@@ -38,6 +40,7 @@ custom_classes = [
     Text,
     Logs,
     CrudTable,
+    Condition,
     # Add other classes here
 ]
 

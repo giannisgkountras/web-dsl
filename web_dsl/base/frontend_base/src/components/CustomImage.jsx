@@ -17,22 +17,19 @@ const CustomImage = ({
     sourceOfContent,
     restData,
     sourceStatic,
-    contentPath,
-    condition
+    contentPath
 }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
-    const [componentVisible, setComponentVisible] = useState(true);
+
     const reloadContent = () => {
         if (sourceOfContent === "rest") {
             const value = fetchValueFromRest(restData, contentPath);
-            setFrame(data);
-            setComponentVisible(evaluateConditionWithData(condition, data));
+            setFrame(value);
         }
         if (sourceOfContent === "db") {
-            const data = fetchValueFromDB(dbData, contentPath);
-            setFrame(data);
-            setComponentVisible(evaluateConditionWithData(condition, data));
+            const value = fetchValueFromDB(dbData, contentPath);
+            setFrame(value);
         }
     };
 
@@ -44,7 +41,6 @@ const CustomImage = ({
         try {
             const data = getValueByPath(msg, contentPath);
             setFrame(`data:image/png;base64,${data}`);
-            setComponentVisible(evaluateConditionWithData(condition, data));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -53,36 +49,34 @@ const CustomImage = ({
         }
     });
     return (
-        componentVisible && (
-            <div className="w-fit h-fit relative">
-                {"rest" === sourceOfContent && (
-                    <button
-                        className="absolute top-0 right-0 p-4 z-10 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                        onClick={fetchValue}
-                        title="Refresh Value"
-                    >
-                        <IoReload size={24} />
-                    </button>
-                )}
-                {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
-                    <img
-                        style={{
-                            width: `${width ? width : 400}px`,
-                            height: `${height ? height : 400}px`
-                        }}
-                        src={frame}
-                    ></img>
-                ) : (
-                    <img
-                        style={{
-                            width: `${width ? width : 400}px`,
-                            height: `${height ? height : 400}px`
-                        }}
-                        src={sourceStatic}
-                    ></img>
-                )}
-            </div>
-        )
+        <div className="w-fit h-fit relative">
+            {"rest" === sourceOfContent && (
+                <button
+                    className="absolute top-0 right-0 p-4 z-10 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
+                    onClick={fetchValue}
+                    title="Refresh Value"
+                >
+                    <IoReload size={24} />
+                </button>
+            )}
+            {sourceOfContent === "rest" || sourceOfContent === "broker" ? (
+                <img
+                    style={{
+                        width: `${width ? width : 400}px`,
+                        height: `${height ? height : 400}px`
+                    }}
+                    src={frame}
+                ></img>
+            ) : (
+                <img
+                    style={{
+                        width: `${width ? width : 400}px`,
+                        height: `${height ? height : 400}px`
+                    }}
+                    src={sourceStatic}
+                ></img>
+            )}
+        </div>
     );
 };
 

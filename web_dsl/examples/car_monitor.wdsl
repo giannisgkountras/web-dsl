@@ -207,7 +207,7 @@ webpage CarMonitor
     //============ For Debugging ============//
 
     Screen Debug
-        title: "debug"
+        title: "Debug"
         url: "/debug"
 
         row
@@ -230,6 +230,10 @@ webpage CarMonitor
                     type: Publish
                         broker: TLServer
                 end
+            endcol
+            col
+                if this.hardware[0] > 10 from entity telemetry
+                    then use StartButton
             endcol
         endrow
     end

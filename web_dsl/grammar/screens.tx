@@ -1,5 +1,6 @@
 import components
 import entity
+import conditions
 
 // Each screen has a name, title, URL, optional description, and nested structure
 Screen:
@@ -16,7 +17,7 @@ Screen:
 
 // Rows and columns, which can contain more structural elements
 StructuralElement:
-    Row | Column | Component | ComponentRef
+    Row | Column | Component | ComponentRef | Condition
 ;
 
 // A row contains multiple structural elements

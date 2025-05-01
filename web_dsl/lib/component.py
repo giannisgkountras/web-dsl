@@ -1,17 +1,10 @@
 class Component:
-    def __init__(self, parent=None, name=None, entity=None, type=None, condition=None):
+    def __init__(self, parent=None, name=None, entity=None, type=None):
         self.isComponent = True
         self.parent = parent
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
-        if condition is not None:
-            self.condition = self.format_condition(condition.condition)
-        else:
-            self.condition = None
-
-        if self.condition is not None:
-            print(f"Component {self.name} created with condition: {self.condition}")
 
         try:
             entityRef = entity.source.connection.__class__.__name__
@@ -50,22 +43,6 @@ class Component:
             if hasattr(accessor, "attribute") and accessor.attribute is not None:
                 path_array.append(accessor.attribute)
         return path_array
-
-    def format_condition(self, condition):
-        """
-        This method formats the condition for the component.
-        It converts the condition into an array and also convert the path into an array.
-        For example, if the condition is "data[0].value > 10", it will be converted to [['data', 0, 'value'], ['>'], [10]]".
-        """
-        if condition is not None:
-            condition_array = []
-            if hasattr(condition, "left") and condition.left is not None:
-                condition_array.append(self.format_attribute_path(condition.left))
-            if hasattr(condition, "op") and condition.op is not None:
-                condition_array.append(condition.op)
-            if hasattr(condition, "right") and condition.right is not None:
-                condition_array.append(self.format_attribute_path(condition.right))
-            return condition_array
 
 
 class ComponentType:

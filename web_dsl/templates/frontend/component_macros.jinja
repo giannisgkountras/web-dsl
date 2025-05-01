@@ -1,3 +1,4 @@
+
 {% macro render_element(element, row_parent=True) %}
     {% if element.__class__.__name__ == 'Row' %}
             {% if row_parent %}
@@ -5,7 +6,7 @@
             {% else %}
                 <div className="row row-child">
             {% endif %}
-                {% for child in element.elements %}
+                {% for child in element.elements %}                    
                     {{ render_element(child, row_parent=False) }}
                 {% endfor %}
             </div>
@@ -25,7 +26,6 @@
         {% set restData={}%}
         {% set dbData={}%}
         {% set topic=None%}
-        {% set condition = element.condition %}
 
         {% if sourceOfContent=="rest" %}
             {% set restData = {
@@ -57,9 +57,6 @@
                 dbData={ {{dbData}} }
                 {% if type.value %}
                     contentPath={ {{type.value}} }
-                {% endif %}
-                {% if condition %}
-                    condition={ {{condition}} }
                 {% endif %}
                 {% if type.description%}
                     description={ "{{type.description}}" }
@@ -172,9 +169,7 @@
                 {% if type.source %}
                     contentPath={ {{type.source}} }
                 {% endif %}
-                {% if condition %}
-                    condition={ {{condition}} }
-                {% endif %}
+
             />
 
         {% elif type.name=="Text" %}
@@ -189,9 +184,7 @@
                 {% if type.content %}
                     contentPath={ {{type.content}} }
                 {% endif %}
-                {% if condition %}
-                    condition={ {{condition}} }
-                {% endif %}
+
             />
 
         {% elif type.name=="Logs" %}
@@ -214,5 +207,39 @@
         
         {% endif %}
 
+    {% elif element.__class__.__name__ == 'Condition'%}
+        {% set sourceOfContent = element.sourceOfContent %}
+        {% set restData={}%}
+        {% set dbData={}%}
+        {% set topic=None%}
+
+        {% if sourceOfContent=="rest" %}
+            {% set restData = {
+                "name": element.entity.source.connection.name or 'default',
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "params": element.entity.source.params or {},
+            } %}
+        {% elif sourceOfContent=="db" %}
+            {% set dbData = {
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
+            } %}
+        {% elif sourceOfContent=="broker"%}
+            {% set topic=element.entity.source.topic %}
+        {% endif %}
+
+        <Condition
+            topic="{{topic}}"
+            restData={ {{restData}} }
+            dbData={ {{dbData}} }
+            sourceOfContent="{{sourceOfContent}}"
+            condition={ {{element.condition}} }
+            element={ {{ render_element(element.component) }} }
+        />
     {% endif %}
+
+
 {% endmacro %}

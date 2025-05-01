@@ -1,7 +1,14 @@
 import accessors
+import components
+import entity
 
 Condition:
-    'if' condition=Expression
+    (
+        ('if' condition=Expression)
+        ('from' 'entity' entity=[Entity])
+        ('then' 'use' component=[Component])
+    )#
+    
 ;
 
 Expression:

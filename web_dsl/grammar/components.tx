@@ -2,15 +2,12 @@ import entity
 import communication
 import types
 import accessors
-import conditions
-
 
 Component:
     'Component' name=ID
     (
         ('entity:'  entity=[Entity])?
         ('type:' type=ComponentType)
-        (condition=Condition)?
     )#
     'end'
 ;

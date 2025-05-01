@@ -81,11 +81,10 @@ def generate(model_path, gen_path):
     # Generate the screen components
     for screen in model.screens:
         print(f"Generating screen: {screen.name}")
-        # # Get all components
-        # all_components = get_children_of_type("ComponentRef", screen)
-        # for component in all_components:
-        #     for accessor in component.ref.type.content_path.accessors:
-        #         print(accessor.__dict__)
+        # Get all components
+        all_components = get_children_of_type("Condition", screen)
+        for component in all_components:
+            print(component.__class__.__name__)
         try:
             html_content = screen_template.render(screen=screen)
         except TemplateError as e:
