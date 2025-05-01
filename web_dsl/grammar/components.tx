@@ -95,7 +95,7 @@ LineChart:
         ('xLabel:' xLabel=STRING)
         ('yLabel:' yLabel=STRING)
         ('xValue:' (xValue=NestedAccessPath | xValue_static=STRING))
-        ('yValues:' (yValues+=NestedAccessPath | yValues_static+=STRING[',']))
+        ('yValues:' (yValues+=NestedAccessPath[','] | yValues_static+=STRING[',']))
         ('staticData:' staticData=List)?
     )#
 ;
@@ -108,6 +108,7 @@ LiveTable:
 Gauge:
     'Gauge' 
     'value:' (value=NestedAccessPath |  value_static=FLOAT)
+    ('description:' description=STRING)?
 ;
 
 JsonViewer:
@@ -118,6 +119,7 @@ JsonViewer:
 Alive:
     'Alive'
     'timeout:' timeout=INT
+    ('description:' description=STRING)?
 ;
 
 Publish:
@@ -127,6 +129,7 @@ Publish:
     (
         ('topic:' topic=STRING)?
         ('json:' json=STRING)?
+        ('description:' description=STRING)?
     )#
 ;
 

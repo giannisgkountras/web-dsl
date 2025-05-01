@@ -94,11 +94,14 @@ class ComponentType:
 
 
 class Gauge(ComponentType):
-    def __init__(self, parent=None, name="Gauge", value=None, value_static=None):
+    def __init__(
+        self, parent=None, name="Gauge", value=None, value_static=None, description=None
+    ):
         super().__init__(parent, name)
         if value is not None:
             self.value = self.format_attribute_path(value)
         self.value_static = value_static  # Static value for the gauge
+        self.description = description  # Description for the gauge
 
 
 class Notification(ComponentType):
@@ -128,9 +131,10 @@ class Image(ComponentType):
 
 
 class Alive(ComponentType):
-    def __init__(self, parent=None, name="Alive", timeout=5000):
+    def __init__(self, parent=None, name="Alive", timeout=5000, description=None):
         super().__init__(parent, name)
         self.timeout = timeout
+        self.description = description
 
 
 class LineChart(ComponentType):
@@ -165,12 +169,14 @@ class Publish(ComponentType):
         endpoint=None,
         topic=None,
         json=None,
+        description=None,
     ):
         super().__init__(parent, name)
         self.broker = broker
         self.endpoint = endpoint
         self.topic = topic
         self.json = json
+        self.description = description
 
 
 class LiveTable(ComponentType):

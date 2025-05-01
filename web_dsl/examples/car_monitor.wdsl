@@ -1,0 +1,235 @@
+webpage CarMonitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A car monitoring dashboard"
+    navbar: true
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    RESTApi CarAPI
+        host: "http://192.168.0.120:8000"
+        headers: {"Content-Type": "application/json"}
+    end
+
+    Broker<MQTT> CarBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    Broker<Redis> TLServer
+        host: "192.168.1.6"
+        port: 6379
+    end
+
+    //============ Specific topics/ queries =============//
+
+    BrokerTopic cameraTopic
+        connection: CarBroker
+        topic: "camera"
+    end
+
+    BrokerTopic telemetryTopic
+        connection: CarBroker
+        topic: "telemetry"
+    end
+
+    BrokerTopic trafficLightTopic
+        connection: TLServer
+        topic: "tl"
+    end
+
+    RESTEndpoint signalEndpoint
+        connection: CarAPI
+        path: "/api/signal"
+    end
+
+    //============ Entities ============//
+    
+    Entity camera
+        source: cameraTopic
+        attributes:
+            - frames: dict
+    end
+
+    Entity telemetry
+        source: telemetryTopic
+        attributes:
+            - fps: list
+            - carInfo: dict
+            - hardware: list
+            - notifications: list
+    end
+
+    Entity trafficLightData
+        source: trafficLightTopic
+        attributes:
+            - traffic_lights: list
+    end
+
+    //============ Components ============//
+
+    Component CameraFront
+        entity: camera
+        type: Image
+            source: this.frames.front
+    end
+
+    Component CameraBack
+        entity: camera
+        type: Image
+            source: this.frames.back
+    end
+
+    Component CameraAlive
+        entity: camera
+        type: Alive
+            timeout: 5000
+            description: "Camera Topic"
+    end
+
+    Component TelemetryAlive
+        entity: telemetry
+        type: Alive
+            timeout: 5000
+            description: "Telemetry Topic"
+    end
+
+    Component LiveFPS
+        entity: telemetry
+        type: LineChart
+            xLabel: "Time"
+            yLabel: "FPS"
+            xValue: this.fps.time
+            yValues: this.fps.ped, this.fps.veh, this.fps.lane
+    end
+
+    Component CarInfoTable
+        entity: telemetry
+        type: LiveTable
+            columns: this.carInfo.speed, this.carInfo.steer, this.carInfo.yaw
+    end
+
+    Component CPUUsage
+        entity: telemetry
+        type: Gauge
+            value: this.hardware[0]
+            description: "CPU Usage"
+    end
+
+    Component GPUUsage
+        entity: telemetry
+        type: Gauge
+            value: this.hardware[1]
+            description: "GPU Usage"
+    end
+
+    Component StartButton
+        type: Publish
+            endpoint: signalEndpoint
+            json: "{\"signal\":\"start_car\"}"
+            description: "Start Car"
+    end
+
+    Component StopButton
+        type: Publish
+            endpoint: signalEndpoint
+            json: "{\"signal\":\"stop_car\"}"
+            description: "Stop Car"
+    end
+
+    Component CarWarnings
+        entity: telemetry
+        type: Notification
+            type: warning
+            message: this.notifications[0].message
+    end
+
+    Component TLServerJsonViewer
+        entity: trafficLightData
+        type: JsonViewer
+    end
+
+    //============ Screens ============//
+    Screen Home
+        title: "Home"
+        url: "/"
+        
+        use CarWarnings
+
+        row
+            col
+                use CameraAlive
+                use TelemetryAlive
+            endcol
+            col
+                use CameraFront
+            endcol
+            col
+                use CameraBack
+            endcol
+            col
+                row
+                    use StartButton
+                    use StopButton
+                endrow
+                row
+                    use TLServerJsonViewer
+                endrow
+            endcol
+        endrow
+
+        row
+            col
+                use LiveFPS
+            endcol
+            col
+                use CarInfoTable
+            endcol
+            col
+                use CPUUsage
+                use GPUUsage
+            endcol
+        endrow
+
+
+    end
+
+    //============ For Debugging ============//
+
+    Screen Debug
+        title: "debug"
+        url: "/debug"
+
+        row
+            col
+                Component cameraPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+            col 
+                Component telemetryPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+        endrow
+        row
+            col
+                Component trafficLightsPublisher
+                    type: Publish
+                        broker: TLServer
+                end
+            endcol
+        endrow
+    end

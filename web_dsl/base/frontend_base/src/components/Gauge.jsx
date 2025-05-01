@@ -20,7 +20,8 @@ const Gauge = ({
     staticValue,
     dbData,
     contentPath,
-    condition
+    condition,
+    description = null
 }) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(0);
@@ -58,7 +59,7 @@ const Gauge = ({
 
     return (
         componentVisible && (
-            <div className="flex justify-center items-center relative">
+            <div className="flex flex-col justify-center items-center relative">
                 {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                     <button
                         className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
@@ -73,6 +74,7 @@ const Gauge = ({
                 ) : (
                     <GaugeComponent value={currentValue} />
                 )}
+                {description && <h1 className="text-lg">{description}</h1>}
             </div>
         )
     );
