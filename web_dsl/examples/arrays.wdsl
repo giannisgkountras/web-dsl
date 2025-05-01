@@ -98,6 +98,7 @@ webpage Vroomitor
         type: Text
             content: this.simple
             size: 18
+        if this.data[0].simple > 5
     end
 
     Component DBText
@@ -154,6 +155,19 @@ webpage Vroomitor
         entity: weatherData
         type: Logs
             attributes: this.data[0]
+    end
+
+    Component dbTable
+        entity: mysqlUsers
+        type: CrudTable
+    end
+
+    Component conditionalText
+        entity: weatherData
+        type: Text
+            content: this.data[0].simple
+            size: 18
+        if this.data[0].simple > 5
     end
 
     //============ Screens ============//
@@ -218,6 +232,24 @@ webpage Vroomitor
             endcol
             col
                 use myLogs
+            endcol
+            col
+                use dbTable
+            endcol
+
+        endrow
+    end
+
+    Screen Conditions
+        title: "conditions"
+        url: "conditions"
+
+        row
+            col
+                use conditionalText
+            endcol
+            col
+                use MQTTPublisher
             endcol
         endrow
     end

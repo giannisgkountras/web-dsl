@@ -1,0 +1,17 @@
+import accessors
+
+Condition:
+    'if' condition=Expression
+;
+
+Expression:
+    left=NestedAccessPath op=ComparisonOperator right=Value
+;
+
+ComparisonOperator:
+    '==' | '!=' | '<' | '>' | '<=' | '>='
+;
+
+Value:
+    INT | FLOAT | STRING | BOOL
+;

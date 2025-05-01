@@ -1,0 +1,16 @@
+AttributeAccessor:
+    '.' attribute=ID  
+;
+
+IndexAccessor:
+    '[' index=INT ']'
+;
+
+Accessor:
+    // One step in the access path can be either by attribute or by index
+    AttributeAccessor | IndexAccessor
+;
+
+NestedAccessPath:
+    base='this' accessors*=Accessor // Starts with 'this', followed by zero or more accessors
+;

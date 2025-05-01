@@ -1,10 +1,18 @@
 class Component:
-    def __init__(self, parent=None, name=None, entity=None, type=None):
+    def __init__(self, parent=None, name=None, entity=None, type=None, condition=None):
         self.isComponent = True
         self.parent = parent
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
+        if condition is not None:
+            self.condition = self.format_condition(condition.condition)
+        else:
+            self.condition = None
+
+        if self.condition is not None:
+            print(f"Component {self.name} created with condition: {self.condition}")
+
         try:
             entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
@@ -23,6 +31,41 @@ class Component:
 
     def __str__(self):
         return self.name
+
+    def format_attribute_path(self, path):
+        """
+        This method formats the attribute path for the component.
+        It converts the path into a list of indices and attributes.
+        For example, if the path is "data[0].value", it will be converted to [0, "value"].
+        """
+        if type(path) == int:
+            return path
+
+        path_array = []
+
+        for accessor in path.accessors:
+            if hasattr(accessor, "index") and accessor.index is not None:
+                accessor.index = int(accessor.index)
+                path_array.append(accessor.index)
+            if hasattr(accessor, "attribute") and accessor.attribute is not None:
+                path_array.append(accessor.attribute)
+        return path_array
+
+    def format_condition(self, condition):
+        """
+        This method formats the condition for the component.
+        It converts the condition into an array and also convert the path into an array.
+        For example, if the condition is "data[0].value > 10", it will be converted to [['data', 0, 'value'], ['>'], [10]]".
+        """
+        if condition is not None:
+            condition_array = []
+            if hasattr(condition, "left") and condition.left is not None:
+                condition_array.append(self.format_attribute_path(condition.left))
+            if hasattr(condition, "op") and condition.op is not None:
+                condition_array.append(condition.op)
+            if hasattr(condition, "right") and condition.right is not None:
+                condition_array.append(self.format_attribute_path(condition.right))
+            return condition_array
 
 
 class ComponentType:
@@ -176,4 +219,7 @@ class Logs(ComponentType):
 class CrudTable(ComponentType):
     def __init__(self, parent=None, name="CrudTable", attributes=None):
         super().__init__(parent, name)
-        self.attributes = attributes
+        if attributes is not None:
+            self.attribute = [
+                self.format_attribute_path(attribute) for attribute in attributes
+            ]

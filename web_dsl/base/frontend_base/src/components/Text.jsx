@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 import { IoReload } from "react-icons/io5";
 import { getValueByPath } from "../utils/getValueByPath";
+import { evaluateCondition } from "../utils/evaluateCondition";
 
 const Text = ({
     topic,
@@ -14,9 +15,12 @@ const Text = ({
     sourceOfContent,
     restData,
     staticContent,
-    dbData
+    dbData,
+    condition = true
 }) => {
     const [content, setContent] = useState("");
+    const [componentVisible, setComponentVisible] = useState(true);
+
     const ws = useContext(WebsocketContext);
 
     const reloadContent = () => {
@@ -35,6 +39,7 @@ const Text = ({
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
             setContent(getValueByPath(msg, contentPath));
+            setComponentVisible(evaluateCondition(condition, msg));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -44,26 +49,28 @@ const Text = ({
     });
 
     return (
-        <div className="flex relative w-fit h-fit p-5">
-            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
-                <button
-                    className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                    onClick={reloadContent}
-                    title="Refresh Value"
-                >
-                    <IoReload size={24} />
-                </button>
-            )}
+        componentVisible && (
+            <div className="flex relative w-fit h-fit p-5">
+                {(sourceOfContent === "rest" || sourceOfContent === "db") && (
+                    <button
+                        className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
+                        onClick={reloadContent}
+                        title="Refresh Value"
+                    >
+                        <IoReload size={24} />
+                    </button>
+                )}
 
-            <h1
-                style={{
-                    ...(size !== 0 && { fontSize: `${size}px` }),
-                    color: color
-                }}
-            >
-                {sourceOfContent === "static" ? staticContent : content}
-            </h1>
-        </div>
+                <h1
+                    style={{
+                        ...(size !== 0 && { fontSize: `${size}px` }),
+                        color: color
+                    }}
+                >
+                    {sourceOfContent === "static" ? staticContent : content}
+                </h1>
+            </div>
+        )
     );
 };
 

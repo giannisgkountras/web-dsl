@@ -3,9 +3,10 @@ import convertTypeValue from "../utils/convertTypeValue";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 import { FaEdit, FaTrash, FaSave } from "react-icons/fa";
+import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
 
 const CrudTable = ({
-    attributes,
+    attributes = [],
     restData = {},
     dbData = {},
     sourceOfContent
@@ -20,19 +21,19 @@ const CrudTable = ({
             if (attributes.length === 0) {
                 setData(response);
             } else {
-                const newData = response.map((item) => {
-                    const newItem = {};
-                    attributes.forEach((attribute) => {
-                        try {
-                            newItem[attribute.name] = convertTypeValue(
-                                item[attribute.name],
-                                attribute.type
-                            );
-                        } catch (error) {
-                            console.error("Error converting value:", error);
-                        }
-                    });
-                    return newItem;
+                const newData = {};
+                attributes.forEach((attribute) => {
+                    try {
+                        const value = getValueByPath(msg, attribute);
+                        const name = getNameFromPath(attribute);
+                        newData[name] = value;
+                    } catch (error) {
+                        toast.error(
+                            "An error occurred while updating value: " +
+                                error.message
+                        );
+                        console.error("Error updating status:", error);
+                    }
                 });
                 setData(newData);
             }
@@ -43,19 +44,19 @@ const CrudTable = ({
                 console.log("response", response);
                 setData(response);
             } else {
-                const newData = response.map((item) => {
-                    const newItem = {};
-                    attributes.forEach((attribute) => {
-                        try {
-                            newItem[attribute.name] = convertTypeValue(
-                                item[attribute.name],
-                                attribute.type
-                            );
-                        } catch (error) {
-                            console.error("Error converting value:", error);
-                        }
-                    });
-                    return newItem;
+                const newData = {};
+                attributes.forEach((attribute) => {
+                    try {
+                        const value = getValueByPath(msg, attribute);
+                        const name = getNameFromPath(attribute);
+                        newData[name] = value;
+                    } catch (error) {
+                        toast.error(
+                            "An error occurred while updating value: " +
+                                error.message
+                        );
+                        console.error("Error updating status:", error);
+                    }
                 });
                 setData(newData);
             }

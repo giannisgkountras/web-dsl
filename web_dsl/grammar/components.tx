@@ -1,29 +1,16 @@
 import entity
 import communication
 import types
+import accessors
+import conditions
 
-AttributeAccessor:
-    '.' attribute=ID  
-;
-
-IndexAccessor:
-    '[' index=INT ']'
-;
-
-Accessor:
-    // One step in the access path can be either by attribute or by index
-    AttributeAccessor | IndexAccessor
-;
-
-NestedAccessPath:
-    base='this' accessors*=Accessor // Starts with 'this', followed by zero or more accessors
-;
 
 Component:
     'Component' name=ID
     (
         ('entity:'  entity=[Entity])?
         ('type:' type=ComponentType)
+        (condition=Condition)?
     )#
     'end'
 ;
@@ -150,6 +137,6 @@ Logs:
 
 CrudTable:
     'CrudTable'
-    ('attributes:' attributes+=[Attribute|ID][','])?
+    ('attributes:' attributes+=NestedAccessPath[','])?
 ;
 

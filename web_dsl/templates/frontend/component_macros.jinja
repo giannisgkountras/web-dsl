@@ -25,6 +25,8 @@
         {% set restData={}%}
         {% set dbData={}%}
         {% set topic=None%}
+        {% set condition = element.condition %}
+
         {% if sourceOfContent=="rest" %}
             {% set restData = {
                 "name": element.entity.source.connection.name or 'default',
@@ -171,6 +173,9 @@
                 {% if type.content %}
                     contentPath={ {{type.content}} }
                 {% endif %}
+                {% if condition %}
+                    condition={ {{condition}} }
+                {% endif %}
             />
 
         {% elif type.name=="Logs" %}
@@ -183,14 +188,9 @@
 
         {% elif type.name=="CrudTable" %}
             <CrudTable
-                attributes={[ 
-                    {% for attr in type.attributes %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                ]}
+                {% if type.attributes %}
+                    attributes={ {{type.attributes}} }
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 dbData={ {{dbData}} }
