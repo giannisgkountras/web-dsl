@@ -1,5 +1,5 @@
 # Textual DSL for web applications
-<image src="https://github.com/user-attachments/assets/c4e067d1-2e55-4af0-aef6-2833d37b3430" alt="web-dsl" width="300px"/>
+<img src="./web_dsl/assets/web_dsl_logo.png" alt="web-dsl" width="350px"/>
 
 ## How to setup
 
