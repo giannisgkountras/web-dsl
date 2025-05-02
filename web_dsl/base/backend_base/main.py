@@ -187,7 +187,7 @@ class RESTCallRequest(BaseModel):
     name: str  # Name of the REST call
     path: str
     method: str
-    params: dict
+    # params: dict
     body: dict
 
 
@@ -215,11 +215,10 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
     try:
         async with httpx.AsyncClient() as client:
             response = await client.request(
-                method=request.method.upper(),  # use dot notation for request
+                method=request.method.upper(),
                 url=url,
-                headers=current_endpoint.get("headers", {}) or {},
-                params=request.params,  # dot notation here
-                json=request.body,  # dot notation here
+                headers=current_endpoint.get("headers", {}),
+                json=request.body,
             )
 
             if response.headers.get("content-type", "").startswith("application/json"):

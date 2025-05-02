@@ -18,13 +18,13 @@ const Condition = ({
     const contentPath = condition[0];
     const ws = useContext(WebsocketContext);
 
-    const reloadContent = () => {
+    const reloadContent = async () => {
         if (sourceOfContent === "rest") {
-            const data = fetchValueFromRest(restData, contentPath);
+            const data = await fetchValueFromRest(restData, contentPath);
             setShowComponent(evaluateConditionWithData(condition, data));
         }
         if (sourceOfContent === "db") {
-            const data = fetchValueFromDB(dbData, contentPath);
+            const data = await fetchValueFromDB(dbData, contentPath);
             setShowComponent(evaluateConditionWithData(condition, data));
         }
     };

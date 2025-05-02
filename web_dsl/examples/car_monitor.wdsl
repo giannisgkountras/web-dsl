@@ -31,7 +31,7 @@ webpage CarMonitor
         port: 6379
     end
 
-    //============ Specific topics/ queries =============//
+    //============ Specific endpoints / topics / queries =============//
 
     BrokerTopic cameraTopic
         connection: CarBroker
