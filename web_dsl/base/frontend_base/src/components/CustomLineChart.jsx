@@ -31,26 +31,38 @@ const CustomLineChart = ({
     const allPaths = [xValue, ...yValues];
     const { name, path, method, params } = restData || {};
     const pathNames = allPaths.map(getNameFromPath);
+
     // Fetch and transform data from REST or DB
     const fetchExternalData = async () => {
         try {
-            // 1. get the raw response (could be an array, or nested under contentPath)
+            let allData = [];
+            const keys = pathNames;
             const response =
                 sourceOfContent === "rest"
                     ? await proxyRestCall({ name, path, method, params })
                     : await queryDB(dbData);
+            console.log(response);
 
-            // 3. map over each object to build chartData entries
-            const formattedData = response.map((item) => {
-                const point = {};
-                allPaths.forEach((path, index) => {
-                    point[pathNames[index]] = getValueByPath(item, path);
+            // Get all data in the form of arrays
+            // [ [], [], ... ]
+            for (const dataPath of allPaths) {
+                const data = getValueByPath(response, dataPath);
+                if (data) {
+                    allData.push(data);
+                }
+            }
+
+            // Turn the arrays into an array of objects
+            // [{}, {}, ...]
+            const combinedData = allData[0].map((_, i) => {
+                const obj = {};
+                keys.forEach((key, j) => {
+                    obj[key] = allData[j][i];
                 });
-                return point;
+                return obj;
             });
 
-            // 4. set the *whole* array as your chartData
-            setChartData(formattedData);
+            setChartData(combinedData);
         } catch (err) {
             console.error("Failed to fetch chart data:", err);
             toast.error("Failed to load chart data");
@@ -75,10 +87,14 @@ const CustomLineChart = ({
         if (sourceOfContent === "rest" || sourceOfContent === "db") {
             fetchExternalData();
         }
+        if (sourceOfContent === "static") {
+            setChartData(staticChartData);
+        }
     }, []);
 
     const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
-    const lineDataKeys = pathNames.slice(1);
+    const lineDataKeys =
+        sourceOfContent === "static" ? yValues : pathNames.slice(1);
     const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
     return (

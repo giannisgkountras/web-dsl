@@ -135,6 +135,8 @@ class LineChart(ComponentType):
         if yValues is not None:
             self.yValues = [self.format_attribute_path(yValue) for yValue in yValues]
         self.staticData = staticData
+        self.xValue_static = xValue_static
+        self.yValues_static = yValues_static
 
 
 class Publish(ComponentType):

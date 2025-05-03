@@ -51,7 +51,7 @@ const Text = ({
         <div className="flex relative w-fit h-fit p-5">
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                 <button
-                    className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
+                    className="absolute top-[-5] right-[-25] p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
                     onClick={reloadContent}
                     title="Refresh Value"
                 >

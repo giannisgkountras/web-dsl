@@ -76,6 +76,27 @@ webpage WeatherStation
             height: 80
     end
 
+    Component TempHumidityChart
+        entity: weatherData
+        type: LineChart
+            xLabel: "Times"
+            yLabel: "Temp & Humidity"
+            xValue: this.hourly.time
+            yValues: this.hourly.temperature_2m, this.hourly.relative_humidity_2m
+    end
+
+    Component staticChart
+        type: LineChart
+            xLabel: "Age"
+            yLabel: "Students"
+            xValue: "age"
+            yValues: "student_number", "mean_grade"
+            staticData: [
+                {"age":20, "student_number":50, "mean_grade":8.1},
+                {"age":21, "student_number":24, "mean_grade":6.8},
+                {"age":23, "student_number":80, "mean_grade":7.3}
+            ]
+    end
     //============ Screens ============//
     Screen Home
         title: "Home"
@@ -100,4 +121,12 @@ webpage WeatherStation
                     then use ClearWeather
             endcol
         endrow 
+        row
+            col
+                use TempHumidityChart
+            endcol
+            col
+                use staticChart
+            endcol
+        endrow
     end
