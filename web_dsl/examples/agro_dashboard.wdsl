@@ -59,7 +59,12 @@ webpage AgroDashboard
 
     MongoDBQuery CropIrrigation
         connection: AgroMongoDB
-        collection: "comments" 
+        collection: "irrigation_zones" 
+    end
+
+    MongoDBQuery CropInfo
+        connection: AgroMongoDB
+        collection: "crops"
     end
 
 
@@ -84,6 +89,16 @@ webpage AgroDashboard
         attributes:
             - crop_type: list
             - area_percent: list
+    end
+
+    Entity CropInfoData
+        source: CropInfo
+        attributes:
+            - name: list
+            - type: list
+            - harvet_season: list
+            - yield_kg_per_hectare: list
+            - irrigation_required: bool
     end
 
     Entity CropIrrigationData
@@ -122,10 +137,15 @@ webpage AgroDashboard
             dataName: this.crop_type
     end
 
-    Component MongoText
+    Component CropsTable
+        entity: CropInfoData
+        type: CrudTable
+            attributes: this.name, this.type, this.harvet_season, this.yield_kg_per_hectare
+    end
+
+    Component CropIrrigationJSONViewer
         entity: CropIrrigationData
-        type: Text
-            content: this.email[0]
+        type: JsonViewer
     end
 
      //============ Screens ============//
@@ -148,7 +168,10 @@ webpage AgroDashboard
 
         row
             col
-                use MongoText
+                use CropsTable
+            endcol
+            col
+                use CropIrrigationJSONViewer
             endcol
         endrow
     end

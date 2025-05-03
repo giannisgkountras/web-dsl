@@ -257,6 +257,6 @@ class CrudTable(ComponentType):
     def __init__(self, parent=None, name="CrudTable", attributes=None):
         super().__init__(parent, name)
         if attributes is not None:
-            self.attribute = [
+            self.attributes = [
                 self.format_attribute_path(attribute) for attribute in attributes
             ]

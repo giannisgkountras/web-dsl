@@ -13,7 +13,13 @@ from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from db_connector import DBConnector
-from utils import load_config, load_endpoint_config, load_db_config
+from utils import (
+    load_config,
+    load_endpoint_config,
+    load_db_config,
+    convert_object_ids,
+    transform_list_of_dicts_to_dict_of_lists,
+)
 
 # Load the .env file
 load_dotenv()
@@ -257,7 +263,7 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     - For MySQL: returns results in the form {column1: [...], column2: [...], ...}
     - For MongoDB: returns documents as-is
     """
-    if request.database:  # MySQL
+    if request.query != {}:  # MySQL
         result = db_connector.mysql_query(
             connection_name=request.connection_name,
             database=request.database,
@@ -267,23 +273,25 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
             raise HTTPException(status_code=500, detail="Error executing MySQL query")
 
         # Transform list of dicts into dict of lists
-        if isinstance(result, list) and result and isinstance(result[0], dict):
-            transformed = {}
-            for key in result[0].keys():
-                transformed[key] = [row[key] for row in result]
-            return transformed
-        else:
-            return result  # fallback in case it's not a list of dicts
+        transformed_result = transform_list_of_dicts_to_dict_of_lists(result)
+        return transformed_result  # fallback in case it's not a list of dicts
 
     elif request.collection:  # MongoDB
-        result = db_connector.mongo_find(
+        result = await asyncio.to_thread(
+            db_connector.mongo_find,
             connection_name=request.connection_name,
             collection=request.collection,
             filter=request.filter or {},
         )
         if result is None:
             raise HTTPException(status_code=500, detail="Error executing Mongo query")
-        return result
+
+        # Clean _id fields
+        cleaned_result = convert_object_ids(result)
+
+        # Transform list of dicts into dict of lists
+        transformed_result = transform_list_of_dicts_to_dict_of_lists(cleaned_result)
+        return transformed_result
 
     else:
         raise HTTPException(

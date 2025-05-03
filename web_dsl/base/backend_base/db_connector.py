@@ -42,7 +42,7 @@ class DBConnector:
 
             mongo_uri = (
                 f"mongodb://{cfg.get('user')}:{cfg.get('password')}@"
-                f"{cfg.get('host')}:{cfg.get('port')}/{cfg.get('database')}?authSource={cfg.get('authSource', 'admin')}"
+                f"{cfg.get('host')}:{cfg.get('port')}/{cfg.get('database')}"
             )
             client = MongoClient(mongo_uri)
             # Here the connection name is used as the name for the MongoDB database

@@ -4,6 +4,10 @@ import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 import { FaEdit, FaTrash, FaSave } from "react-icons/fa";
 import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
+import {
+    objectOfListsToListOfObjects,
+    isObjectOfLists
+} from "../utils/transformations";
 
 const CrudTable = ({
     attributes = [],
@@ -16,50 +20,42 @@ const CrudTable = ({
 
     // load from REST or DB
     const reloadValue = async () => {
+        let response;
+
         if (sourceOfContent === "rest") {
-            const response = await proxyRestCall(restData);
-            if (attributes.length === 0) {
-                setData(response);
-            } else {
-                const newData = {};
-                attributes.forEach((attribute) => {
-                    try {
-                        const value = getValueByPath(msg, attribute);
-                        const name = getNameFromPath(attribute);
-                        newData[name] = value;
-                    } catch (error) {
-                        toast.error(
-                            "An error occurred while updating value: " +
-                                error.message
-                        );
-                        console.error("Error updating status:", error);
-                    }
-                });
-                setData(newData);
-            }
+            response = await proxyRestCall(restData);
+        } else if (sourceOfContent === "db") {
+            response = await queryDB(dbData);
+        } else {
+            return;
         }
-        if (sourceOfContent === "db") {
-            const response = await queryDB(dbData);
-            if (attributes.length === 0) {
-                console.log("response", response);
-                setData(response);
-            } else {
-                const newData = {};
+
+        // Convert object-of-lists to list-of-objects if needed
+        let listData = isObjectOfLists(response)
+            ? objectOfListsToListOfObjects(response)
+            : response;
+
+        if (attributes.length === 0) {
+            setData(listData);
+        } else {
+            const processedData = listData.map((item) => {
+                const newItem = {};
                 attributes.forEach((attribute) => {
                     try {
-                        const value = getValueByPath(msg, attribute);
+                        const value = getValueByPath(item, attribute);
                         const name = getNameFromPath(attribute);
-                        newData[name] = value;
+                        newItem[name] = value;
                     } catch (error) {
                         toast.error(
-                            "An error occurred while updating value: " +
+                            "An error occurred while extracting value: " +
                                 error.message
                         );
-                        console.error("Error updating status:", error);
+                        console.error("Error extracting attribute:", error);
                     }
                 });
-                setData(newData);
-            }
+                return newItem;
+            });
+            setData(processedData);
         }
     };
 
