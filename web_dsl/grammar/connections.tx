@@ -89,6 +89,7 @@ MongoDB:
         ('host:' host=STRING)
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
+        ('database:' database=STRING)
     )#
     'end'
 ;

@@ -244,7 +244,9 @@ class QueryRequest(BaseModel):
     collection: Optional[str] = (
         None  # For MySQL this is a table; for Mongo, treat as collection.
     )
-    query: str  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    query: Optional[Any] = (
+        None  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    )
     filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
 
 

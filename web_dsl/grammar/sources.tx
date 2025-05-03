@@ -11,7 +11,8 @@ MySQLQuery:
 MongoDBQuery:
     'MongoDBQuery' name=ID
     'connection:' connection=[MongoDB]
-    'query:' query=STRING
+    'collection:' collection=STRING
+    ('filter:' filter=STRING)?
     'end'
 ;
 

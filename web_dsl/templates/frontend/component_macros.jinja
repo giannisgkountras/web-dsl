@@ -40,6 +40,7 @@
                 "database": element.entity.source.connection.database or '',
                 "query": element.entity.source.query or {},
                 "filter": element.entity.source.filter or {},
+                "collection": element.entity.source.collection or '',
             } %}
         {% elif sourceOfContent=="broker"%}
             {% set topic=element.entity.source.topic %}

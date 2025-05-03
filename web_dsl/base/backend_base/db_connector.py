@@ -1,4 +1,5 @@
 from pymongo import MongoClient
+from pymongo.server_api import ServerApi
 import pymysql
 import logging
 
@@ -38,15 +39,15 @@ class DBConnector:
 
     def _connect_mongo(self, cfg):
         try:
-            # Build the MongoDB URI
+
             mongo_uri = (
                 f"mongodb://{cfg.get('user')}:{cfg.get('password')}@"
-                f"{cfg.get('host')}:{cfg.get('port')}/?authSource={cfg.get('authSource', 'admin')}"
+                f"{cfg.get('host')}:{cfg.get('port')}/{cfg.get('database')}?authSource={cfg.get('authSource', 'admin')}"
             )
             client = MongoClient(mongo_uri)
             # Here the connection name is used as the name for the MongoDB database
             conn_name = cfg.get("name")
-            db = client[conn_name]
+            db = client[cfg.get("database")]
             self.connections[conn_name] = db
             print(f"MongoDB connected to {conn_name}")
         except Exception as e:

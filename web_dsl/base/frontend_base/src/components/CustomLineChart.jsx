@@ -42,7 +42,6 @@ const CustomLineChart = ({
                 sourceOfContent === "rest"
                     ? await proxyRestCall({ name, path, method, params })
                     : await queryDB(dbData);
-            console.log(response);
 
             // Get all data in the form of arrays
             // [ [], [], ... ]

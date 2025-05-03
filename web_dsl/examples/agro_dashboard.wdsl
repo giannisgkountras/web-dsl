@@ -25,6 +25,15 @@ webpage AgroDashboard
         database: "thesis"
     end
 
+    Database<MongoDB> AgroMongoDB
+        host: "192.168.1.6"
+        database: "thesis"
+        port: 27017
+        auth:
+            username: "thesis"
+            password: "password"
+    end
+
     //============ Specific endpoints/queries =============//
     
     MySQLQuery soilMoistureZone1
@@ -34,7 +43,8 @@ webpage AgroDashboard
 
     MySQLQuery averageMoisturePerZone
         connection: AgroSQL
-        query: "SELECT z.name AS zone, AVG(s.moisture_percent) AS avg_moisture
+        query: "SELECT z.name AS zone, 
+                    ROUND(AVG(s.moisture_percent), 2) AS avg_moisture
                 FROM soil_moisture_readings s
                 JOIN zones z ON s.zone_id = z.id
                 GROUP BY z.id;"
@@ -46,6 +56,12 @@ webpage AgroDashboard
                 FROM crop_distribution
                 WHERE zone_id = 1;"
     end
+
+    MongoDBQuery CropIrrigation
+        connection: AgroMongoDB
+        collection: "comments" 
+    end
+
 
      //============ Entities ============//
 
@@ -70,6 +86,11 @@ webpage AgroDashboard
             - area_percent: list
     end
 
+    Entity CropIrrigationData
+        source: CropIrrigation
+        attributes:
+            - data: list
+    end
 
      //============ Components ============//
 
@@ -101,6 +122,12 @@ webpage AgroDashboard
             dataName: this.crop_type
     end
 
+    Component MongoText
+        entity: CropIrrigationData
+        type: Text
+            content: this.email[0]
+    end
+
      //============ Screens ============//
 
     Screen Home
@@ -116,6 +143,12 @@ webpage AgroDashboard
             endcol
             col
                 use CropDistributionPieChart
+            endcol
+        endrow
+
+        row
+            col
+                use MongoText
             endcol
         endrow
     end

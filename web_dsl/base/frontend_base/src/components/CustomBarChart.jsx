@@ -34,7 +34,6 @@ const CustomBarChart = ({
                 sourceOfContent === "rest"
                     ? await proxyRestCall({ name, path, method, params })
                     : await queryDB(dbData);
-            console.log(response);
 
             for (const dataPath of allPaths) {
                 const data = getValueByPath(response, dataPath);
