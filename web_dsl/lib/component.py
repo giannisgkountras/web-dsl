@@ -126,6 +126,7 @@ class LineChart(ComponentType):
         xValue_static=None,
         yValues_static=None,
         staticData=[],
+        description=None,
     ):
         super().__init__(parent, name)
         self.xLabel = xLabel
@@ -137,6 +138,34 @@ class LineChart(ComponentType):
         self.staticData = staticData
         self.xValue_static = xValue_static
         self.yValues_static = yValues_static
+        self.description = description
+
+
+class BarChart(ComponentType):
+    def __init__(
+        self,
+        parent=None,
+        name="BarChart",
+        xLabel="X-Axis",
+        yLabel="Y-Axis",
+        xValue=None,
+        yValues=None,
+        xValue_static=None,
+        yValues_static=None,
+        staticData=[],
+        description=None,
+    ):
+        super().__init__(parent, name)
+        self.xLabel = xLabel
+        self.yLabel = yLabel
+        if xValue is not None:
+            self.xValue = self.format_attribute_path(xValue)
+        if yValues is not None:
+            self.yValues = [self.format_attribute_path(yValue) for yValue in yValues]
+        self.staticData = staticData
+        self.xValue_static = xValue_static
+        self.yValues_static = yValues_static
+        self.description = description
 
 
 class Publish(ComponentType):

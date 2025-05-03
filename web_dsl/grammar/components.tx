@@ -17,7 +17,7 @@ ComponentRef:
 ;
 
 ComponentType:
-    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable
+    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable | BarChart
 ;
 
 Button:
@@ -94,6 +94,19 @@ LineChart:
         ('xValue:' (xValue=NestedAccessPath | xValue_static=STRING))
         ('yValues:' (yValues+=NestedAccessPath[','] | yValues_static+=STRING[',']))
         ('staticData:' staticData=List)?
+        ('description:' description=STRING)?
+    )#
+;
+
+BarChart:
+    'BarChart' 
+    (
+        ('xLabel:' xLabel=STRING)
+        ('yLabel:' yLabel=STRING)
+        ('xValue:' (xValue=NestedAccessPath | xValue_static=STRING))
+        ('yValues:' (yValues+=NestedAccessPath[','] | yValues_static+=STRING[',']))
+        ('staticData:' staticData=List)?
+        ('description:' description=STRING)?
     )#
 ;
 

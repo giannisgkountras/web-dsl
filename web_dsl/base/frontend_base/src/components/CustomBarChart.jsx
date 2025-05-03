@@ -1,11 +1,4 @@
-import {
-    CartesianGrid,
-    Line,
-    LineChart,
-    Tooltip,
-    XAxis,
-    YAxis
-} from "recharts";
+import { CartesianGrid, BarChart, Bar, Tooltip, XAxis, YAxis } from "recharts";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState, useEffect } from "react";
@@ -15,7 +8,7 @@ import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 
-const CustomLineChart = ({
+const CustomBarChart = ({
     topic,
     xLabel,
     yLabel,
@@ -33,7 +26,6 @@ const CustomLineChart = ({
     const { name, path, method, params } = restData || {};
     const pathNames = allPaths.map(getNameFromPath);
 
-    // Fetch and transform data from REST or DB
     const fetchExternalData = async () => {
         try {
             let allData = [];
@@ -44,8 +36,6 @@ const CustomLineChart = ({
                     : await queryDB(dbData);
             console.log(response);
 
-            // Get all data in the form of arrays
-            // [ [], [], ... ]
             for (const dataPath of allPaths) {
                 const data = getValueByPath(response, dataPath);
                 if (data) {
@@ -53,8 +43,6 @@ const CustomLineChart = ({
                 }
             }
 
-            // Turn the arrays into an array of objects
-            // [{}, {}, ...]
             const combinedData = allData[0].map((_, i) => {
                 const obj = {};
                 keys.forEach((key, j) => {
@@ -70,7 +58,6 @@ const CustomLineChart = ({
         }
     };
 
-    // WebSocket handler
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
             const newData = {};
@@ -94,7 +81,7 @@ const CustomLineChart = ({
     }, []);
 
     const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
-    const lineDataKeys =
+    const barDataKeys =
         sourceOfContent === "static" ? yValues : pathNames.slice(1);
     const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
@@ -112,7 +99,7 @@ const CustomLineChart = ({
                     <IoReload size={20} />
                 </button>
             )}
-            <LineChart
+            <BarChart
                 data={
                     sourceOfContent === "static" ? staticChartData : chartData
                 }
@@ -154,20 +141,18 @@ const CustomLineChart = ({
                     }}
                     itemStyle={{ color: "#fff" }}
                 />
-                {lineDataKeys.map((key, index) => (
-                    <Line
+                {barDataKeys.map((key, index) => (
+                    <Bar
                         key={key}
-                        isAnimationActive={false}
-                        type="monotone"
                         dataKey={key}
-                        stroke={colors[index % colors.length]}
-                        strokeWidth={2}
-                        dot={{ fill: colors[index % colors.length] }}
+                        fill={colors[index % colors.length]}
+                        barSize={25}
+                        isAnimationActive={false}
                     />
                 ))}
-            </LineChart>
+            </BarChart>
         </div>
     );
 };
 
-export default CustomLineChart;
+export default CustomBarChart;

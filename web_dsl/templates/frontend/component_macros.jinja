@@ -90,8 +90,43 @@
                     xValue={ {{type.xValue}}}
                     yValues={ {{type.yValues}} }
                 {% endif %}
+                {% if type.description%}
+                    description={ "{{type.description}}" }
+                {% endif %}
             />
 
+        {% elif type.name=="BarChart"%}
+
+            <CustomBarChart 
+                topic={"{{topic}}"} 
+                xLabel={"{{type.xLabel}}"} 
+                yLabel={"{{type.yLabel}}"} 
+                sourceOfContent={"{{sourceOfContent}}"}
+                dbData={ {{dbData}} }
+                restData={ {{restData}} }
+                {% if type.staticData %}
+                    xValue={"{{type.xValue_static}}"}
+                    yValues={[ {% for item in type.yValues_static %}
+                                "{{item}}",
+                            {% endfor %}  ]}
+                    staticChartData={ [ 
+                        {% for group in type.staticData.items %}
+                            {   
+                                {% for dictItem in group.items %}
+                                    "{{ dictItem.name }}": "{{ dictItem.value }}"{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            }{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    ] }
+                {% else %}
+                    xValue={ {{type.xValue}}}
+                    yValues={ {{type.yValues}} }
+                {% endif %}
+                {% if type.description%}
+                    description={ "{{type.description}}" }
+                {% endif %}
+            />
+        
         {% elif type.name=="LiveTable"%}
             <LiveTable 
                 topic={"{{topic}}"} 
