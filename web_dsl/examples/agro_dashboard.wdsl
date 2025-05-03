@@ -34,6 +34,11 @@ webpage AgroDashboard
             password: "password"
     end
 
+    RESTApi CropAPI
+        host: "http://192.168.1.6:3000"
+        headers: {"Content-Type": "application/json"}
+    end
+
     //============ Specific endpoints/queries =============//
     
     MySQLQuery soilMoistureZone1
@@ -67,6 +72,11 @@ webpage AgroDashboard
         collection: "crops"
     end
 
+    RESTEndpoint CreateCrop
+        connection: CropAPI
+        path: "/crop"
+        method: POST
+    end
 
      //============ Entities ============//
 
@@ -107,6 +117,15 @@ webpage AgroDashboard
             - data: list
     end
 
+    Entity CropCreationData
+        source: CreateCrop
+        attributes:
+            - name: str
+            - type: str
+            - price_per_kg: float
+            - available: bool
+    end
+
      //============ Components ============//
 
     Component MoistureChartZone1
@@ -140,13 +159,39 @@ webpage AgroDashboard
     Component CropsTable
         entity: CropInfoData
         type: CrudTable
-            attributes: this.name, this.type, this.harvet_season, this.yield_kg_per_hectare
+            attributes: this.name, this.type, this.harvest_season, this.yield_kg_per_hectare
     end
 
     Component CropIrrigationJSONViewer
         entity: CropIrrigationData
         type: JsonViewer
     end
+
+    Component CropForm
+        entity: CropCreationData
+        type: Form
+                Label "Name"
+                Input
+                    type: text
+                    placeholder: "Crop name"
+                    required: true
+                Label "Type"
+                Input 
+                    type: text 
+                    placeholder: "Crop type" 
+                    required: true
+                Label "Price"
+                Input 
+                    type: number 
+                    placeholder: "Price per kg" 
+                    required: true
+                Label "Availability"
+                Input 
+                    type: checkbox 
+                    placeholder: "Availability" 
+                    required: true
+    end
+
 
      //============ Screens ============//
 
@@ -172,6 +217,9 @@ webpage AgroDashboard
             endcol
             col
                 use CropIrrigationJSONViewer
+            endcol
+            col
+                use CropForm
             endcol
         endrow
     end

@@ -19,11 +19,7 @@ ComponentRef:
 ;
 
 ComponentType:
-    Button | Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable | BarChart | PieChart
-;
-
-Button:
-    'Button' content=STRING
+    Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable | BarChart | PieChart
 ;
 
 Input:
@@ -40,19 +36,18 @@ InputType:
 ;
 
 Label:
-    'Label' 
-        'content:' content=STRING
+    'Label' content=STRING
 ;
 
 Form:
-    'Form' (name=ID)?
-    elements*=FormElement
-    'endform'
+    'Form'
+    ( elements+=FormElement )+
 ;
 
 FormElement:
-    Input | Label | Button
+    Input | Label
 ;
+
 
 
 Image:
