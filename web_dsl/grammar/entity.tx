@@ -1,5 +1,6 @@
-import communication
+import sources
 import types
+import connections
 
 EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 

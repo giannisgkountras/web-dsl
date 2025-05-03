@@ -1,18 +1,8 @@
 import types
+import auth
 
 MessageBroker:
     AMQPBroker | MQTTBroker | RedisBroker
-;
-
-Authentication: AuthPlain | AuthApiKey;
-
-AuthPlain:
-    'username' ':' username=STRING
-    'password' ':' password=STRING
-;
-
-AuthApiKey:
-    'key' ':' key=STRING
 ;
 
 MQTTBroker:
@@ -79,13 +69,6 @@ RESTApi:
     'end'
 ;
 
-RESTVerb:
-    'GET'       |
-    'POST'      |
-    'PUT'       |
-    'DELETE'
-;
-
 Database: MySQL | MongoDB
 ;
 
@@ -107,38 +90,5 @@ MongoDB:
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
     )#
-    'end'
-;
-
-MySQLQuery:
-    'MySQLQuery' name=ID
-    'connection:' connection=[MySQL]
-    'query:' query=STRING
-    'end'
-;
-
-MongoDBQuery:
-    'MongoDBQuery' name=ID
-    'connection:' connection=[MongoDB]
-    'query:' query=STRING
-    'end'
-;
-
-RESTEndpoint:
-    'RESTEndpoint' name=ID
-    'connection:' connection=[RESTApi]
-    (
-        ('path:' path=STRING)?
-        ('method:' method=RESTVerb)?
-        ('body:' body=Dict)?
-        ('params:' params=Dict)?
-    )#
-    'end'
-;
-
-BrokerTopic:
-    'BrokerTopic' name=ID
-    'connection:' connection=[MessageBroker]
-    'topic:' topic=STRING
     'end'
 ;

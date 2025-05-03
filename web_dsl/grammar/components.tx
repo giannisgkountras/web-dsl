@@ -1,7 +1,9 @@
 import entity
-import communication
+import connections
 import types
 import accessors
+import sources
+
 
 Component:
     'Component' name=ID

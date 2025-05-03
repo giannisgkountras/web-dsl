@@ -1,6 +1,8 @@
 import screens
 import components
-import communication
+import connections
+import sources
+import auth
 import entity
 import utils
 import accessors

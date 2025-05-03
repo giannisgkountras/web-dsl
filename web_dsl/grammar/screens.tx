@@ -1,6 +1,7 @@
 import components
 import entity
 import conditions
+import connections
 
 // Each screen has a name, title, URL, optional description, and nested structure
 Screen:
