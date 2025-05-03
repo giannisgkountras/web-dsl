@@ -168,6 +168,29 @@ class BarChart(ComponentType):
         self.description = description
 
 
+class PieChart(ComponentType):
+    def __init__(
+        self,
+        parent=None,
+        name="PieChart",
+        dataName=None,
+        value=None,
+        dataName_static=None,
+        value_static=None,
+        staticData=[],
+        description=None,
+    ):
+        super().__init__(parent, name)
+        if dataName is not None:
+            self.dataName = self.format_attribute_path(dataName)
+        if value is not None:
+            self.value = self.format_attribute_path(value)
+        self.staticData = staticData
+        self.dataName_static = dataName_static
+        self.value_static = value_static
+        self.description = description
+
+
 class Publish(ComponentType):
     def __init__(
         self,

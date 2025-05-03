@@ -22,6 +22,7 @@ from .lib.component import (
     Logs,
     CrudTable,
     BarChart,
+    PieChart,
 )
 
 from .lib.condition import Condition
@@ -43,6 +44,7 @@ custom_classes = [
     CrudTable,
     Condition,
     BarChart,
+    PieChart,
     # Add other classes here
 ]
 

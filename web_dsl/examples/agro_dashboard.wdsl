@@ -1,0 +1,121 @@
+webpage AgroDashboard
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A dashboard for agriculture"
+    navbar: true
+
+    //============ Connections =============//
+
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Database<MySQL> AgroSQL
+        host: "192.168.1.6"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "thesis"
+    end
+
+    //============ Specific endpoints/queries =============//
+    
+    MySQLQuery soilMoistureZone1
+        connection: AgroSQL
+        query: "SELECT timestamp, moisture_percent FROM soil_moisture_readings WHERE zone_id=1"
+    end
+
+    MySQLQuery averageMoisturePerZone
+        connection: AgroSQL
+        query: "SELECT z.name AS zone, AVG(s.moisture_percent) AS avg_moisture
+                FROM soil_moisture_readings s
+                JOIN zones z ON s.zone_id = z.id
+                GROUP BY z.id;"
+    end
+
+    MySQLQuery CropDistribution
+        connection: AgroSQL
+        query: "SELECT crop_type, area_percent
+                FROM crop_distribution
+                WHERE zone_id = 1;"
+    end
+
+     //============ Entities ============//
+
+    Entity moistureZone1
+        source: soilMoistureZone1
+        attributes:
+            - timestamp: list
+            - moisture_percent: list
+    end
+
+    Entity averageMoisture
+        source: averageMoisturePerZone
+        attributes:
+            - zone: list
+            - avg_moisture: list
+    end
+
+    Entity cropDistributionData
+        source: CropDistribution
+        attributes:
+            - crop_type: list
+            - area_percent: list
+    end
+
+
+     //============ Components ============//
+
+    Component MoistureChartZone1
+        entity: moistureZone1
+        type: LineChart
+            description: "Soil Moisture Zone 1"
+            xLabel: "Time"
+            yLabel: "Soil Moisture"
+            xValue: this.timestamp
+            yValues: this.moisture_percent
+    end
+
+    Component AverageMoistureChart
+        entity: averageMoisture
+        type: BarChart
+            description: "Average Moisture Per Zone"
+            xLabel: "Zone"
+            yLabel: "Avg Moisture"
+            xValue: this.zone
+            yValues: this.avg_moisture
+    end
+
+    Component CropDistributionPieChart
+        entity: cropDistributionData
+        type: PieChart
+            description: "Crop Distribution Area"
+            value: this.area_percent
+            dataName: this.crop_type
+    end
+
+     //============ Screens ============//
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use MoistureChartZone1
+            endcol
+            col
+                use AverageMoistureChart
+            endcol
+            col
+                use CropDistributionPieChart
+            endcol
+        endrow
+    end

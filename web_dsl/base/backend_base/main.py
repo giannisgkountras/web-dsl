@@ -252,15 +252,10 @@ class QueryRequest(BaseModel):
 async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     """
     Endpoint to run MySQL or MongoDB queries based on the provided request.
-    - For MySQL:
-      - 'database' is the target database.
-      - 'query' contains the SQL query string.
-    - For MongoDB:
-      - 'collection' is the collection to query.
-      - 'filter' is the filter for the Mongo query.
-      - 'database' and 'query' fields are ignored.
+    - For MySQL: returns results in the form {column1: [...], column2: [...], ...}
+    - For MongoDB: returns documents as-is
     """
-    if request.database:  # If 'database' is provided, assume it's a MySQL query
+    if request.database:  # MySQL
         result = db_connector.mysql_query(
             connection_name=request.connection_name,
             database=request.database,
@@ -268,9 +263,17 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
         )
         if result is None:
             raise HTTPException(status_code=500, detail="Error executing MySQL query")
-        return result
 
-    elif request.collection:  # If 'collection' is provided, assume it's a Mongo query
+        # Transform list of dicts into dict of lists
+        if isinstance(result, list) and result and isinstance(result[0], dict):
+            transformed = {}
+            for key in result[0].keys():
+                transformed[key] = [row[key] for row in result]
+            return transformed
+        else:
+            return result  # fallback in case it's not a list of dicts
+
+    elif request.collection:  # MongoDB
         result = db_connector.mongo_find(
             connection_name=request.connection_name,
             collection=request.collection,
