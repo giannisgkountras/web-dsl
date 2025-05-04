@@ -3,16 +3,20 @@ import types
 
 MySQLQuery:
     'MySQLQuery' name=ID
-    'connection:' connection=[MySQL]
-    'query:' query=STRING
+    (
+        ( 'connection:' connection=[MySQL] )
+        ( 'query:' query=STRING )
+    )#
     'end'
 ;
 
 MongoDBQuery:
     'MongoDBQuery' name=ID
-    'connection:' connection=[MongoDB]
-    'collection:' collection=STRING
-    ('filter:' filter=STRING)?
+    (
+        ('connection:' connection=[MongoDB] )
+        ('collection:' collection=STRING )
+        ('filter:' filter=STRING)?
+    )#
     'end'
 ;
 
@@ -37,7 +41,9 @@ RESTVerb:
 
 BrokerTopic:
     'BrokerTopic' name=ID
-    'connection:' connection=[MessageBroker]
-    'topic:' topic=STRING
+    (
+        ('connection:' connection=[MessageBroker] )
+        ('topic:' topic=STRING )
+    )#
     'end'
 ;

@@ -141,6 +141,7 @@ webpage AgroDashboard
         attributes:
             - frame: str
             - motion: bool
+        strict: true
     end
 
      //============ Components ============//

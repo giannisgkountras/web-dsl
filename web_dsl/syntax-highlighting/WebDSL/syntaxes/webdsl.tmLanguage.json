@@ -125,11 +125,15 @@
                     "name": "support.type"
                 },
                 {
+                    "match": "\\bstrict\\b",
+                    "name": "constant.language"
+                },
+                {
                     "match": "entity\\:",
                     "name": "constant.language"
                 },
                 {
-                    "match": "type\\:",
+                    "match": "\\btype\\b:",
                     "name": "constant.language"
                 },
                 {

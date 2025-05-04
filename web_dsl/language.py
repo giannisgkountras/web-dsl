@@ -122,12 +122,64 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
 #     pass
 
 
-# def validate_model(model):
-#     """Validates the model."""
-#     pass
-# Check for duplicate attribute names in global entities
-# Add more validation logic as needed
-# For example, check for required attributes, etc.
+def validate_model(model):
+    """Validates the model."""
+    all_entities = get_children_of_type("Entity", model)
+    strict_entities = strict_entities = [e for e in all_entities if e.strict]
+
+    all_components = get_children_of_type("Component", model)
+    components_referencing_strict_entities = [
+        c for c in all_components if c.entity and c.entity in strict_entities
+    ]
+
+    errors = validate_components_with_strict_entities(
+        components_referencing_strict_entities
+    )
+    if errors:
+        print("Validation errors:")
+        for error in errors:
+            print(f" - {error}")
+        raise TextXSemanticError(f"Model validation failed with {len(errors)} errors.")
+
+
+def validate_components_with_strict_entities(components):
+    errors = []
+    for component in components:
+        if not hasattr(component, "entity") or not component.entity:
+            continue
+
+        if not getattr(component.entity, "strict", False):
+            continue
+
+        # Collect all formatted attribute paths from the component type
+        attribute_paths = []
+
+        # Find all attributes that look like formatted paths (lists of mixed str/int)
+        for attr_name in dir(component.type):
+            if attr_name.startswith("_"):
+                continue
+            attr = getattr(component.type, attr_name)
+            if isinstance(attr, list) and all(isinstance(p, (int, str)) for p in attr):
+                attribute_paths.append(attr)
+            elif isinstance(attr, list) and all(
+                isinstance(p, list) and all(isinstance(e, (int, str)) for e in p)
+                for p in attr
+            ):
+                # This handles lists of paths, like yValues = [[0, 'temp'], [0, 'pressure']]
+                attribute_paths.extend(attr)
+
+        strict_entity_attributes = component.entity.attributes
+        strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
+
+        for attribute in attribute_paths:
+            attribute_root = attribute[0]
+
+            if attribute_root not in strict_entity_attributes_names:
+                errors.append(
+                    f"Component '{component.name}' uses attribute '{attribute_root}' not allowed by strict entity '{component.entity.name}'"
+                )
+                continue
+    return errors
 
 
 def build_model(model_path: str):
@@ -137,5 +189,5 @@ def build_model(model_path: str):
     mm = get_metamodel(debug=False)
     model = mm.model_from_file(model_path)
     # set_defaults(model)  # Set default values for the model
-    # validate_model(model)  # Validate
+    validate_model(model)  # Validate
     return model  # Return the built model
