@@ -27,12 +27,13 @@ Input:
     (
         ('type:' type=InputType)
         ('placeholder:' placeholder=STRING)
+        ('datakey:' datakey=STRING)
         ('required:' required=BOOL)
     )#
 ;
 
 InputType:
-    'text' | 'password' | 'number' | 'email' | 'checkbox' | 'radio'
+    'text' | 'password' | 'number' | 'email'
 ;
 
 Label:
@@ -41,7 +42,10 @@ Label:
 
 Form:
     'Form'
-    ( elements+=FormElement )+
+    (
+        ( elements+=FormElement )+
+        ( 'description:' description=STRING )?
+    )#
 ;
 
 FormElement:

@@ -93,9 +93,11 @@ form {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    background-color: #13191e;
+    padding: 1rem;
+    border-radius: 15px;
 }
-
-input[type="text"] {
+input {
     background-color: #111828;
     border: 1px solid #2d4373;
     padding: 0.5rem 1rem;

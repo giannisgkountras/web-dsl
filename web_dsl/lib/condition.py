@@ -26,11 +26,12 @@ class Condition:
         It converts the path into a list of indices and attributes.
         For example, if the path is "data[0].value", it will be converted to [0, "value"].
         """
-        if type(path) == int:
+        if type(path) == int or type(path) == str or type(path) == float:
             return path
+        if type(path) == bool:
+            return "true" if path else "false"
 
         path_array = []
-
         for accessor in path.accessors:
             if hasattr(accessor, "index") and accessor.index is not None:
                 accessor.index = int(accessor.index)

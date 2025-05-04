@@ -272,6 +272,9 @@
             <CustomForm
                 elements={ {{type.elements}} }
                 restData={ {{restData}} }
+                {% if type.description %}
+                    description={ "{{type.description}}" }
+                {% endif %}
             />
         {% endif %}
 

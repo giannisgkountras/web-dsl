@@ -35,8 +35,13 @@ webpage AgroDashboard
     end
 
     RESTApi CropAPI
-        host: "http://192.168.1.6:3000"
+        host: "http://192.168.1.6:4000"
         headers: {"Content-Type": "application/json"}
+    end
+
+    Broker<MQTT> FieldBroker
+        host: "192.168.1.6"
+        port: 1883
     end
 
     //============ Specific endpoints/queries =============//
@@ -76,6 +81,11 @@ webpage AgroDashboard
         connection: CropAPI
         path: "/crop"
         method: POST
+    end
+
+    BrokerTopic FieldCamera
+        connection: FieldBroker
+        topic: "camera"
     end
 
      //============ Entities ============//
@@ -126,6 +136,13 @@ webpage AgroDashboard
             - available: bool
     end
 
+    Entity FieldCameraData
+        source: FieldCamera
+        attributes:
+            - frame: str
+            - motion: bool
+    end
+
      //============ Components ============//
 
     Component MoistureChartZone1
@@ -159,7 +176,7 @@ webpage AgroDashboard
     Component CropsTable
         entity: CropInfoData
         type: CrudTable
-            attributes: this.name, this.type, this.harvest_season, this.yield_kg_per_hectare
+            attributes: this.name, this.type, this.yield_kg_per_hectare
     end
 
     Component CropIrrigationJSONViewer
@@ -170,28 +187,40 @@ webpage AgroDashboard
     Component CropForm
         entity: CropCreationData
         type: Form
+                description: "Add new crops"
                 Label "Name"
                 Input
                     type: text
                     placeholder: "Crop name"
                     required: true
+                    datakey: "name"
                 Label "Type"
                 Input 
                     type: text 
                     placeholder: "Crop type" 
                     required: true
+                    datakey: "type"
                 Label "Price"
                 Input 
                     type: number 
                     placeholder: "Price per kg" 
-                    required: true
-                Label "Availability"
-                Input 
-                    type: checkbox 
-                    placeholder: "Availability" 
-                    required: true
+                    required: true            
+                    datakey: "price"
     end
 
+    Component FieldLiveCamera
+        entity: FieldCameraData
+        type: Image
+            source: this.frame
+            width: 400
+            height: 300
+    end
+
+    Component FieldLiveCameraAlive
+        entity: FieldCameraData
+        type: Alive
+                timeout: 5000
+    end
 
      //============ Screens ============//
 
@@ -220,6 +249,31 @@ webpage AgroDashboard
             endcol
             col
                 use CropForm
+            endcol
+            col
+                if this.motion == true from entity FieldCameraData
+                        then use FieldLiveCamera
+                    
+                if this.motion == false from entity FieldCameraData
+                    then use FieldLiveCameraAlive
+            endcol
+        endrow
+
+    end
+
+
+     //============ Debug ============//
+
+    Screen Debug
+        title: "Debug"
+        url: "/debug"
+
+        row
+            col
+                Component FieldCameraPublisher
+                    type: Publish
+                    broker: FieldBroker
+                end
             endcol
         endrow
     end

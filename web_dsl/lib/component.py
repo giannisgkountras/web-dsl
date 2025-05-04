@@ -264,12 +264,19 @@ class CrudTable(ComponentType):
 
 class Input(ComponentType):
     def __init__(
-        self, parent=None, name="Input", type=None, placeholder=None, required=None
+        self,
+        parent=None,
+        name="Input",
+        type=None,
+        placeholder=None,
+        required=None,
+        datakey=None,
     ):
         super().__init__(parent, name)
         self.type = type
         self.placeholder = placeholder
         self.required = required
+        self.datakey = datakey
 
     def to_dict(self):
         return {
@@ -277,6 +284,7 @@ class Input(ComponentType):
             "type": self.type,
             "placeholder": self.placeholder,
             "required": "true" if self.required else "false",
+            "datakey": self.datakey,
         }
 
 
@@ -293,10 +301,11 @@ class Label(ComponentType):
 
 
 class Form(ComponentType):
-    def __init__(self, parent=None, name="Form", elements=None):
+    def __init__(self, parent=None, name="Form", elements=None, description=None):
         super().__init__(parent, name)
         if elements is not None:
             formatted_elements = [el.to_dict() for el in elements]
         else:
             formatted_elements = []
         self.elements = formatted_elements
+        self.description = description

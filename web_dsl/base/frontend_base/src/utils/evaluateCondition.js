@@ -51,8 +51,22 @@ export const evaluateConditionWithData = (condition, data) => {
         return condition;
     }
 
+    if (condition === "true") {
+        return true;
+    }
+    if (condition === "false") {
+        return false;
+    }
+
     if (Array.isArray(condition)) {
         const [conditionPath, conditionOperator, conditionValue] = condition;
+
+        let finalConditionValue = conditionValue;
+        if (conditionValue === "true") {
+            finalConditionValue = true;
+        } else if (conditionValue === "false") {
+            finalConditionValue = false;
+        }
 
         const comparator = operatorMaps[conditionOperator];
         if (!comparator) {
@@ -60,7 +74,7 @@ export const evaluateConditionWithData = (condition, data) => {
             return false;
         }
 
-        return comparator(data, conditionValue);
+        return comparator(data, finalConditionValue);
     }
 
     toast.warn("Invalid condition format:", condition);
