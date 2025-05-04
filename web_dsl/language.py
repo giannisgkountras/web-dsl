@@ -172,6 +172,8 @@ def validate_components_with_strict_entities(components):
         strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
 
         for attribute in attribute_paths:
+            if not attribute:  # skip empty lists
+                continue
             attribute_root = attribute[0]
 
             if attribute_root not in strict_entity_attributes_names:
