@@ -5,10 +5,9 @@ import placeholder from "../assets/placeholderimage";
 import { toast } from "react-toastify";
 import { IoReload } from "react-icons/io5";
 import { getValueByPath } from "../utils/getValueByPath";
-import {
-    evaluateCondition,
-    evaluateConditionWithData
-} from "../utils/evaluateCondition";
+import { fetchValueFromRest } from "../utils/fetchValues";
+import { fetchValueFromDB } from "../utils/fetchValues";
+
 const CustomImage = ({
     topic,
     width,
@@ -22,13 +21,13 @@ const CustomImage = ({
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
 
-    const reloadContent = () => {
+    const reloadContent = async () => {
         if (sourceOfContent === "rest") {
-            const value = fetchValueFromRest(restData, contentPath);
+            const value = await fetchValueFromRest(restData, contentPath);
             setFrame(value);
         }
         if (sourceOfContent === "db") {
-            const value = fetchValueFromDB(dbData, contentPath);
+            const value = await fetchValueFromDB(dbData, contentPath);
             setFrame(value);
         }
     };
@@ -53,7 +52,7 @@ const CustomImage = ({
             {"rest" === sourceOfContent && (
                 <button
                     className="absolute top-0 right-0 p-4 z-10 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                    onClick={fetchValue}
+                    onClick={reloadContent}
                     title="Refresh Value"
                 >
                     <IoReload size={24} />
