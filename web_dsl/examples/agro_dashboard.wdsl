@@ -177,6 +177,7 @@ webpage AgroDashboard
     Component CropsTable
         entity: CropInfoData
         type: CrudTable
+            primary_key: "_id"
             attributes: this.name, this.type, this.yield_kg_per_hectare
     end
 

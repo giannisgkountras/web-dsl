@@ -259,6 +259,13 @@
             />
 
         {% elif type.name=="CrudTable" %}
+            {%if element.entity.source.connection.__class__.__name__ == "MongoDB" %}
+                {%set dbType="mongo"%}
+            {%elif element.entity.source.connection.__class__.__name__ == "MySQL" %}
+                {%set dbType="mysql"%}
+            {%else%}
+                {% set dbType=""%}
+            {%endif%}
             <CrudTable
                 {% if type.attributes %}
                     attributes={ {{type.attributes}} }
@@ -266,6 +273,8 @@
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 dbData={ {{dbData}} }
+                primaryKey={ "{{type.primary_key}}" }
+                dbType={ "{{dbType}}" }
             />
         
         {% elif type.name=="Form"%}

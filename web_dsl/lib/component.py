@@ -254,10 +254,13 @@ class Logs(ComponentType):
 
 
 class CrudTable(ComponentType):
-    def __init__(self, parent=None, name="CrudTable", attributes=None):
+    def __init__(
+        self, parent=None, name="CrudTable", attributes=None, primary_key=None
+    ):
         super().__init__(parent, name)
+        self.primary_key = primary_key
         if attributes is not None:
-            self.attributes = [
+            self.attributes = [primary_key] + [
                 self.format_attribute_path(attribute) for attribute in attributes
             ]
 
