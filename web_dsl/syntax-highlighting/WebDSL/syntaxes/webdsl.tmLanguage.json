@@ -1,0 +1,576 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "name": "WebDSL",
+    "scopeName": "source.WebDSL",
+    "patterns": [
+        {
+            "include": "#comment"
+        },
+        {
+            "include": "#string"
+        },
+        {
+            "include": "#number"
+        },
+        {
+            "include": "#language_keyword"
+        },
+        {
+            "include": "#language_operation"
+        },
+        {
+            "include": "#regular_expression"
+        }
+    ],
+    "repository": {
+        "comment": {
+            "patterns": [
+                {
+                    "match": "//.*$",
+                    "name": "comment.line"
+                },
+                {
+                    "name": "comment.block",
+                    "begin": "/\\*",
+                    "end": "\\*/"
+                }
+            ]
+        },
+        "string": {
+            "patterns": [
+                {
+                    "name": "string.quoted.single",
+                    "begin": "'",
+                    "end": "'"
+                },
+                {
+                    "name": "string.quoted.double",
+                    "begin": "\"",
+                    "end": "\""
+                }
+            ]
+        },
+        "number": {
+            "patterns": [
+                {
+                    "match": "\\b[0-9]+\\b\\.{0,1}",
+                    "name": "constant.numeric"
+                }
+            ]
+        },
+        "language_keyword": {
+            "patterns": [
+                {
+                    "match": "\\bwebpage\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "author\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "version\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "description\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "navbar\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "Screen",
+                    "name": "support.type"
+                },
+                {
+                    "match": "title\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "url\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bend\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\brow\\b",
+                    "name": "keyword.operator"
+                },
+                {
+                    "match": "height\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bendrow\\b",
+                    "name": "keyword.operator"
+                },
+                {
+                    "match": "\\bcol\\b",
+                    "name": "keyword.operator"
+                },
+                {
+                    "match": "width\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bendcol\\b",
+                    "name": "keyword.operator"
+                },
+                {
+                    "match": "\\bComponent\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "entity\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "type\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\buse\\b",
+                    "name": "keyword.control"
+                },
+                {
+                    "match": "Input",
+                    "name": "support.type"
+                },
+                {
+                    "match": "placeholder\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "datakey\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "required\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "text",
+                    "name": "support.class"
+                },
+                {
+                    "match": "password",
+                    "name": "support.class"
+                },
+                {
+                    "match": "number",
+                    "name": "support.class"
+                },
+                {
+                    "match": "email",
+                    "name": "support.class"
+                },
+                {
+                    "match": "\\bLabel\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bForm\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bImage\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "source\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bText\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "content\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "size\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "color\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bNotification\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "message\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "info",
+                    "name": "support.class"
+                },
+                {
+                    "match": "warning",
+                    "name": "support.class"
+                },
+                {
+                    "match": "error",
+                    "name": "support.class"
+                },
+                {
+                    "match": "success",
+                    "name": "support.class"
+                },
+                {
+                    "match": "\\bLineChart\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "xLabel\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "yLabel\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "xValue\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "yValues\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\,",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "staticData\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bBarChart\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bPieChart\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "dataName\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "value\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bLiveTable\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "columns\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bGauge\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bJsonViewer\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "attributes\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bAlive\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "timeout\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "Publish",
+                    "name": "support.type"
+                },
+                {
+                    "match": "broker\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "endpoint\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "topic\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "json\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bLogs\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bCrudTable\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bEntity\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\-",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "int",
+                    "name": "support.class"
+                },
+                {
+                    "match": "\\=",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "float",
+                    "name": "support.class"
+                },
+                {
+                    "match": "str",
+                    "name": "support.class"
+                },
+                {
+                    "match": "bool",
+                    "name": "support.class"
+                },
+                {
+                    "match": "list",
+                    "name": "support.class"
+                },
+                {
+                    "match": "\\[",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\]",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "dict",
+                    "name": "support.class"
+                },
+                {
+                    "match": "\\{",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\}",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "MySQLQuery",
+                    "name": "support.type"
+                },
+                {
+                    "match": "connection\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "query\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "MongoDBQuery",
+                    "name": "support.type"
+                },
+                {
+                    "match": "collection\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "filter\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "RESTEndpoint",
+                    "name": "support.type"
+                },
+                {
+                    "match": "path\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "method\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "body\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "params\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "GET",
+                    "name": "support.class"
+                },
+                {
+                    "match": "POST",
+                    "name": "support.class"
+                },
+                {
+                    "match": "PUT",
+                    "name": "support.class"
+                },
+                {
+                    "match": "DELETE",
+                    "name": "support.class"
+                },
+                {
+                    "match": "BrokerTopic",
+                    "name": "support.type"
+                },
+                {
+                    "match": "Broker<MQTT>",
+                    "name": "support.type"
+                },
+                {
+                    "match": "host\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "port\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "transport\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "auth\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "Broker<AMQP>",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "vhost\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "Broker<;Redis\\&gt;",
+                    "name": "support.type"
+                },
+                {
+                    "match": "db\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\bWebsocket\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bAPI\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "\\bRESTApi\\b",
+                    "name": "support.type"
+                },
+                {
+                    "match": "headers\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "Database<MySQL>;",
+                    "name": "support.type.property-name"
+                },
+                {
+                    "match": "database\\:",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "Database<MongoDB>;",
+                    "name": "support.type.property-name"
+                },
+                {
+                    "match": "username",
+                    "name": "support.class"
+                },
+                {
+                    "match": "key",
+                    "name": "support.class"
+                },
+                {
+                    "match": "\\.",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "this",
+                    "name": "keyword.control"
+                },
+                {
+                    "match": "if",
+                    "name": "keyword.control"
+                },
+                {
+                    "match": "from",
+                    "name": "keyword.control"
+                },
+                {
+                    "match": "entity",
+                    "name": "keyword.control"
+                },
+                {
+                    "match": "then",
+                    "name": "keyword.control"
+                },
+                {
+                    "match": "\\=\\=",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "\\!\\=",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "<;",
+                    "name": "constant.language"
+                },
+                {
+                    "match": ">",
+                    "name": "constant.language"
+                },
+                {
+                    "match": "<=",
+                    "name": "constant.language"
+                },
+                {
+                    "match": ">=",
+                    "name": "constant.language"
+                }
+            ]
+        },
+        "language_operation": {
+            "patterns": []
+        },
+        "regular_expression": {
+            "patterns": []
+        }
+    }
+}
