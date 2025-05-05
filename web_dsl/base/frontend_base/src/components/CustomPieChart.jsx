@@ -88,7 +88,9 @@ const CustomPieChart = ({
     return (
         <div className="relative w-full h-full flex flex-col items-center justify-center">
             {description && (
-                <h1 className="text-lg w-full text-center">{description}</h1>
+                <h1 className="text-lg w-full text-center mb-2 font-semibold">
+                    {description}
+                </h1>
             )}
             {/* <ResponsiveContainer> */}
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (

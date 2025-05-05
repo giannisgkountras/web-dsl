@@ -48,7 +48,7 @@ const Alive = ({ topic, timeout, description }) => {
     return (
         <div className="flex flex-col justify-center items-center">
             {description && (
-                <h1 className="text-2xl font-bold mb-2">{description}</h1>
+                <h1 className="text-lg font-semibold mb-2">{description}</h1>
             )}
             <div className="flex justify-evenly items-center">
                 <div

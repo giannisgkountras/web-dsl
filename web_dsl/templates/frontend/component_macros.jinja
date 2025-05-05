@@ -324,7 +324,10 @@
             dbData={ {{dbData}} }
             sourceOfContent="{{sourceOfContent}}"
             condition={ {{element.condition}} }
-            element={ {{ render_element(element.component) }} }
+            elements={ [ 
+                {% for item in element.component %}
+                {{ render_element(item) }},
+                {% endfor %}] }
         />
     {% endif %}
 

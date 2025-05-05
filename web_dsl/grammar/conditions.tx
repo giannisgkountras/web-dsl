@@ -8,7 +8,7 @@ Condition:
     (
         ('if' condition=Expression)
         ('from' 'entity' entity=[Entity])
-        ('then' 'use' component=[Component])
+        ('then' 'use' component+=[Component][','])
     )#
     
 ;

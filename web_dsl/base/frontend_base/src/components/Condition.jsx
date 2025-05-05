@@ -1,4 +1,4 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect, Fragment } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from "react-toastify";
@@ -12,7 +12,7 @@ const Condition = ({
     dbData,
     sourceOfContent,
     condition,
-    element
+    elements
 }) => {
     const [showComponent, setShowComponent] = useState(false);
     const contentPath = condition[0];
@@ -44,7 +44,9 @@ const Condition = ({
             console.error("Error updating status:", error);
         }
     });
-    return showComponent ? element : null;
+    return showComponent
+        ? elements.map((el, idx) => <Fragment key={idx}>{el}</Fragment>)
+        : null;
 };
 
 export default Condition;

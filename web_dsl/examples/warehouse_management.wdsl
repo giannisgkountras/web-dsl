@@ -146,6 +146,7 @@ webpage WarehouseManagement
         type: CrudTable
             description: "All warehouses"
             primary_key: "_id"
+            attributes: this.name, this.capacity, this.address
     end
 
     Component RevenueBarChart
@@ -190,6 +191,27 @@ webpage WarehouseManagement
             message: this.warning
     end
 
+    Component WarehouseOperational
+        type: Text
+            content: "Warehouse is operational"
+            color: "#8EC07C"
+            size: 20
+    end
+
+    Component WarehouseNotOperational
+        type: Text
+            content: "Warehouse is not operational"
+            color: "#FA4934"
+            size: 22
+    end
+
+    Component WarehouseNotificationsAlive
+        entity: NotificationsData
+        type: Alive
+            timeout: 5000
+            description: "Notifications channel"
+    end
+
     //============ Screens ============//
 
     Screen Home
@@ -216,6 +238,13 @@ webpage WarehouseManagement
             endcol
             col
                 use YearlyIncomeChart
+            endcol
+            col
+                if this.isOperational[0] == true from entity Warehouses
+                        then use WarehouseNotificationsAlive, WarehouseOperational
+
+                if this.isOperational[0] == false from entity Warehouses
+                        then use WarehouseNotOperational
             endcol
         endrow
     end
