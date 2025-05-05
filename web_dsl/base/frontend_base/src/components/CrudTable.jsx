@@ -18,6 +18,7 @@ const CrudTable = ({
     dbType,
     primaryKey
 }) => {
+    const extendedAttributes = [[primaryKey], ...attributes];
     const [data, setData] = useState([]);
     const [editingPkValue, setEditingPkValue] = useState(null);
     const [newRecord, setNewRecord] = useState({});
@@ -56,12 +57,12 @@ const CrudTable = ({
             ? objectOfListsToListOfObjects(response)
             : response;
 
-        if (attributes.length === 0) {
+        if (extendedAttributes.length <= 1) {
             setData(listData);
         } else {
             const processedData = listData.map((item) => {
                 const newItem = {};
-                attributes.forEach((attribute) => {
+                extendedAttributes.forEach((attribute) => {
                     try {
                         const value = getValueByPath(item, attribute);
                         const name = getNameFromPath(attribute);
@@ -110,7 +111,8 @@ const CrudTable = ({
                 await modifyDB({
                     connection_name: dbData.connection_name,
                     database: dbData.database,
-                    query: query
+                    query: query,
+                    dbType: dbType
                 });
             } else if (dbType === "mongo") {
                 const updateData = { ...item };
@@ -121,7 +123,8 @@ const CrudTable = ({
                     collection: dbData.collection,
                     modification: "update",
                     filter: { [primaryKey]: item[primaryKey] },
-                    new_data: updateData
+                    new_data: updateData,
+                    dbType: dbType
                 });
             }
         }
@@ -129,13 +132,14 @@ const CrudTable = ({
     };
 
     const handleDelete = async (pkValue) => {
-        if (sourceOfTruth === "db") {
+        if (sourceOfContent === "db") {
             if (dbType === "mysql") {
                 const query = `DELETE FROM ${dbData.collection} WHERE ${primaryKey} = '${pkValue}'`;
                 await modifyDB({
                     connection_name: dbData.connection_name,
                     database: dbData.database,
-                    query: query
+                    query: query,
+                    dbType: dbType
                 });
             } else if (dbType === "mongo") {
                 await modifyDB({
@@ -143,7 +147,8 @@ const CrudTable = ({
                     database: dbData.database,
                     collection: dbData.collection,
                     modification: "delete",
-                    filter: { [primaryKey]: pkValue }
+                    filter: { [primaryKey]: pkValue },
+                    dbType: dbType
                 });
             }
         }
@@ -151,7 +156,7 @@ const CrudTable = ({
     };
 
     const handleAdd = async () => {
-        if (sourceOfTruth === "db") {
+        if (sourceOfContent === "db") {
             if (dbType === "mysql") {
                 const columnsToInsert = columns.filter(
                     (col) => col !== primaryKey
@@ -167,7 +172,8 @@ const CrudTable = ({
                 await modifyDB({
                     connection_name: dbData.connection_name,
                     database: dbData.database,
-                    query: query
+                    query: query,
+                    dbType: dbType
                 });
                 await reloadValue();
             } else if (dbType === "mongo") {
@@ -178,7 +184,8 @@ const CrudTable = ({
                     database: dbData.database,
                     collection: dbData.collection,
                     modification: "insert",
-                    new_data: newData
+                    new_data: newData,
+                    dbType: dbType
                 });
                 await reloadValue();
             }

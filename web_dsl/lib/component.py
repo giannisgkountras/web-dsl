@@ -260,7 +260,7 @@ class CrudTable(ComponentType):
         super().__init__(parent, name)
         self.primary_key = primary_key
         if attributes is not None:
-            self.attributes = [primary_key] + [
+            self.attributes = [
                 self.format_attribute_path(attribute) for attribute in attributes
             ]
 

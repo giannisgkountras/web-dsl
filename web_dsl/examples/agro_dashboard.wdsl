@@ -278,4 +278,7 @@ webpage AgroDashboard
                 end
             endcol
         endrow
+        row
+            use CropsTable
+        endrow
     end

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Optional, Any
 from fastapi import FastAPI, HTTPException, Security, status
+from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
@@ -310,6 +311,7 @@ class ModifyDBRequest(BaseModel):
     filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
     modification: str  # The update operation to perform
     new_data: Optional[dict] = None  # New data to be inserted or updated
+    dbType: Optional[str] = None  # Type of database (MySQL or MongoDB)
 
 
 @app.post("/modifyDB")
@@ -320,7 +322,7 @@ async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_ke
     - For MongoDB: performs the specified modification operation (e.g., update, delete, insert).
     """
     # Handle MySQL modifications
-    if request.query and request.database:
+    if request.dbType == "mysql":
         success = db_connector.mysql_execute(
             connection_name=request.connection_name,
             database=request.database,
@@ -333,7 +335,7 @@ async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_ke
         return {"status": "success", "engine": "MySQL"}
 
     # Handle MongoDB modifications
-    elif request.collection:
+    elif request.dbType == "mongo":
         operation = request.modification.lower()
         # Convert _id to ObjectId for MongoDB update and delete
         if (

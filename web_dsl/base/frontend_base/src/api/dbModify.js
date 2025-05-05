@@ -8,7 +8,8 @@ export const modifyDB = async ({
     collection,
     modification,
     filter,
-    new_data
+    new_data,
+    dbType
 }) => {
     try {
         const payload = {
@@ -18,7 +19,8 @@ export const modifyDB = async ({
             collection,
             modification,
             filter,
-            new_data
+            new_data,
+            dbType
         };
 
         const response = await api.post("modifyDB", payload);
