@@ -1,4 +1,12 @@
-import { CartesianGrid, BarChart, Bar, Tooltip, XAxis, YAxis } from "recharts";
+import {
+    CartesianGrid,
+    BarChart,
+    Bar,
+    Tooltip,
+    XAxis,
+    YAxis,
+    Legend
+} from "recharts";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState, useEffect } from "react";
@@ -7,6 +15,7 @@ import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
+import { colors } from "../lib/colors";
 
 const CustomBarChart = ({
     topic,
@@ -82,10 +91,9 @@ const CustomBarChart = ({
     const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
     const barDataKeys =
         sourceOfContent === "static" ? yValues : pathNames.slice(1);
-    const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
     return (
-        <div className="relative p-6">
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
             {description && (
                 <h1 className="text-lg w-full text-center">{description}</h1>
             )}
@@ -102,12 +110,13 @@ const CustomBarChart = ({
                 data={
                     sourceOfContent === "static" ? staticChartData : chartData
                 }
-                width={500}
-                height={300}
+                width={450}
+                height={350}
                 style={{
                     backgroundColor: "#13191e",
                     borderRadius: "15px",
-                    padding: "0.5rem"
+                    position: "relative",
+                    padding: "1rem"
                 }}
             >
                 <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
@@ -128,7 +137,7 @@ const CustomBarChart = ({
                         position: "outsideLeft",
                         fill: "#fff",
                         angle: -90,
-                        dx: -10
+                        dx: -35
                     }}
                 />
                 <Tooltip
@@ -149,6 +158,7 @@ const CustomBarChart = ({
                         isAnimationActive={false}
                     />
                 ))}
+                <Legend />
             </BarChart>
         </div>
     );

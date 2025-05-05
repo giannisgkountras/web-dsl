@@ -88,6 +88,36 @@ class DBConnector:
             )
             return None
 
+    def execute_query(self, connection_name, database, query):
+        """
+        Executes a non-SELECT SQL query (e.g., INSERT, UPDATE, DELETE) using a MySQL connection.
+
+        Args:
+            connection: A MySQL connection object.
+            database (str): Name of the database to use.
+            query (str): The SQL query to execute. Use %s placeholders for parameters.
+            params (tuple or list, optional): Values to bind to placeholders in the query.
+
+        Returns:
+            bool: True if execution and commit succeeded, False otherwise.
+        """
+        connection = self.connections.get(connection_name)
+        if connection is None:
+            print(f"No MySQL connection for {connection_name}")
+            return None
+
+        try:
+            # Switch to the specified database
+            connection.select_db(database)
+
+            with connection.cursor() as cursor:
+                cursor.execute(query)
+                connection.commit()
+                return True
+        except Exception as e:
+            print(f"Query execution failed: {e}")
+            return False
+
     # ----------------------
     # MongoDB operations
     # ----------------------

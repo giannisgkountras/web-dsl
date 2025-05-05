@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Optional, Any
 from fastapi import FastAPI, HTTPException, Security, status
+from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
@@ -297,6 +298,93 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
         raise HTTPException(
             status_code=400,
             detail="Invalid request: 'database' or 'collection' must be specified",
+        )
+
+
+class ModifyDBRequest(BaseModel):
+    connection_name: str
+    database: Optional[str] = None
+    collection: Optional[str] = None
+    query: Optional[Any] = (
+        None  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    )
+    filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
+    modification: Optional[str] = None  # The update operation to perform
+    new_data: Optional[dict] = None  # New data to be inserted or updated
+    dbType: Optional[str] = None  # Type of database (MySQL or MongoDB)
+
+
+@app.post("/modifyDB")
+async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_key)):
+    """
+    Endpoint to modify MySQL or MongoDB databases based on the provided request.
+    - For MySQL: executes the SQL statement (e.g., INSERT, UPDATE, DELETE).
+    - For MongoDB: performs the specified modification operation (e.g., update, delete, insert).
+    """
+    # Handle MySQL modifications
+    if request.dbType == "mysql":
+        success = db_connector.execute_query(
+            connection_name=request.connection_name,
+            database=request.database,
+            query=request.query,
+        )
+        if not success:
+            raise HTTPException(
+                status_code=500, detail="Error executing MySQL modification"
+            )
+        return {"status": "success", "engine": "MySQL"}
+
+    # Handle MongoDB modifications
+    elif request.dbType == "mongo":
+        operation = request.modification.lower()
+        # Convert _id to ObjectId for MongoDB update and delete
+        if (
+            operation in ["update", "delete"]
+            and request.filter
+            and "_id" in request.filter
+        ):
+            try:
+                request.filter["_id"] = ObjectId(request.filter["_id"])
+            except:
+                raise HTTPException(status_code=400, detail="Invalid _id format")
+
+        if operation == "update":
+            result = await asyncio.to_thread(
+                db_connector.mongo_update,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                filter=request.filter or {},
+                update=request.new_data,
+            )
+        elif operation == "delete":
+            result = await asyncio.to_thread(
+                db_connector.mongo_delete,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                filter=request.filter or {},
+            )
+        elif operation == "insert":
+            result = await asyncio.to_thread(
+                db_connector.mongo_insert,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                document=request.new_data,
+            )
+        else:
+            raise HTTPException(
+                status_code=400, detail="Unsupported MongoDB modification operation"
+            )
+
+        if result is None:
+            raise HTTPException(
+                status_code=500, detail=f"Error performing MongoDB {operation}"
+            )
+        return {"status": "success", "engine": "MongoDB", "operation": operation}
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid request: 'query' and 'database' or 'collection' must be specified",
         )
 
 

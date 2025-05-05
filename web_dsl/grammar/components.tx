@@ -161,6 +161,11 @@ Logs:
 
 CrudTable:
     'CrudTable'
-    ('attributes:' attributes+=NestedAccessPath[','])?
+    (
+        'primary_key:' primary_key=STRING
+        ('attributes:' attributes+=NestedAccessPath[','])?
+        ( 'description:' description=STRING )?
+        ( 'table:' table=STRING )?
+    )#
 ;
 

@@ -63,6 +63,7 @@ webpage CarMonitor
 
     Entity telemetry
         source: telemetryTopic
+        strict: true
         attributes:
             - fps: list
             - carInfo: dict

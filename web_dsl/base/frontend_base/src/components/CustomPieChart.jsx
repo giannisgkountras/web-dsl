@@ -14,6 +14,7 @@ import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
+import { colors } from "../lib/colors";
 
 const CustomPieChart = ({
     topic,
@@ -84,57 +85,59 @@ const CustomPieChart = ({
         }
     }, []);
 
-    const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
-
     return (
-        <div className="relative p-6">
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
             {description && (
                 <h1 className="text-lg w-full text-center">{description}</h1>
             )}
+            {/* <ResponsiveContainer> */}
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                 <button
                     onClick={fetchExternalData}
-                    className="absolute top-0 right-0 p-2 text-white hover:text-gray-400 cursor-pointer"
+                    className="absolute top-0 right-0 p-2 text-white hover:text-gray-400 cursor-pointer "
                     title="Reload chart data"
                 >
                     <IoReload size={20} />
                 </button>
             )}
-            <ResponsiveContainer width={400} height={300}>
-                <PieChart>
-                    <Pie
-                        dataKey={
-                            sourceOfContent === "static"
-                                ? valuePath
-                                : pathNames[1]
-                        }
-                        nameKey={
-                            sourceOfContent === "static"
-                                ? namePath
-                                : pathNames[0]
-                        }
-                        data={
-                            sourceOfContent === "static"
-                                ? staticChartData
-                                : chartData
-                        }
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        fill="#8884d8"
-                        label
-                    >
-                        {chartData.map((_, index) => (
-                            <Cell
-                                key={`cell-${index}`}
-                                fill={colors[index % colors.length]}
-                            />
-                        ))}
-                    </Pie>
-                    <Tooltip />
-                    <Legend />
-                </PieChart>
-            </ResponsiveContainer>
+            <PieChart
+                width={450}
+                height={350}
+                style={{
+                    backgroundColor: "#13191e",
+                    borderRadius: "15px",
+                    position: "relative"
+                }}
+            >
+                <Pie
+                    dataKey={
+                        sourceOfContent === "static" ? valuePath : pathNames[1]
+                    }
+                    nameKey={
+                        sourceOfContent === "static" ? namePath : pathNames[0]
+                    }
+                    data={
+                        sourceOfContent === "static"
+                            ? staticChartData
+                            : chartData
+                    }
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    label
+                >
+                    {chartData.map((_, index) => (
+                        <Cell
+                            key={`cell-${index}`}
+                            fill={colors[index % colors.length]}
+                        />
+                    ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+            </PieChart>
+            {/* </ResponsiveContainer> */}
         </div>
     );
 };
