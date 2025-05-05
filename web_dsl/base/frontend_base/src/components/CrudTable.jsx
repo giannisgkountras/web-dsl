@@ -16,7 +16,9 @@ const CrudTable = ({
     dbData = {},
     sourceOfContent,
     dbType,
-    primaryKey
+    primaryKey,
+    table,
+    description
 }) => {
     const extendedAttributes = [[primaryKey], ...attributes];
     const [data, setData] = useState([]);
@@ -107,7 +109,7 @@ const CrudTable = ({
                     .filter((col) => col !== primaryKey)
                     .map((col) => `${col} = '${item[col]}'`)
                     .join(", ");
-                const query = `UPDATE ${dbData.collection} SET ${setClause} WHERE ${primaryKey} = '${item[primaryKey]}'`;
+                const query = `UPDATE ${table} SET ${setClause} WHERE ${primaryKey} = '${item[primaryKey]}'`;
                 await modifyDB({
                     connection_name: dbData.connection_name,
                     database: dbData.database,
@@ -134,7 +136,7 @@ const CrudTable = ({
     const handleDelete = async (pkValue) => {
         if (sourceOfContent === "db") {
             if (dbType === "mysql") {
-                const query = `DELETE FROM ${dbData.collection} WHERE ${primaryKey} = '${pkValue}'`;
+                const query = `DELETE FROM ${table} WHERE ${primaryKey} = '${pkValue}'`;
                 await modifyDB({
                     connection_name: dbData.connection_name,
                     database: dbData.database,
@@ -164,11 +166,9 @@ const CrudTable = ({
                 const values = columnsToInsert.map(
                     (col) => `'${newRecord[col]}'`
                 );
-                const query = `INSERT INTO ${
-                    dbData.collection
-                } (${columnsToInsert.join(", ")}) VALUES (${values.join(
+                const query = `INSERT INTO ${table} (${columnsToInsert.join(
                     ", "
-                )})`;
+                )}) VALUES (${values.join(", ")})`;
                 await modifyDB({
                     connection_name: dbData.connection_name,
                     database: dbData.database,
@@ -198,7 +198,8 @@ const CrudTable = ({
     return (
         <div className="flex flex-col text-white justify-start items-center w-full h-fit max-h-96 bg-[#101929] rounded-2xl">
             {/* Header */}
-            <div className="w-full sticky top-0 z-10 border-b border-[#111929] bg-[#1A2233] p-4 rounded-t-2xl">
+            <h1 className="p-4 text-lg font-semibold">{description}</h1>
+            <div className="w-full sticky top-0 z-10 border-b border-[#111929] bg-[#1A2233] p-4">
                 <div
                     className="grid gap-2 font-bold"
                     style={{

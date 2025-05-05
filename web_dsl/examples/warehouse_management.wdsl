@@ -1,0 +1,82 @@
+webpage AgroDashboard
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A dashboard for managing warehouses"
+    navbar: true
+
+    //============ Connections =============//
+
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Database<MySQL> WarehouseSQL
+        host: "192.168.1.6"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "thesis"
+    end
+
+    Database<MongoDB> WarehouseMongo
+        host: "192.168.1.6"
+        database: "thesis"
+        port: 27017
+        auth:
+            username: "thesis"
+            password: "password"
+    end
+
+    Broker<MQTT> CheckInBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    //============ Specific endpoints/queries/ topics =============//
+
+    MySQLQuery allProducts
+        connection: WarehouseSQL
+        query: "SELECT * from products"
+    end
+
+     //============ Entities ============//
+    Entity Products
+        source: allProducts
+        strict: true
+        attributes:
+            - id: list
+            - name: list
+            - category: list
+            - description: list
+            - price: list
+    end
+
+    //============ Components ============//
+    Component ProductsTable
+        entity: Products
+        type: CrudTable
+            primary_key: "id"
+            table: "products"
+    end
+
+
+    //============ Screens ============//
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use ProductsTable
+            endcol
+        endrow
+    end
+

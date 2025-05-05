@@ -275,6 +275,12 @@
                 dbData={ {{dbData}} }
                 primaryKey={ "{{type.primary_key}}" }
                 dbType={ "{{dbType}}" }
+                {% if type.description %}
+                    description={ "{{type.description}}" }
+                {% endif %}
+                {% if type.table%}
+                    table={ "{{type.table}}" }
+                {% endif %}
             />
         
         {% elif type.name=="Form"%}

@@ -309,7 +309,7 @@ class ModifyDBRequest(BaseModel):
         None  # For MySQL, the SQL statement. For Mongo, you might ignore this.
     )
     filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
-    modification: str  # The update operation to perform
+    modification: Optional[str] = None  # The update operation to perform
     new_data: Optional[dict] = None  # New data to be inserted or updated
     dbType: Optional[str] = None  # Type of database (MySQL or MongoDB)
 
@@ -323,7 +323,7 @@ async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_ke
     """
     # Handle MySQL modifications
     if request.dbType == "mysql":
-        success = db_connector.mysql_execute(
+        success = db_connector.execute_query(
             connection_name=request.connection_name,
             database=request.database,
             query=request.query,
