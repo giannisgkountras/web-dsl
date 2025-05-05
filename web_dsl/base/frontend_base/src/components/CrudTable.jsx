@@ -230,7 +230,7 @@ const CrudTable = ({
                         }}
                     >
                         {columns.map((col) => (
-                            <div key={col}>
+                            <div key={col} className="overflow-auto">
                                 {col === primaryKey ||
                                 editingPkValue !== row[primaryKey] ? (
                                     <p className="text-left px-2">

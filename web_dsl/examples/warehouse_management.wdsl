@@ -1,4 +1,4 @@
-webpage AgroDashboard
+webpage WarehouseManagement
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A dashboard for managing warehouses"
@@ -34,7 +34,7 @@ webpage AgroDashboard
             password: "password"
     end
 
-    Broker<MQTT> CheckInBroker
+    Broker<MQTT> NotificationsBroker
         host: "192.168.1.6"
         port: 1883
     end
@@ -44,6 +44,42 @@ webpage AgroDashboard
     MySQLQuery allProducts
         connection: WarehouseSQL
         query: "SELECT * from products"
+    end
+
+    MySQLQuery salesCategory
+        connection: WarehouseSQL
+        query: "SELECT * from sales_by_category"
+    end
+
+    MySQLQuery yearlyIncome
+        connection: WarehouseSQL
+        query: "SELECT
+                    year,
+                    SUM(CASE WHEN category = 'Electronics' THEN income ELSE 0 END) AS Electronics,
+                    SUM(CASE WHEN category = 'Furniture' THEN income ELSE 0 END) AS Furniture,
+                    SUM(CASE WHEN category = 'Clothing' THEN income ELSE 0 END) AS Clothing,
+                    SUM(CASE WHEN category = 'Toys' THEN income ELSE 0 END) AS Toys
+                FROM
+                    yearly_income
+                GROUP BY
+                    year
+                ORDER BY
+                    year;"
+    end
+
+    MongoDBQuery allWarehouses
+        connection: WarehouseMongo
+        collection: "warehouses"
+    end
+
+    MongoDBQuery allRevenue
+        connection: WarehouseMongo
+        collection: "revenue"
+    end
+
+    BrokerTopic Notifications
+        connection: NotificationsBroker
+        topic: "notifications"
     end
 
      //============ Entities ============//
@@ -58,14 +94,101 @@ webpage AgroDashboard
             - price: list
     end
 
+    Entity Warehouses
+        source: allWarehouses
+        strict: true
+        attributes:
+            - name: str
+            - capacity: int
+            - address: str
+    end
+
+    Entity Revenue
+        source: allRevenue
+        attributes:
+            - date: str
+            - amount: float
+    end
+
+    Entity SalesByCategory
+        source: salesCategory
+        attributes:
+            - category: str
+            - total_sales: float
+    end
+
+    Entity YearlyIncomeData
+        source: yearlyIncome
+        attributes:
+            - year: int
+            - income: float
+    end
+
+    Entity NotificationsData
+        source: Notifications
+        attributes:
+            - info: str
+            - warning: str
+            - error: str
+    end
+
     //============ Components ============//
     Component ProductsTable
         entity: Products
         type: CrudTable
+            description: "All products"
             primary_key: "id"
             table: "products"
     end
 
+    Component WarehousesTable
+        entity: Warehouses 
+        type: CrudTable
+            description: "All warehouses"
+            primary_key: "_id"
+    end
+
+    Component RevenueBarChart
+        entity: Revenue
+        type: BarChart
+            description: "Revenue over time"
+            xLabel: "Time"
+            yLabel: "Money"
+            xValue: this.date
+            yValues: this.amount
+    end
+
+    Component CategorySalesPieChart
+        entity: SalesByCategory
+        type: PieChart
+            description: "Sales by Category"
+            value: this.total_sales
+            dataName: this.category
+    end
+
+    Component YearlyIncomeChart
+        entity: YearlyIncomeData
+        type: LineChart
+            description: "Yearly income"
+            xLabel: "Time"
+            yLabel: "Money"
+            xValue: this.year
+            yValues: this.Electronics, this.Furniture, this.Clothing, this.Toys
+    end
+
+    Component InfoNotifications
+        entity: NotificationsData
+        type: Notification
+            type: info
+            message: this.info
+    end
+
+    Component WarningNotifications
+        entity: NotificationsData
+        type: Notification
+            type: warning
+            message: this.warning
+    end
 
     //============ Screens ============//
 
@@ -73,10 +196,40 @@ webpage AgroDashboard
         title: "Home"
         url: "/"
 
+        use InfoNotifications
+        use WarningNotifications
+
         row
             col
                 use ProductsTable
             endcol
+            col
+                use WarehousesTable
+            endcol
+        endrow
+        row
+            col
+                use RevenueBarChart
+            endcol
+            col
+                use CategorySalesPieChart
+            endcol
+            col
+                use YearlyIncomeChart
+            endcol
         endrow
     end
 
+    Screen Debug
+        title: "Debug"
+        url: "/debug"
+
+        row
+            col
+                Component NotificationsPublisher
+                    type: Publish
+                        broker: NotificationsBroker
+                end
+            endcol
+        endrow
+    end

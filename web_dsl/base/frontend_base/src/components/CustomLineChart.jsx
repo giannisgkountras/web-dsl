@@ -1,5 +1,6 @@
 import {
     CartesianGrid,
+    Legend,
     Line,
     LineChart,
     Tooltip,
@@ -14,6 +15,7 @@ import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
+import { colors } from "../lib/colors";
 
 const CustomLineChart = ({
     topic,
@@ -95,10 +97,9 @@ const CustomLineChart = ({
     const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
     const lineDataKeys =
         sourceOfContent === "static" ? yValues : pathNames.slice(1);
-    const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
 
     return (
-        <div className="relative p-6">
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
             {description && (
                 <h1 className="text-lg w-full text-center">{description}</h1>
             )}
@@ -115,12 +116,13 @@ const CustomLineChart = ({
                 data={
                     sourceOfContent === "static" ? staticChartData : chartData
                 }
-                width={500}
-                height={300}
+                width={450}
+                height={350}
                 style={{
                     backgroundColor: "#13191e",
                     borderRadius: "15px",
-                    padding: "0.5rem"
+                    position: "relative",
+                    padding: "1rem"
                 }}
             >
                 <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
@@ -141,7 +143,7 @@ const CustomLineChart = ({
                         position: "outsideLeft",
                         fill: "#fff",
                         angle: -90,
-                        dx: -10
+                        dx: -35
                     }}
                 />
                 <Tooltip
@@ -164,6 +166,7 @@ const CustomLineChart = ({
                         dot={{ fill: colors[index % colors.length] }}
                     />
                 ))}
+                <Legend />
             </LineChart>
         </div>
     );
