@@ -46,8 +46,11 @@
             {% set topic=element.entity.source.topic %}
         {% endif %}
 
+        {% if element.type %}
         {% set type = element.type %}
-
+        {% else %}
+        {% set type = element %}
+        {% endif %}
         {% if type.name=="Gauge"%}
             <Gauge 
                 topic={"{{topic}}"} 
@@ -328,6 +331,43 @@
                 {% for item in element.component %}
                 {{ render_element(item) }},
                 {% endfor %}] }
+        />
+
+    {% elif element.__class__.__name__ == 'Repetition'%}
+        {% set sourceOfContent = element.sourceOfContent %}
+        {% set restData={}%}
+        {% set dbData={}%}
+        {% set topic=None%}
+
+        {% if sourceOfContent=="rest" %}
+            {% set restData = {
+                "name": element.entity.source.connection.name or 'default',
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "params": element.entity.source.params or {},
+            } %}
+        {% elif sourceOfContent=="db" %}
+            {% set dbData = {
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
+                "collection": element.entity.source.collection or '',
+            } %}
+        {% elif sourceOfContent=="broker"%}
+            {% set topic=element.entity.source.topic %}
+        {% endif %}
+
+        <Repetition
+            topic="{{topic}}"
+            restData={ {{restData}} }
+            dbData={ {{dbData}} }
+            sourceOfContent="{{sourceOfContent}}"
+            item={ {{element.item}} }
+            element={ {{ render_element(element.component) }} }
+            {% if element.data %}
+                dataPath={ {{element.data}} }
+            {% endif %}
         />
     {% endif %}
 

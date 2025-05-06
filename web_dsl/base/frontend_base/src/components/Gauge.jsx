@@ -16,7 +16,8 @@ const Gauge = ({
     staticValue,
     dbData,
     contentPath,
-    description = null
+    description = null,
+    repetitionItem = null
 }) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(0);
@@ -59,7 +60,10 @@ const Gauge = ({
                     <IoReload size={24} />
                 </button>
             )}
-            {sourceOfContent === "static" ? (
+            {typeof repetitionItem === "string" ||
+            typeof repetitionItem === "number" ? (
+                <GaugeComponent value={repetitionItem} />
+            ) : sourceOfContent === "static" ? (
                 <GaugeComponent value={staticValue} />
             ) : (
                 <GaugeComponent value={currentValue} />

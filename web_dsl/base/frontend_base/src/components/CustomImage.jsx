@@ -16,7 +16,8 @@ const CustomImage = ({
     sourceOfContent,
     restData,
     sourceStatic,
-    contentPath
+    contentPath,
+    repetitionItem = null
 }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
@@ -34,6 +35,7 @@ const CustomImage = ({
 
     useEffect(() => {
         reloadContent();
+        if (typeof repetitionItem === "string") setFrame(repetitionItem);
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
@@ -72,7 +74,11 @@ const CustomImage = ({
                         width: `${width ? width : 400}px`,
                         height: `${height ? height : 400}px`
                     }}
-                    src={sourceStatic}
+                    src={
+                        typeof repetitionItem === "string"
+                            ? repetitionItem
+                            : sourceStatic
+                    }
                 ></img>
             )}
         </div>

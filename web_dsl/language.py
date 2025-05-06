@@ -29,6 +29,7 @@ from .lib.component import (
 )
 
 from .lib.condition import Condition
+from .lib.repetition import Repetition
 
 # Map grammar rules to Python classes
 custom_classes = [
@@ -51,6 +52,7 @@ custom_classes = [
     Input,
     Label,
     Form,
+    Repetition,
     # Add other classes here
 ]
 

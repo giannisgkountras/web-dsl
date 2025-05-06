@@ -1,7 +1,6 @@
 import accessors
 import components
 import entity
-import connections
 
 
 Condition:

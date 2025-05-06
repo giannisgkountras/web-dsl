@@ -65,10 +65,10 @@ Image:
 
 Text:
     'Text' 
-    'content:' (
+    ('content:' (
         content=NestedAccessPath                   
         | content_static=STRING               
-    )
+    ))?
     (
         ('size:' size=INT)?
         ('color:' color=STRING)?
@@ -128,7 +128,7 @@ LiveTable:
 
 Gauge:
     'Gauge' 
-    'value:' (value=NestedAccessPath |  value_static=FLOAT)
+    ('value:' (value=NestedAccessPath |  value_static=FLOAT))?
     ('description:' description=STRING)?
 ;
 

@@ -1,0 +1,18 @@
+import accessors
+import components
+import entity
+
+
+Repetition:
+    (
+        ('for' item=NestedAccessPath)
+        ('in' 'entity' entity=[Entity])
+        ('use' component=RepetitionComponentTypes)
+        ('with' 'data' data=NestedAccessPath)?
+    )#
+    
+;
+
+RepetitionComponentTypes: 
+    Text | Gauge | Image
+;

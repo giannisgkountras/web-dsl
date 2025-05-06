@@ -79,6 +79,7 @@ class Gauge(ComponentType):
             self.value = self.format_attribute_path(value)
         self.value_static = value_static  # Static value for the gauge
         self.description = description  # Description for the gauge
+        self.isComponent = True
 
 
 class Notification(ComponentType):
@@ -105,6 +106,7 @@ class Image(ComponentType):
         if source is not None:
             self.source = self.format_attribute_path(source)
         self.source_static = source_static
+        self.isComponent = True
 
 
 class Alive(ComponentType):
@@ -242,6 +244,7 @@ class Text(ComponentType):
         self.content_static = content_static
         self.size = size
         self.color = color
+        self.isComponent = True
 
 
 class Logs(ComponentType):

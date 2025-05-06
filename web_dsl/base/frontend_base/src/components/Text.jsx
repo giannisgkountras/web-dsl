@@ -14,7 +14,8 @@ const Text = ({
     sourceOfContent,
     restData,
     staticContent,
-    dbData
+    dbData,
+    repetitionItem = null
 }) => {
     const [content, setContent] = useState("");
 
@@ -65,7 +66,12 @@ const Text = ({
                     color: color
                 }}
             >
-                {sourceOfContent === "static" ? staticContent : content}
+                {typeof repetitionItem === "string" ||
+                typeof repetitionItem === "number"
+                    ? repetitionItem
+                    : sourceOfContent === "static"
+                    ? staticContent
+                    : content}
             </h1>
         </div>
     );
