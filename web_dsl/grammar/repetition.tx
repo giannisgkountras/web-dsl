@@ -1,6 +1,7 @@
 import accessors
 import components
 import entity
+import conditions
 
 
 Repetition:
@@ -9,6 +10,7 @@ Repetition:
         ('in' 'entity' entity=[Entity])
         ('use' component=RepetitionComponentTypes)
         ('with' 'data' data=NestedAccessPath)?
+        ('if' condition=HalfExpression)?
     )#
     
 ;

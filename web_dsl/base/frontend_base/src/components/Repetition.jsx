@@ -4,7 +4,7 @@ import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from "react-toastify";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 import { getValueByPath } from "../utils/getValueByPath";
-
+import { evaluateConditionWithData } from "../utils/evaluateCondition";
 const Repetition = ({
     topic,
     restData,
@@ -12,7 +12,8 @@ const Repetition = ({
     sourceOfContent,
     item,
     element,
-    dataPath = []
+    dataPath = [],
+    condition = true
 }) => {
     const contentPath = item;
     const ws = useContext(WebsocketContext);
@@ -44,13 +45,18 @@ const Repetition = ({
         }
     });
     return Array.isArray(allData) ? (
-        allData.map((item, idx) => (
-            <Fragment key={idx}>
-                {cloneElement(element, {
-                    repetitionItem: getValueByPath(item, dataPath)
-                })}
-            </Fragment>
-        ))
+        allData.map((item, idx) =>
+            evaluateConditionWithData(
+                condition,
+                getValueByPath(item, dataPath)
+            ) === false ? null : (
+                <Fragment key={idx}>
+                    {cloneElement(element, {
+                        repetitionItem: getValueByPath(item, dataPath)
+                    })}
+                </Fragment>
+            )
+        )
     ) : (
         <p className="text-red-500">No data found</p>
     );

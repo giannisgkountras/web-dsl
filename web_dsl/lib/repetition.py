@@ -1,5 +1,13 @@
 class Repetition:
-    def __init__(self, parent=None, entity=None, item=None, component=None, data=None):
+    def __init__(
+        self,
+        parent=None,
+        entity=None,
+        item=None,
+        component=None,
+        data=None,
+        condition=None,
+    ):
 
         self.parent = parent
         self.entity = entity
@@ -10,7 +18,6 @@ class Repetition:
             self.data = None
         self.component = component
 
-        print(f"Repetition: {self.component} - {self.item}")
         try:
             entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
@@ -26,6 +33,7 @@ class Repetition:
         }
 
         self.sourceOfContent = source_map.get(entityRef, "static")
+        self.condition = self.format_condition(condition)
 
     def format_attribute_path(self, path):
         """
@@ -46,3 +54,19 @@ class Repetition:
             if hasattr(accessor, "attribute") and accessor.attribute is not None:
                 path_array.append(accessor.attribute)
         return path_array
+
+    def format_condition(self, condition):
+        """
+        This method formats the condition for the repetition.
+        It converts the condition into an array and also convert the path into an array.
+        For example, if the condition is "data[0].value > 10", it will be converted to [['data', 0, 'value'], ['>'], [10]]".
+        Here we use Half Expression
+        """
+        if condition is not None:
+            # WE INITIALIZE THE CONDITION ARRAY WITH ONE ELEMENT BECAUSE WE WILL USE HALF EXPRESSION
+            condition_array = [""]
+            if hasattr(condition, "op") and condition.op is not None:
+                condition_array.append(condition.op)
+            if hasattr(condition, "right") and condition.right is not None:
+                condition_array.append(self.format_attribute_path(condition.right))
+            return condition_array

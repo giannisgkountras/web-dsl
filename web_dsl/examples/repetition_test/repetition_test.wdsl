@@ -1,0 +1,176 @@
+webpage CarMonitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A car monitoring dashboard"
+    navbar: true
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Broker<MQTT> CarBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    Database<MySQL> WarehouseSQL
+        host: "192.168.1.6"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "thesis"
+    end
+
+    Database<MongoDB> WarehouseMongo
+        host: "192.168.1.6"
+        database: "thesis"
+        port: 27017
+        auth:
+            username: "thesis"
+            password: "password"
+    end
+
+    RESTApi OpenMeteo
+        host: "https://api.open-meteo.com"
+        headers: {"Content-Type": "application/json"}
+    end
+    //============ Specific endpoints / topics / queries =============//
+
+    MySQLQuery allProducts
+        connection: WarehouseSQL
+        query: "SELECT * from products"
+    end
+
+    MongoDBQuery allWarehouses
+        connection: WarehouseMongo
+        collection: "warehouses"
+    end
+
+    BrokerTopic dataTopic
+        connection: CarBroker
+        topic: "data"
+    end
+
+    RESTEndpoint WeatherEnpoint
+        connection: OpenMeteo
+        path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
+    end
+
+    // ============= ENTITIES=========
+    Entity CarData
+        source: dataTopic
+        attributes:
+            - data: list
+    end
+
+    Entity Products
+        source: allProducts
+        attributes:
+            - id: list
+            - name: list
+            - category: list
+            - description: list
+            - price: list
+    end
+
+    Entity Warehouses
+        source: allWarehouses
+        strict: true
+        attributes:
+            - name: str
+            - capacity: int
+            - address: str
+            - isOperational: bool
+    end
+
+    Entity weatherData
+        source: WeatherEnpoint
+        attributes:
+            - current: dict
+            - daily: dict
+            - hourly: dict
+    end
+
+    Screen BrokerTest
+        title: "Home"
+        url: '/'
+
+        row
+            col
+                for this.metrics in entity CarData
+                    use Text with data this.name    
+            endcol
+            col
+                for this.metrics in entity CarData 
+                    use Gauge with data this.value
+                    if > 30
+            endcol
+            col
+                for this.metrics in entity CarData
+                    use Image width: 100 height: 100
+                    with data this.frame
+            endcol
+            col
+                for this.test in entity CarData
+                    use Text if == "Hello"
+            endcol
+        endrow
+        row
+            col
+                Component dataPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+        endrow
+    end
+
+    Screen DBTest
+        title: "db"
+        url: '/db'
+
+        row
+            col
+                for this.name in entity Products
+                    use Text    
+            endcol
+            col
+                for this.name in entity Warehouses
+                    use Text
+            endcol
+        endrow
+    end
+
+    Screen RestTest
+        title: "Rest"
+        url: '/rest'
+
+        row
+            col
+                for this.daily.temperature_2m_max in entity weatherData
+                    use Text color: "#DC2A35"
+            endcol
+            col
+                for this.daily.temperature_2m_min in entity weatherData
+                    use Text color: "#2D4373"
+            endcol
+
+        endrow
+    end
+
+
+
+    // data to test
+
+//     {
+//   "metrics": [{"name":"First Name", "value": 30, "frame":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII"}, {"name":"Second Name", "value": 90, "frame":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII"}]
+// }

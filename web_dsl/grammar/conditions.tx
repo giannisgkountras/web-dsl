@@ -23,3 +23,7 @@ ComparisonOperator:
 Value:
     INT | FLOAT | STRING | BOOL
 ;
+
+HalfExpression:
+    op=ComparisonOperator right=Value
+;
