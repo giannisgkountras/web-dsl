@@ -100,6 +100,21 @@ webpage CarMonitor
             - hourly: dict
     end
 
+    // COMPONENTS
+    Component ClearWeather
+        type: Image
+            source: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn3.iconfinder.com%2Fdata%2Ficons%2Fweather-ios-11-1%2F50%2FSunny_Clear_Sun_Sunlight_Apple_Weather-1024.png&f=1&nofb=1&ipt=cdbbe89f81b2a0b5ea2aba4286eb1c095b2636a005a496df00735b07d54bf908"
+            width: 70
+            height: 70
+    end
+
+    Component NotClearWeather
+        type: Image
+            source: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Fweather-flat-14%2F64%2Fweather07-1024.png&f=1&nofb=1&ipt=ccaa95ca2c666c283f3254954fe8b7d12273580455cc096d2ae1890c459cd2da"
+            width: 70
+            height: 70
+    end
+
     Screen BrokerTest
         title: "Home"
         url: '/'
@@ -107,7 +122,7 @@ webpage CarMonitor
         row
             col
                 for item this.metrics in entity CarData
-                    use Text with item.name    
+                    use Text with item.name   
             endcol
             col
                 for item this.metrics in entity CarData 
@@ -121,7 +136,7 @@ webpage CarMonitor
             endcol
             col
                 for item this.test in entity CarData
-                    use Text if == "Hello"
+                    use Text if == "Hello" with item
             endcol
         endrow
         row
@@ -141,11 +156,24 @@ webpage CarMonitor
         row
             col
                 for item this.name in entity Products
-                    use Text    
+                    use Text with item
             endcol
             col
                 for item this.name in entity Warehouses
-                    use Text
+                    use Text with item
+            endcol
+        endrow
+        row
+            col
+                row
+                    for item this.name in entity Warehouses
+                    use Text with item
+                endrow
+                row
+                    for item this.isOperational in entity Warehouses
+                    use Text content:"Operational" color: "#7DB242" size: 20 if ==true
+                    else use Text content:"Not Operational" color: "#DC2A35" size: 20 
+                endrow
             endcol
         endrow
     end
@@ -156,14 +184,31 @@ webpage CarMonitor
 
         row
             col
-                for item this.daily.temperature_2m_max in entity weatherData
-                    use Text color: "#DC2A35"
-            endcol
-            col
-                for item this.daily.temperature_2m_min in entity weatherData
-                    use Text color: "#2D4373"
+                row
+                    for item this.daily.temperature_2m_max in entity weatherData
+                        use Text color: "#DC2A35" size: 24 with item
+                endrow
+                row
+                    for item this.daily.temperature_2m_min in entity weatherData
+                        use Text color: "#206EEB" size: 24 with item
+                endrow
+                row
+                    for item this.daily.weather_code in entity weatherData
+                        use use ClearWeather if == 3
+                        else use use NotClearWeather
+                endrow
             endcol
 
+        endrow
+
+        row
+            col
+                row
+                    for item this.daily.weather_code in entity weatherData
+                        use use ClearWeather if == 3
+                        else use Text color: "#7DB242" size: 24 with item
+                endrow
+            endcol
         endrow
     end
 

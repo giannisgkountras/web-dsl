@@ -1,9 +1,17 @@
 class Condition:
-    def __init__(self, parent=None, entity=None, condition=None, component=None):
+    def __init__(
+        self,
+        parent=None,
+        entity=None,
+        condition=None,
+        component=None,
+        componentElse=None,
+    ):
         self.parent = parent
         self.entity = entity
         self.condition = self.format_condition(condition)
         self.component = component
+        self.componentElse = componentElse
         try:
             entityRef = entity.source.connection.__class__.__name__
         except AttributeError:

@@ -12,8 +12,10 @@ const Repetition = ({
     sourceOfContent,
     item,
     element,
-    dataPath = [],
-    condition = true
+    conditionDataPath = "",
+    dataPath = null,
+    condition = true,
+    elementElse = <></>
 }) => {
     const contentPath = item;
     const ws = useContext(WebsocketContext);
@@ -45,18 +47,36 @@ const Repetition = ({
         }
     });
     return Array.isArray(allData) ? (
-        allData.map((item, idx) =>
-            evaluateConditionWithData(
-                condition,
-                getValueByPath(item, dataPath)
-            ) === false ? null : (
-                <Fragment key={idx}>
-                    {cloneElement(element, {
-                        repetitionItem: getValueByPath(item, dataPath)
-                    })}
-                </Fragment>
-            )
-        )
+        allData.map((item, idx) => (
+            <Fragment key={idx}>
+                {evaluateConditionWithData(
+                    condition,
+                    getValueByPath(item, conditionDataPath)
+                )
+                    ? cloneElement(
+                          element,
+                          dataPath !== null
+                              ? {
+                                    repetitionItem: getValueByPath(
+                                        item,
+                                        dataPath
+                                    )
+                                }
+                              : {}
+                      )
+                    : cloneElement(
+                          elementElse,
+                          dataPath !== null
+                              ? {
+                                    repetitionItem: getValueByPath(
+                                        item,
+                                        dataPath
+                                    )
+                                }
+                              : {}
+                      )}
+            </Fragment>
+        ))
     ) : (
         <p className="text-red-500">No data found</p>
     );

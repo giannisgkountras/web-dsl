@@ -69,7 +69,7 @@ const Text = ({
                 {typeof repetitionItem === "string" ||
                 typeof repetitionItem === "number"
                     ? repetitionItem
-                    : sourceOfContent === "static"
+                    : sourceOfContent === "static" || sourceOfContent === ""
                     ? staticContent
                     : content}
             </h1>

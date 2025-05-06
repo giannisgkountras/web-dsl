@@ -8,6 +8,7 @@ Condition:
         ('if' condition=Expression)
         ('from' 'entity' entity=[Entity])
         ('then' 'use' component+=[Component][','])
+        ('else' 'use' componentElse+=[Component][','])
     )#
     
 ;

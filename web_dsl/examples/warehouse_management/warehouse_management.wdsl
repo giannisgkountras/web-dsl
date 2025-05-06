@@ -266,9 +266,7 @@ webpage WarehouseManagement
             col
                 if this.isOperational[0] == true from entity Warehouses
                         then use WarehouseNotificationsAlive, WarehouseOperational
-
-                if this.isOperational[0] == false from entity Warehouses
-                        then use WarehouseNotOperational
+                        else use WarehouseNotOperational
             endcol
         endrow
     end

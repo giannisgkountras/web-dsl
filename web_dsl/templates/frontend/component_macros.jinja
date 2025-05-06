@@ -331,6 +331,10 @@
                 {% for item in element.component %}
                 {{ render_element(item) }},
                 {% endfor %}] }
+            elementsElse={ [ 
+                {% for item in element.componentElse %}
+                {{ render_element(item) }},
+                {% endfor %}] }
         />
 
     {% elif element.__class__.__name__ == 'Repetition'%}
@@ -365,11 +369,15 @@
             sourceOfContent="{{sourceOfContent}}"
             item={ {{element.item}} }
             element={ {{ render_element(element.component) }} }
-            {% if element.data %}
+            {% if element.data != None %}
                 dataPath={ {{element.data}} }
+                conditionDataPath={ {{element.data}} }
             {% endif %}
             {% if element.condition %}
                 condition ={ {{element.condition}} }
+            {% endif %}
+            {% if element.componentElse %}
+                elementElse={ {{ render_element(element.componentElse) }} }
             {% endif %}
         />
     {% endif %}

@@ -12,7 +12,8 @@ const Condition = ({
     dbData,
     sourceOfContent,
     condition,
-    elements
+    elements,
+    elementsElse = <></>
 }) => {
     const [showComponent, setShowComponent] = useState(false);
     const contentPath = condition[0];
@@ -46,7 +47,7 @@ const Condition = ({
     });
     return showComponent
         ? elements.map((el, idx) => <Fragment key={idx}>{el}</Fragment>)
-        : null;
+        : elementsElse.map((el, idx) => <Fragment key={idx}>{el}</Fragment>);
 };
 
 export default Condition;

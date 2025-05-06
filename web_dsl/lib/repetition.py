@@ -7,6 +7,7 @@ class Repetition:
         component=None,
         data=None,
         condition=None,
+        componentElse=None,
     ):
 
         self.parent = parent
@@ -16,7 +17,9 @@ class Repetition:
             self.data = self.format_attribute_path(data)
         else:
             self.data = None
+
         self.component = component
+        self.componentElse = componentElse
 
         try:
             entityRef = entity.source.connection.__class__.__name__

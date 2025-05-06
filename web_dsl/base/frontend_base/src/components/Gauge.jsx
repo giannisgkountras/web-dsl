@@ -63,7 +63,7 @@ const Gauge = ({
             {typeof repetitionItem === "string" ||
             typeof repetitionItem === "number" ? (
                 <GaugeComponent value={repetitionItem} />
-            ) : sourceOfContent === "static" ? (
+            ) : sourceOfContent === "static" || sourceOfContent === "" ? (
                 <GaugeComponent value={staticValue} />
             ) : (
                 <GaugeComponent value={currentValue} />

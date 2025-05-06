@@ -8,13 +8,14 @@ Repetition:
     (
         ('for' 'item' item=NestedAccessPath)
         ('in' 'entity' entity=[Entity])
-        ('use' component=RepetitionComponentTypes)
+        ('use' component=RepetitionComponentTypes )
         ('with' data=NestedAccessPathItem)?
         ('if' condition=HalfExpression)?
+        ('else' 'use' componentElse=RepetitionComponentTypes)?
     )#
     
 ;
 
 RepetitionComponentTypes: 
-    Text | Gauge | Image
+    Text | Gauge | Image | ComponentRef
 ;
