@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 import { colors } from "../lib/colors";
+import { transformToArrayOfObjects } from "../utils/transformations";
 
 const CustomPieChart = ({
     topic,
@@ -34,29 +35,18 @@ const CustomPieChart = ({
 
     const fetchExternalData = async () => {
         try {
-            let allData = [];
-            const keys = pathNames;
             const response =
                 sourceOfContent === "rest"
                     ? await proxyRestCall({ name, path, method, params })
                     : await queryDB(dbData);
 
-            for (const dataPath of allPaths) {
-                const data = getValueByPath(response, dataPath);
-                if (data) {
-                    allData.push(data);
-                }
-            }
+            const transformed = transformToArrayOfObjects(
+                response,
+                allPaths,
+                pathNames
+            );
 
-            const combinedData = allData[0].map((_, i) => {
-                const obj = {};
-                keys.forEach((key, j) => {
-                    obj[key] = allData[j][i];
-                });
-                return obj;
-            });
-
-            setChartData(combinedData);
+            setChartData(transformed);
         } catch (err) {
             console.error("Failed to fetch chart data:", err);
             toast.error("Failed to load chart data");
@@ -69,7 +59,7 @@ const CustomPieChart = ({
             allPaths.forEach((path, index) => {
                 newData[pathNames[index]] = getValueByPath(msg, path);
             });
-            setChartData((prevData) => [...prevData, newData]);
+            setChartData(newData);
         } catch (error) {
             toast.error("Error updating chart from WebSocket");
             console.error("WebSocket error:", error);

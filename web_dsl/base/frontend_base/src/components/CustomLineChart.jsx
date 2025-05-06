@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 import { colors } from "../lib/colors";
+import { transformToArrayOfObjects } from "../utils/transformations";
 
 const CustomLineChart = ({
     topic,
@@ -38,33 +39,18 @@ const CustomLineChart = ({
     // Fetch and transform data from REST or DB
     const fetchExternalData = async () => {
         try {
-            let allData = [];
-            const keys = pathNames;
             const response =
                 sourceOfContent === "rest"
                     ? await proxyRestCall({ name, path, method, params })
                     : await queryDB(dbData);
 
-            // Get all data in the form of arrays
-            // [ [], [], ... ]
-            for (const dataPath of allPaths) {
-                const data = getValueByPath(response, dataPath);
-                if (data) {
-                    allData.push(data);
-                }
-            }
+            const transformed = transformToArrayOfObjects(
+                response,
+                allPaths,
+                pathNames
+            );
 
-            // Turn the arrays into an array of objects
-            // [{}, {}, ...]
-            const combinedData = allData[0].map((_, i) => {
-                const obj = {};
-                keys.forEach((key, j) => {
-                    obj[key] = allData[j][i];
-                });
-                return obj;
-            });
-
-            setChartData(combinedData);
+            setChartData(transformed);
         } catch (err) {
             console.error("Failed to fetch chart data:", err);
             toast.error("Failed to load chart data");

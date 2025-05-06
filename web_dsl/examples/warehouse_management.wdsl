@@ -82,6 +82,12 @@ webpage WarehouseManagement
         topic: "notifications"
     end
 
+    BrokerTopic Chart
+        connection: NotificationsBroker
+        topic: "chart"
+    end
+
+
      //============ Entities ============//
     Entity Products
         source: allProducts
@@ -133,6 +139,13 @@ webpage WarehouseManagement
             - error: str
     end
 
+    Entity ChartDebugData
+        source: Chart
+        attributes:
+            - x: int
+            - y1: int
+            - y2: int
+    end
     //============ Components ============//
     Component ProductsTable
         entity: Products
@@ -213,6 +226,16 @@ webpage WarehouseManagement
             description: "Notifications channel"
     end
 
+    Component ChartDebug
+        entity: ChartDebugData
+        type: LineChart
+            description: "Debug chart"
+            xLabel: "X Axis"
+            yLabel: "Y axis"
+            xValue: this.x
+            yValues: this.y1, this.y2
+    end
+
     //============ Screens ============//
 
     Screen Home
@@ -261,5 +284,8 @@ webpage WarehouseManagement
                         broker: NotificationsBroker
                 end
             endcol
+        endrow
+        row
+            use ChartDebug
         endrow
     end
