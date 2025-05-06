@@ -106,21 +106,21 @@ webpage CarMonitor
 
         row
             col
-                for this.metrics in entity CarData
-                    use Text with data this.name    
+                for item this.metrics in entity CarData
+                    use Text with item.name    
             endcol
             col
-                for this.metrics in entity CarData 
-                    use Gauge with data this.value
+                for item this.metrics in entity CarData 
+                    use Gauge with item.value
                     if > 30
             endcol
             col
-                for this.metrics in entity CarData
+                for item this.metrics in entity CarData
                     use Image width: 100 height: 100
-                    with data this.frame
+                    with item.frame
             endcol
             col
-                for this.test in entity CarData
+                for item this.test in entity CarData
                     use Text if == "Hello"
             endcol
         endrow
@@ -140,11 +140,11 @@ webpage CarMonitor
 
         row
             col
-                for this.name in entity Products
+                for item this.name in entity Products
                     use Text    
             endcol
             col
-                for this.name in entity Warehouses
+                for item this.name in entity Warehouses
                     use Text
             endcol
         endrow
@@ -156,11 +156,11 @@ webpage CarMonitor
 
         row
             col
-                for this.daily.temperature_2m_max in entity weatherData
+                for item this.daily.temperature_2m_max in entity weatherData
                     use Text color: "#DC2A35"
             endcol
             col
-                for this.daily.temperature_2m_min in entity weatherData
+                for item this.daily.temperature_2m_min in entity weatherData
                     use Text color: "#2D4373"
             endcol
 

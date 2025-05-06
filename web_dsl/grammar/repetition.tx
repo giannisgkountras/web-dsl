@@ -6,10 +6,10 @@ import conditions
 
 Repetition:
     (
-        ('for' item=NestedAccessPath)
+        ('for' 'item' item=NestedAccessPath)
         ('in' 'entity' entity=[Entity])
         ('use' component=RepetitionComponentTypes)
-        ('with' 'data' data=NestedAccessPath)?
+        ('with' data=NestedAccessPathItem)?
         ('if' condition=HalfExpression)?
     )#
     
