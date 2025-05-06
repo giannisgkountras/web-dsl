@@ -9,6 +9,7 @@ import {
     isObjectOfLists
 } from "../utils/transformations";
 import { modifyDB } from "../api/dbModify";
+import CustomCheckbox from "./CustomCheckbox";
 
 const CrudTable = ({
     attributes = [],
@@ -34,11 +35,12 @@ const CrudTable = ({
         const rec = {};
         columns.forEach((col) => {
             if (col !== primaryKey) {
-                rec[col] = "";
+                // Check if the column is a boolean field, set to false if so
+                rec[col] = typeof data[0]?.[col] === "boolean" ? false : "";
             }
         });
         return rec;
-    }, [columns, primaryKey]);
+    }, [columns, primaryKey, data]);
 
     useEffect(() => {
         setNewRecord(emptyRecord);
@@ -196,10 +198,10 @@ const CrudTable = ({
     const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 
     return (
-        <div className="flex flex-col text-white justify-start items-center w-full h-fit max-h-96 bg-[#101929] rounded-2xl">
+        <div className="flex flex-col text-white justify-start items-center w-full h-fit max-h-96 bg-[#13191E] rounded-2xl">
             {/* Header */}
             <h1 className="p-4 text-lg font-semibold">{description}</h1>
-            <div className="w-full sticky top-0 z-10 border-b border-[#111929] bg-[#1A2233] p-4">
+            <div className="w-full sticky top-0 z-10  bg-[#13191E]  border-b border-[#313641] p-4">
                 <div
                     className="grid gap-2 font-bold"
                     style={{
@@ -222,40 +224,84 @@ const CrudTable = ({
                 {data.map((row) => (
                     <div
                         key={row[primaryKey]}
-                        className="grid gap-2 p-2 bg-[#101929] border-b border-[#0D1117] items-center"
+                        className="grid w-full gap-2 p-2 border-b border-[#313641] items-center"
                         style={{
                             gridTemplateColumns: `repeat(${
                                 columns.length + 1
-                            }, minmax(100px,1fr))`
+                            }, minmax(0, 1fr))`
                         }}
                     >
-                        {columns.map((col) => (
-                            <div key={col} className="overflow-auto">
-                                {col === primaryKey ||
-                                editingPkValue !== row[primaryKey] ? (
-                                    <p className="text-left px-2">
-                                        {row[col] ?? "-"}
-                                    </p>
-                                ) : (
-                                    <input
-                                        className="bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2"
-                                        value={row[col]}
-                                        onChange={(e) =>
-                                            handleChange(
-                                                row[primaryKey],
-                                                col,
-                                                e.target.value
-                                            )
-                                        }
-                                    />
-                                )}
-                            </div>
-                        ))}
+                        {columns.map((col) => {
+                            const value = row[col];
+
+                            return (
+                                <div
+                                    key={col}
+                                    className="overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer"
+                                    title={String(value ?? "-")}
+                                >
+                                    {col === primaryKey ||
+                                    editingPkValue !== row[primaryKey] ? (
+                                        typeof value === "boolean" ? (
+                                            <CustomCheckbox
+                                                checked={value}
+                                                disabled={true}
+                                            />
+                                        ) : (
+                                            // <input
+                                            //     type="checkbox"
+                                            //     checked={value}
+                                            //     disabled
+                                            //     className="mx-2 cursor-default"
+                                            // />
+                                            <p className="text-left px-2 text-ellipsis whitespace-nowrap overflow-hidden">
+                                                {value ?? "-"}
+                                            </p>
+                                        )
+                                    ) : typeof value === "boolean" ? (
+                                        <CustomCheckbox
+                                            checked={value}
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    row[primaryKey],
+                                                    col,
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        // <input
+                                        //     type="checkbox"
+                                        //     checked={value}
+                                        //     onChange={(e) =>
+                                        //         handleChange(
+                                        //             row[primaryKey],
+                                        //             col,
+                                        //             e.target.checked
+                                        //         )
+                                        //     }
+                                        //     className="mx-2"
+                                        // />
+                                        <input
+                                            className="bg-transparent w-full text-white focus:outline-none border-b border-transparent focus:border-white px-2"
+                                            value={value}
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    row[primaryKey],
+                                                    col,
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
                         <div className="flex justify-center space-x-2">
                             {editingPkValue === row[primaryKey] ? (
                                 <button
                                     onClick={() => handleSave(row[primaryKey])}
-                                    className="p-2 rounded-full hover:bg-[#03C64C]/20"
+                                    className="p-2 rounded-full hover:bg-[#03C64C]/20 cursor-pointer"
                                 >
                                     <FaSave className="text-[#03C64C]" />
                                 </button>
@@ -264,14 +310,14 @@ const CrudTable = ({
                                     onClick={() =>
                                         setEditingPkValue(row[primaryKey])
                                     }
-                                    className="p-2 rounded-full hover:bg-[#2D4272]/20"
+                                    className="p-2 rounded-full hover:bg-[#2D4272]/20 cursor-pointer"
                                 >
                                     <FaEdit className="text-white" />
                                 </button>
                             )}
                             <button
                                 onClick={() => handleDelete(row[primaryKey])}
-                                className="p-2 rounded-full hover:bg-[#FA2C37]/20"
+                                className="p-2 rounded-full hover:bg-[#FA2C37]/20 cursor-pointer"
                             >
                                 <FaTrash className="text-[#FA2C37]" />
                             </button>
@@ -281,31 +327,53 @@ const CrudTable = ({
 
                 {/* New Record Row */}
                 <div
-                    className="grid gap-2 p-2 bg-[#1A2233] rounded-b-2xl"
+                    className="grid gap-2 p-2 bg-[#13191E] rounded-b-2xl"
                     style={{
                         gridTemplateColumns: `repeat(${
                             columns.length + 1
                         }, minmax(100px,1fr))`
                     }}
                 >
-                    {columns.map((col) =>
-                        col === primaryKey ? (
-                            <div key={col} />
+                    {columns.map((col) => {
+                        const value = newRecord[col];
+
+                        if (col === primaryKey) return <div key={col} />;
+
+                        return typeof value === "boolean" ? (
+                            <div
+                                key={col}
+                                className="flex justify-center items-center"
+                            >
+                                {/* <input
+                                    type="checkbox"
+                                    checked={value}
+                                    onChange={(e) =>
+                                        handleNewChange(col, e.target.checked)
+                                    }
+                                    className="mx-2"
+                                /> */}
+                                <CustomCheckbox
+                                    checked={value}
+                                    onChange={(e) =>
+                                        handleNewChange(col, e.target.checked)
+                                    }
+                                />
+                            </div>
                         ) : (
                             <input
                                 key={col}
                                 className="p-1 bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2 placeholder-gray-400"
                                 placeholder={capitalize(col)}
-                                value={newRecord[col]}
+                                value={value}
                                 onChange={(e) =>
                                     handleNewChange(col, e.target.value)
                                 }
                             />
-                        )
-                    )}
+                        );
+                    })}
                     <button
                         onClick={handleAdd}
-                        className="bg-[#2D4272] px-3 py-1 rounded-md font-medium hover:bg-[#253A66]"
+                        className="bg-[#2D4272] px-3 py-1 rounded-md font-medium hover:bg-[#253A66] cursor-pointer"
                     >
                         Add
                     </button>

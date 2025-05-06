@@ -101,6 +101,7 @@ webpage WarehouseManagement
             - name: str
             - capacity: int
             - address: str
+            - isOperational: bool
     end
 
     Entity Revenue
@@ -146,7 +147,7 @@ webpage WarehouseManagement
         type: CrudTable
             description: "All warehouses"
             primary_key: "_id"
-            attributes: this.name, this.capacity, this.address
+            attributes: this.name, this.capacity, this.address, this.isOperational
     end
 
     Component RevenueBarChart
