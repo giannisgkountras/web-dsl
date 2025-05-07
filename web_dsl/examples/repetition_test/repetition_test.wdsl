@@ -1,4 +1,4 @@
-webpage CarMonitor
+webpage RepetitionsTest
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A car monitoring dashboard"
@@ -123,20 +123,24 @@ webpage CarMonitor
             col
                 for item this.metrics in entity CarData
                     use Text with item.name   
+                    orientation: column
             endcol
             col
                 for item this.metrics in entity CarData 
                     use Gauge with item.value
                     if > 30
+                    orientation: column
             endcol
             col
                 for item this.metrics in entity CarData
                     use Image width: 100 height: 100
                     with item.frame
+                    orientation: column
             endcol
             col
                 for item this.test in entity CarData
                     use Text if == "Hello" with item
+                    orientation: column
             endcol
         endrow
         row
