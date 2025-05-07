@@ -248,8 +248,38 @@ webpage RepetitionsTest
         endrow
     end
 
+    Screen Debug
+        title: "Debug"
+        url: "/debug"
 
-
+        row
+            col
+                Component TestForm
+                    entity: weatherData
+                    type: Form
+                            description: "Add new crops"
+                            Label "Name"
+                            Input
+                                type: text
+                                placeholder: "Crop name"
+                                required: true
+                                datakey: "name"
+                            Label "Type"
+                            Input 
+                                type: text 
+                                placeholder: "Crop type" 
+                                required: true
+                                datakey: "type"
+                            Label "Mandatory"
+                            Input 
+                                type: checkbox 
+                                placeholder: "Price per kg" 
+                                required: true            
+                                datakey: "price"
+                end
+            endcol
+        endrow
+    end
     // data to test
 
 //     {

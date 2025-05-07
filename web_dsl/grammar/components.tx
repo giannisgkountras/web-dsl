@@ -33,7 +33,7 @@ Input:
 ;
 
 InputType:
-    'text' | 'password' | 'number' | 'email'
+    'text' | 'password' | 'number' | 'email' | 'checkbox'
 ;
 
 Label:

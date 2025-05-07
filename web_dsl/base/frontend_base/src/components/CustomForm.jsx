@@ -1,19 +1,19 @@
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { proxyRestCall } from "../api/proxyRestCall";
+import CustomCheckbox from "./CustomCheckbox";
 
 const CustomForm = ({ elements, restData, description }) => {
     // Track form field values by index
     const [formData, setFormData] = useState({});
 
     // Handle input changes
-    const handleChange = (datakey) => (e) => {
-        const key = datakey;
-        const value = e.target.value;
+    const handleChange = (datakey, type) => (e) => {
+        const value = type === "checkbox" ? e.target.checked : e.target.value;
 
         setFormData((prev) => ({
             ...prev,
-            [key]: value
+            [datakey]: value
         }));
     };
 
@@ -44,13 +44,19 @@ const CustomForm = ({ elements, restData, description }) => {
                 }
 
                 // Otherwise treat as input
-                return (
+                return el.type === "checkbox" ? (
+                    <CustomCheckbox
+                        key={el.datakey}
+                        checked={formData[el.datakey] || false}
+                        onChange={handleChange(el.datakey, "checkbox")}
+                    />
+                ) : (
                     <input
                         key={el.datakey}
                         type={el.type}
                         placeholder={el.placeholder}
                         required={el.required}
-                        onChange={handleChange(el.datakey)}
+                        onChange={handleChange(el.datakey, el.type)}
                     />
                 );
             })}
