@@ -373,12 +373,17 @@
                 dataPath={ {{element.data}} }
                 conditionDataPath={ {{element.data}} }
             {% endif %}
+            {% if element.dataElse !=None %}
+                dataElsePath={ {{element.dataElse}} }
+            {% endif %}
             {% if element.condition %}
                 condition ={ {{element.condition}} }
             {% endif %}
             {% if element.componentElse %}
                 elementElse={ {{ render_element(element.componentElse) }} }
             {% endif %}
+            orientation={"{{element.orientation}}" }
+   
         />
     {% endif %}
 

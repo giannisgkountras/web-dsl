@@ -15,7 +15,9 @@ const Repetition = ({
     conditionDataPath = "",
     dataPath = null,
     condition = true,
-    elementElse = <></>
+    elementElse = <></>,
+    dataElsePath = null,
+    orientation
 }) => {
     const contentPath = item;
     const ws = useContext(WebsocketContext);
@@ -46,40 +48,49 @@ const Repetition = ({
             console.error("Error updating status:", error);
         }
     });
-    return Array.isArray(allData) ? (
-        allData.map((item, idx) => (
-            <Fragment key={idx}>
-                {evaluateConditionWithData(
-                    condition,
-                    getValueByPath(item, conditionDataPath)
-                )
-                    ? cloneElement(
-                          element,
-                          dataPath !== null
-                              ? {
-                                    repetitionItem: getValueByPath(
-                                        item,
-                                        dataPath
-                                    )
-                                }
-                              : {}
-                      )
-                    : cloneElement(
-                          elementElse,
-                          dataPath !== null
-                              ? {
-                                    repetitionItem: getValueByPath(
-                                        item,
-                                        dataPath
-                                    )
-                                }
-                              : {}
-                      )}
-            </Fragment>
-        ))
-    ) : (
-        <p className="text-red-500">No data found</p>
+    return (
+        <div
+            className="flex justify-evenly items-center w-full"
+            style={{ flexDirection: orientation }}
+        >
+            {Array.isArray(allData) ? (
+                allData.map((item, idx) => (
+                    <div
+                        key={idx}
+                        className="flex w-full justify-center items-center"
+                    >
+                        {evaluateConditionWithData(
+                            condition,
+                            getValueByPath(item, conditionDataPath)
+                        )
+                            ? cloneElement(
+                                  element,
+                                  dataPath !== null
+                                      ? {
+                                            repetitionItem: getValueByPath(
+                                                item,
+                                                dataPath
+                                            )
+                                        }
+                                      : {}
+                              )
+                            : cloneElement(
+                                  elementElse,
+                                  dataElsePath !== null
+                                      ? {
+                                            repetitionItem: getValueByPath(
+                                                item,
+                                                dataElsePath
+                                            )
+                                        }
+                                      : {}
+                              )}
+                    </div>
+                ))
+            ) : (
+                <p className="text-red-500">No data found</p>
+            )}
+        </div>
     );
 };
-
 export default Repetition;

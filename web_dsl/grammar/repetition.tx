@@ -5,17 +5,23 @@ import conditions
 
 
 Repetition:
+    'for' 'item' item=NestedAccessPath
+    'in' 'entity' entity=[Entity]
+    'use' (component=RepetitionComponentTypes | componentRef=[Component])
+    ('with' data=NestedAccessPathItem)?
     (
-        ('for' 'item' item=NestedAccessPath)
-        ('in' 'entity' entity=[Entity])
-        ('use' component=RepetitionComponentTypes )
-        ('with' data=NestedAccessPathItem)?
-        ('if' condition=HalfExpression)?
-        ('else' 'use' componentElse=RepetitionComponentTypes)?
-    )#
+        'if' condition=HalfExpression
+        ('else' 'use' (componentElse=RepetitionComponentTypes | componentElseRef=[Component]))?
+        ('with' dataElse=NestedAccessPathItem)?
+    )?
+    ('orientation:' orientation=OrientationType)?
     
 ;
 
 RepetitionComponentTypes: 
-    Text | Gauge | Image | ComponentRef
+    Text | Gauge | Image
+;
+
+OrientationType:
+    'row' | 'column'
 ;

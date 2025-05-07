@@ -8,6 +8,10 @@ class Repetition:
         data=None,
         condition=None,
         componentElse=None,
+        componentRef=None,
+        componentElseRef=None,
+        dataElse=None,
+        orientation=None,
     ):
 
         self.parent = parent
@@ -18,8 +22,25 @@ class Repetition:
         else:
             self.data = None
 
-        self.component = component
-        self.componentElse = componentElse
+        if dataElse is not None:
+            self.dataElse = self.format_attribute_path(dataElse)
+        else:
+            self.dataElse = None
+
+        if componentRef is not None:
+            self.component = componentRef
+        else:
+            self.component = component
+
+        if componentElseRef is not None:
+            self.componentElse = componentElseRef
+        else:
+            self.componentElse = componentElse
+
+        if orientation is None:
+            self.orientation = "row"
+        else:
+            self.orientation = orientation
 
         try:
             entityRef = entity.source.connection.__class__.__name__

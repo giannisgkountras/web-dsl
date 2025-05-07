@@ -157,6 +157,7 @@ webpage CarMonitor
             col
                 for item this.name in entity Products
                     use Text with item
+                    orientation: column
             endcol
             col
                 for item this.name in entity Warehouses
@@ -179,34 +180,65 @@ webpage CarMonitor
     end
 
     Screen RestTest
-        title: "Rest"
+        title: "Rest Weather"
         url: '/rest'
 
         row
-            col
+            col 
+                row
+                    Component WeeklyTitle
+                        type: Text
+                            content: "Weekly Weather" size:24
+                    end
+                endrow
+                row
+                    for item this.daily.weather_code in entity weatherData
+                        use ClearWeather if == 3
+                        else use NotClearWeather
+                endrow
                 row
                     for item this.daily.temperature_2m_max in entity weatherData
-                        use Text color: "#DC2A35" size: 24 with item
+                        use Text color: "#EE535E" size: 20 with item
                 endrow
                 row
                     for item this.daily.temperature_2m_min in entity weatherData
-                        use Text color: "#206EEB" size: 24 with item
+                        use Text color: "#2C627B" size: 20 with item
                 endrow
                 row
-                    for item this.daily.weather_code in entity weatherData
-                        use use ClearWeather if == 3
-                        else use use NotClearWeather
+                    for item this.daily.time in entity weatherData
+                        use Text size:16 with item
                 endrow
             endcol
 
-        endrow
-
-        row
             col
                 row
                     for item this.daily.weather_code in entity weatherData
-                        use use ClearWeather if == 3
-                        else use Text color: "#7DB242" size: 24 with item
+                        use ClearWeather if == 3
+                        else use Text color: "#7DB242" size: 20 with item
+                endrow
+            endcol
+        endrow
+
+        row
+            col 
+                row
+                    Component WeeklyTitle
+                        type: Text
+                            content: "Hourly Weather" size:24
+                    end
+                endrow
+                row
+                    for item this.hourly.weather_code in entity weatherData
+                        use ClearWeather if == 1
+                        else use NotClearWeather
+                endrow
+                row
+                    for item this.hourly.temperature_2m in entity weatherData
+                        use Text color: "#EE535E" size: 20 with item
+                endrow
+                row
+                    for item this.hourly.time in entity weatherData
+                        use Text size:10 with item
                 endrow
             endcol
         endrow
