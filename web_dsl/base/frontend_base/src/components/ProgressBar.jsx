@@ -14,7 +14,8 @@ const ProgressBar = ({
     staticValue,
     dbData,
     contentPath,
-    max = 100,
+    max,
+    maxStatic = 0,
     description,
     barColor = "#80A499",
     textColor = "#fff",
@@ -22,10 +23,16 @@ const ProgressBar = ({
 }) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(staticValue || 0);
-    const percentage = Math.min((currentValue / max) * 100, 100);
+    const [maxValue, setMaxValue] = useState(maxStatic || 0);
+    const percentage = Math.min((currentValue / maxValue) * 100, 100);
+
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
             const data = getValueByPath(msg, contentPath);
+            if (maxStatic === 0) {
+                const newMax = getValueByPath(msg, max);
+                setMaxValue(newMax);
+            }
             setCurrentValue(data);
         } catch (error) {
             toast.error(
@@ -38,10 +45,18 @@ const ProgressBar = ({
     const reloadValue = async () => {
         if (sourceOfContent === "rest") {
             const data = await fetchValueFromRest(restData, contentPath);
+            if (maxStatic === 0) {
+                const newMax = await fetchValueFromRest(restData, max);
+                setMaxValue(newMax);
+            }
             setCurrentValue(data);
         }
         if (sourceOfContent === "db") {
             const data = await fetchValueFromDB(dbData, contentPath);
+            if (maxStatic === 0) {
+                const newMax = await fetchValueFromDB(dbData, max);
+                setMaxValue(newMax);
+            }
             setCurrentValue(data);
         }
     };

@@ -240,7 +240,7 @@ webpage WarehouseManagement
         entity: Warehouses
         type: ProgressBar
             value: this.capacity[0]
-            max: 120000
+            max: this.capacity[2]
             description: "Central warehouse capacity"
     end
     //============ Screens ============//

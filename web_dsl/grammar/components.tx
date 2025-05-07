@@ -176,7 +176,7 @@ ProgressBar:
     'ProgressBar'
     (
         ('value:' (value=NestedAccessPath |  value_static=FLOAT))
-        ('max:' max=INT)
+        ('max:' (max_static=INT | max=NestedAccessPath))
         ('description:' description=STRING)?
         ('barColor:' barColor=STRING)?
         ('textColor:' textColor=STRING)?

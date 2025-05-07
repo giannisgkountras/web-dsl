@@ -336,6 +336,7 @@ class ProgressBar(ComponentType):
         name="ProgressBar",
         value=None,
         value_static=None,
+        max_static=None,
         max=None,
         description=None,
         barColor=None,
@@ -343,10 +344,13 @@ class ProgressBar(ComponentType):
         textColor=None,
     ):
         super().__init__(parent, name)
+        print(max_static)
         if value is not None:
             self.value = self.format_attribute_path(value)
         self.value_static = value_static
-        self.max = max
+        if max is not None:
+            self.max = self.format_attribute_path(max)
+        self.max_static = max_static
         self.description = description
         self.barColor = barColor
         self.trackColor = trackColor

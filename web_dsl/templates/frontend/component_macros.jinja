@@ -303,7 +303,12 @@
                 sourceOfContent={"{{sourceOfContent}}"}
                 restData={ {{restData}} }
                 dbData={ {{dbData}} }
-                max={ {{type.max}} }
+                {% if type.max !=None %}
+                    max={ {{type.max}} }
+                {% endif %}
+                {% if type.max_static != None %}
+                    maxStatic={ {{type.max_static}} }
+                {% endif %}
                 {% if type.value %}
                     contentPath={ {{type.value}} }
                 {% endif %}
