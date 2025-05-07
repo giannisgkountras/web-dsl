@@ -46,11 +46,15 @@ def validate_model(model):
                 f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{item.entity.name}'"
             )
 
+    # Validate CRUD table
+    all_crud_tables = get_children_of_type("CrudTable", model)
+    validate_crud_table(all_crud_tables, errors)
+
     if errors:
-        print("Validation errors:")
-        for error in errors:
-            print(f" - {error}")
-        raise TextXSemanticError(f"Model validation failed with {len(errors)} errors.")
+        error_text = "\n".join(f" - {e}" for e in errors)
+        raise TextXSemanticError(
+            f"Model validation failed with {len(errors)} errors:\n{error_text}"
+        )
 
 
 def validate_components_with_strict_entities(components):
@@ -93,3 +97,18 @@ def validate_components_with_strict_entities(components):
                 )
                 continue
     return errors
+
+
+def validate_crud_table(all_crud_tables, errors):
+    """Validates the CRUD table. If it has a reference to a MySQLQuery, it needs to have a table name."""
+    for crud_table in all_crud_tables:
+        entity_referenced_by_crud_table = crud_table.parent.entity
+        source_of_entity = entity_referenced_by_crud_table.source
+
+        if source_of_entity.__class__.__name__ == "MySQLQuery":
+            if crud_table.table is None or crud_table.table == "":
+                errors.append(
+                    f"CRUD table '{crud_table.name}' references a MySQLQuery without a table name."
+                )
+            else:
+                continue
