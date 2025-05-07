@@ -1,0 +1,257 @@
+webpage RepetitionsTest
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A car monitoring dashboard"
+    navbar: true
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Broker<MQTT> CarBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    Database<MySQL> WarehouseSQL
+        host: "192.168.1.6"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "thesis"
+    end
+
+    Database<MongoDB> WarehouseMongo
+        host: "192.168.1.6"
+        database: "thesis"
+        port: 27017
+        auth:
+            username: "thesis"
+            password: "password"
+    end
+
+    RESTApi OpenMeteo
+        host: "https://api.open-meteo.com"
+        headers: {"Content-Type": "application/json"}
+    end
+    //============ Specific endpoints / topics / queries =============//
+
+    MySQLQuery allProducts
+        connection: WarehouseSQL
+        query: "SELECT * from products"
+    end
+
+    MongoDBQuery allWarehouses
+        connection: WarehouseMongo
+        collection: "warehouses"
+    end
+
+    BrokerTopic dataTopic
+        connection: CarBroker
+        topic: "data"
+    end
+
+    RESTEndpoint WeatherEnpoint
+        connection: OpenMeteo
+        path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
+    end
+
+    // ============= ENTITIES=========
+    Entity CarData
+        source: dataTopic
+        attributes:
+            - data: list
+    end
+
+    Entity Products
+        source: allProducts
+        attributes:
+            - id: list
+            - name: list
+            - category: list
+            - description: list
+            - price: list
+    end
+
+    Entity Warehouses
+        source: allWarehouses
+        strict: true
+        attributes:
+            - name: str
+            - capacity: int
+            - address: str
+            - isOperational: bool
+    end
+
+    Entity weatherData
+        source: WeatherEnpoint
+        attributes:
+            - current: dict
+            - daily: dict
+            - hourly: dict
+    end
+
+    // COMPONENTS
+    Component ClearWeather
+        type: Image
+            source: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn3.iconfinder.com%2Fdata%2Ficons%2Fweather-ios-11-1%2F50%2FSunny_Clear_Sun_Sunlight_Apple_Weather-1024.png&f=1&nofb=1&ipt=cdbbe89f81b2a0b5ea2aba4286eb1c095b2636a005a496df00735b07d54bf908"
+            width: 70
+            height: 70
+    end
+
+    Component NotClearWeather
+        type: Image
+            source: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Fweather-flat-14%2F64%2Fweather07-1024.png&f=1&nofb=1&ipt=ccaa95ca2c666c283f3254954fe8b7d12273580455cc096d2ae1890c459cd2da"
+            width: 70
+            height: 70
+    end
+
+    Screen BrokerTest
+        title: "Home"
+        url: '/'
+
+        row
+            col
+                for item this.metrics in entity CarData
+                    use Text with item.name   
+                    orientation: column
+            endcol
+            col
+                for item this.metrics in entity CarData 
+                    use Gauge with item.value
+                    if > 30
+                    orientation: column
+            endcol
+            col
+                for item this.metrics in entity CarData
+                    use Image width: 100 height: 100
+                    with item.frame
+                    orientation: column
+            endcol
+            col
+                for item this.test in entity CarData
+                    use Text if == "Hello" with item
+                    orientation: column
+            endcol
+        endrow
+        row
+            col
+                Component dataPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+        endrow
+    end
+
+    Screen DBTest
+        title: "db"
+        url: '/db'
+
+        row
+            col
+                for item this.name in entity Products
+                    use Text with item
+                    orientation: column
+            endcol
+            col
+                for item this.name in entity Warehouses
+                    use Text with item
+            endcol
+        endrow
+        row
+            col
+                row
+                    for item this.name in entity Warehouses
+                    use Text with item
+                endrow
+                row
+                    for item this.isOperational in entity Warehouses
+                    use Text content:"Operational" color: "#7DB242" size: 20 if ==true
+                    else use Text content:"Not Operational" color: "#DC2A35" size: 20 
+                endrow
+            endcol
+        endrow
+    end
+
+    Screen RestTest
+        title: "Rest Weather"
+        url: '/rest'
+
+        row
+            col 
+                row
+                    Component WeeklyTitle
+                        type: Text
+                            content: "Weekly Weather" size:24
+                    end
+                endrow
+                row
+                    for item this.daily.weather_code in entity weatherData
+                        use ClearWeather if == 3
+                        else use NotClearWeather
+                endrow
+                row
+                    for item this.daily.temperature_2m_max in entity weatherData
+                        use Text color: "#EE535E" size: 20 with item
+                endrow
+                row
+                    for item this.daily.temperature_2m_min in entity weatherData
+                        use Text color: "#2C627B" size: 20 with item
+                endrow
+                row
+                    for item this.daily.time in entity weatherData
+                        use Text size:16 with item
+                endrow
+            endcol
+
+            col
+                row
+                    for item this.daily.weather_code in entity weatherData
+                        use ClearWeather if == 3
+                        else use Text color: "#7DB242" size: 20 with item
+                endrow
+            endcol
+        endrow
+
+        row
+            col 
+                row
+                    Component WeeklyTitle
+                        type: Text
+                            content: "Hourly Weather" size:24
+                    end
+                endrow
+                row
+                    for item this.hourly.weather_code in entity weatherData
+                        use ClearWeather if == 1
+                        else use NotClearWeather
+                endrow
+                row
+                    for item this.hourly.temperature_2m in entity weatherData
+                        use Text color: "#EE535E" size: 20 with item
+                endrow
+                row
+                    for item this.hourly.time in entity weatherData
+                        use Text size:10 with item
+                endrow
+            endcol
+        endrow
+    end
+
+
+
+    // data to test
+
+//     {
+//   "metrics": [{"name":"First Name", "value": 30, "frame":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII"}, {"name":"Second Name", "value": 90, "frame":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII"}]
+// }

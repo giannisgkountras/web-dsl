@@ -7,6 +7,7 @@ import entity
 import utils
 import accessors
 import conditions
+import repetition
 
 WebPage:
     'webpage' name=ID 

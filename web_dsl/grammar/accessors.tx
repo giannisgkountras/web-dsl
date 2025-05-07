@@ -14,3 +14,7 @@ Accessor:
 NestedAccessPath:
     base='this' accessors+=Accessor* // Starts with 'this', followed by zero or more accessors
 ;
+
+NestedAccessPathItem:
+    base='item' accessors+=Accessor*
+;

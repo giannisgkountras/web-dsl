@@ -32,7 +32,7 @@ load_dotenv()
 
 API_KEY = os.getenv("API_KEY", "API_KEY")
 TMP_DIR = "./tmp/"
-CLEANUP_THRESHOLD = 60 * 60  # 1h in seconds
+CLEANUP_THRESHOLD = 60 * 15  # 15m in seconds
 
 os.makedirs(TMP_DIR, exist_ok=True)
 
@@ -202,8 +202,11 @@ async def generate_from_model(
 
 @app.post("/generate/file", tags=["Generation"])
 async def generate_from_file(
-    model_file: UploadFile = File(...), api_key: str = Security(get_api_key)
+    model_file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
+    api_key: str = Security(get_api_key),
 ):
+    background_tasks.add_task(cleanup_old_generations)
     uid = get_unique_id()
     model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")

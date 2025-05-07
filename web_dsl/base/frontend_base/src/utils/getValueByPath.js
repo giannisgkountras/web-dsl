@@ -1,6 +1,7 @@
 import { toast } from "react-toastify";
 
 export const getValueByPath = (obj, path) => {
+    if (path === "") return obj;
     try {
         const result = path.reduce((acc, key) => {
             if (acc && key in acc) {

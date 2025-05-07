@@ -29,6 +29,7 @@ from .lib.component import (
 )
 
 from .lib.condition import Condition
+from .lib.repetition import Repetition
 
 # Map grammar rules to Python classes
 custom_classes = [
@@ -51,6 +52,7 @@ custom_classes = [
     Input,
     Label,
     Form,
+    Repetition,
     # Add other classes here
 ]
 
@@ -135,6 +137,20 @@ def validate_model(model):
     errors = validate_components_with_strict_entities(
         components_referencing_strict_entities
     )
+
+    all_repetitions = get_children_of_type("Repetition", model)
+    repetitions_to_check = [
+        r for r in all_repetitions if r.entity and r.entity in strict_entities
+    ]
+    for repetition in repetitions_to_check:
+        attribute_root = repetition.item[0]
+        strict_entity_attributes = repetition.entity.attributes
+        strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
+        if attribute_root not in strict_entity_attributes_names:
+            errors.append(
+                f"Repetition uses attribute '{attribute_root}' not allowed by strict entity '{repetition.entity.name}'"
+            )
+
     if errors:
         print("Validation errors:")
         for error in errors:

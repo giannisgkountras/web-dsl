@@ -1,17 +1,47 @@
-class Condition:
+class Repetition:
     def __init__(
         self,
         parent=None,
         entity=None,
-        condition=None,
+        item=None,
         component=None,
+        data=None,
+        condition=None,
         componentElse=None,
+        componentRef=None,
+        componentElseRef=None,
+        dataElse=None,
+        orientation=None,
     ):
+
         self.parent = parent
         self.entity = entity
-        self.condition = self.format_condition(condition)
-        self.component = component
-        self.componentElse = componentElse
+        self.item = self.format_attribute_path(item)
+        if data is not None:
+            self.data = self.format_attribute_path(data)
+        else:
+            self.data = None
+
+        if dataElse is not None:
+            self.dataElse = self.format_attribute_path(dataElse)
+        else:
+            self.dataElse = None
+
+        if componentRef is not None:
+            self.component = componentRef
+        else:
+            self.component = component
+
+        if componentElseRef is not None:
+            self.componentElse = componentElseRef
+        else:
+            self.componentElse = componentElse
+
+        if orientation is None:
+            self.orientation = "row"
+        else:
+            self.orientation = orientation
+
         try:
             entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
@@ -27,6 +57,7 @@ class Condition:
         }
 
         self.sourceOfContent = source_map.get(entityRef, "static")
+        self.condition = self.format_condition(condition)
 
     def format_attribute_path(self, path):
         """
@@ -50,14 +81,14 @@ class Condition:
 
     def format_condition(self, condition):
         """
-        This method formats the condition for the component.
+        This method formats the condition for the repetition.
         It converts the condition into an array and also convert the path into an array.
         For example, if the condition is "data[0].value > 10", it will be converted to [['data', 0, 'value'], ['>'], [10]]".
+        Here we use Half Expression
         """
         if condition is not None:
-            condition_array = []
-            if hasattr(condition, "left") and condition.left is not None:
-                condition_array.append(self.format_attribute_path(condition.left))
+            # WE INITIALIZE THE CONDITION ARRAY WITH ONE ELEMENT BECAUSE WE WILL USE HALF EXPRESSION
+            condition_array = [""]
             if hasattr(condition, "op") and condition.op is not None:
                 condition_array.append(condition.op)
             if hasattr(condition, "right") and condition.right is not None:

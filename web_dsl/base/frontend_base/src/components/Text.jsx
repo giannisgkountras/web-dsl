@@ -14,7 +14,8 @@ const Text = ({
     sourceOfContent,
     restData,
     staticContent,
-    dbData
+    dbData,
+    repetitionItem = null
 }) => {
     const [content, setContent] = useState("");
 
@@ -48,7 +49,14 @@ const Text = ({
     });
 
     return (
-        <div className="flex relative w-fit h-fit p-5">
+        <div
+            className="flex relative w-fit h-fit p-5"
+            style={
+                sourceOfContent === "rest" || sourceOfContent === "db"
+                    ? { padding: "1.25rem" }
+                    : { padding: "0.5rem" }
+            }
+        >
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                 <button
                     className="absolute top-[-5] right-[-25] p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
@@ -64,8 +72,14 @@ const Text = ({
                     ...(size !== 0 && { fontSize: `${size}px` }),
                     color: color
                 }}
+                className="text-center"
             >
-                {sourceOfContent === "static" ? staticContent : content}
+                {typeof repetitionItem === "string" ||
+                typeof repetitionItem === "number"
+                    ? repetitionItem
+                    : sourceOfContent === "static" || sourceOfContent === ""
+                    ? staticContent
+                    : content}
             </h1>
         </div>
     );

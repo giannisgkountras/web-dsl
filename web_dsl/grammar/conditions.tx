@@ -1,16 +1,13 @@
 import accessors
 import components
 import entity
-import connections
 
 
 Condition:
-    (
-        ('if' condition=Expression)
-        ('from' 'entity' entity=[Entity])
-        ('then' 'use' component+=[Component][','])
-    )#
-    
+    'if' condition=Expression
+    'from' 'entity' entity=[Entity]
+    'then' 'use' component+=[Component][',']
+    ('else' 'use' componentElse+=[Component][','])?
 ;
 
 Expression:
@@ -23,4 +20,8 @@ ComparisonOperator:
 
 Value:
     INT | FLOAT | STRING | BOOL
+;
+
+HalfExpression:
+    op=ComparisonOperator right=Value
 ;
