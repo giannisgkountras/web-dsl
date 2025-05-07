@@ -243,6 +243,9 @@
                 topic={"{{topic}}"} 
                 size={ {{ type.size | default(18) }} }
                 color={"{{type.color}}"}
+                {% if type.weight %}
+                weight={"{{type.weight}}"}
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
                 staticContent={"{{type.content_static}}"}

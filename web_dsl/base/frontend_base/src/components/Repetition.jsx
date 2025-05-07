@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 import { getValueByPath } from "../utils/getValueByPath";
 import { evaluateConditionWithData } from "../utils/evaluateCondition";
+import { IoReload } from "react-icons/io5";
+
 const Repetition = ({
     topic,
     restData,
@@ -50,9 +52,18 @@ const Repetition = ({
     });
     return (
         <div
-            className="flex justify-evenly items-center w-full"
+            className="flex justify-evenly items-center w-full relative"
             style={{ flexDirection: orientation }}
         >
+            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
+                <button
+                    className="absolute top-0 right-0 text-gray-100 hover:text-gray-500 hover:cursor-pointer box-content"
+                    onClick={reloadContent}
+                    title="Refresh Value"
+                >
+                    <IoReload size={24} />
+                </button>
+            )}
             {Array.isArray(allData) ? (
                 allData.map((item, idx) => (
                     <div

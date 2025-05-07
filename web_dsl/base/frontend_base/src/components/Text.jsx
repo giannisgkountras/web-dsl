@@ -11,6 +11,7 @@ const Text = ({
     contentPath,
     size = 18,
     color,
+    weight = 400,
     sourceOfContent,
     restData,
     staticContent,
@@ -70,7 +71,8 @@ const Text = ({
             <h1
                 style={{
                     ...(size !== 0 && { fontSize: `${size}px` }),
-                    color: color
+                    color: color,
+                    fontWeight: weight
                 }}
                 className="text-center"
             >

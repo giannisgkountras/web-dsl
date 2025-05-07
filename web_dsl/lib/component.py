@@ -237,6 +237,7 @@ class Text(ComponentType):
         content_static=None,
         size=None,
         color="#fff",
+        weight=400,
     ):
         super().__init__(parent, name)
         if content is not None:
@@ -245,6 +246,9 @@ class Text(ComponentType):
         self.size = size
         self.color = color
         self.isComponent = True
+
+        if weight is not None:
+            self.weight = weight
 
 
 class Logs(ComponentType):

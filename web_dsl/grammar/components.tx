@@ -72,6 +72,7 @@ Text:
     (
         ('size:' size=INT)?
         ('color:' color=STRING)?
+        ('weight:' weight=INT)?
     )#
 ;
 
@@ -166,6 +167,13 @@ CrudTable:
         ('attributes:' attributes+=NestedAccessPath[','])?
         ( 'description:' description=STRING )?
         ( 'table:' table=STRING )?
+    )#
+;
+
+Card:
+    'Card'
+    (
+        'title:'
     )#
 ;
 

@@ -176,7 +176,7 @@ webpage RepetitionsTest
                 endrow
                 row
                     for item this.isOperational in entity Warehouses
-                    use Text content:"Operational" color: "#7DB242" size: 20 if ==true
+                    use Text content:"Operational" color: "#7DB242" size: 20 weight:900 if ==true
                     else use Text content:"Not Operational" color: "#DC2A35" size: 20 
                 endrow
             endcol
