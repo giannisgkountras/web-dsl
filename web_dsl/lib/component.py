@@ -327,3 +327,27 @@ class Form(ComponentType):
             formatted_elements = []
         self.elements = formatted_elements
         self.description = description
+
+
+class ProgressBar(ComponentType):
+    def __init__(
+        self,
+        parent=None,
+        name="ProgressBar",
+        value=None,
+        value_static=None,
+        max=None,
+        description=None,
+        barColor=None,
+        trackColor=None,
+        textColor=None,
+    ):
+        super().__init__(parent, name)
+        if value is not None:
+            self.value = self.format_attribute_path(value)
+        self.value_static = value_static
+        self.max = max
+        self.description = description
+        self.barColor = barColor
+        self.trackColor = trackColor
+        self.textColor = textColor

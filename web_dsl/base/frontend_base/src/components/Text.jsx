@@ -22,13 +22,13 @@ const Text = ({
 
     const ws = useContext(WebsocketContext);
 
-    const reloadContent = () => {
+    const reloadContent = async () => {
         if (sourceOfContent === "rest") {
-            const data = fetchValueFromRest(restData, contentPath);
+            const data = await fetchValueFromRest(restData, contentPath);
             setContent(data);
         }
         if (sourceOfContent === "db") {
-            const data = fetchValueFromDB(dbData, contentPath);
+            const data = await fetchValueFromDB(dbData, contentPath);
             setContent(data);
         }
     };

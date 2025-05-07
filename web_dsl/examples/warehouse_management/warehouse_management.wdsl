@@ -236,6 +236,13 @@ webpage WarehouseManagement
             yValues: this.y1, this.y2
     end
 
+    Component CentralWarehouseCapacity
+        entity: Warehouses
+        type: ProgressBar
+            value: this.capacity[0]
+            max: 120000
+            description: "Central warehouse capacity"
+    end
     //============ Screens ============//
 
     Screen Home
@@ -265,7 +272,7 @@ webpage WarehouseManagement
             endcol
             col
                 if this.isOperational[0] == true from entity Warehouses
-                        then use WarehouseNotificationsAlive, WarehouseOperational
+                        then use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
                         else use WarehouseNotOperational
             endcol
         endrow

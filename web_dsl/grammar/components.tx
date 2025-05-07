@@ -19,7 +19,9 @@ ComponentRef:
 ;
 
 ComponentType:
-    Form | Image | Text | Notification | LineChart | LiveTable | Gauge | JsonViewer | Alive | Publish | Logs | CrudTable | BarChart | PieChart
+    Form | Image | Text | Notification | LineChart | 
+    LiveTable | Gauge | JsonViewer | Alive | Publish | 
+    Logs | CrudTable | BarChart | PieChart | ProgressBar
 ;
 
 Input:
@@ -170,10 +172,15 @@ CrudTable:
     )#
 ;
 
-Card:
-    'Card'
+ProgressBar:
+    'ProgressBar'
     (
-        'title:'
+        ('value:' (value=NestedAccessPath |  value_static=FLOAT))
+        ('max:' max=INT)
+        ('description:' description=STRING)?
+        ('barColor:' barColor=STRING)?
+        ('textColor:' textColor=STRING)?
+        ('trackColor:' trackColor=STRING)?
     )#
 ;
 

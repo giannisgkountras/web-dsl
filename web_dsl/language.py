@@ -25,6 +25,7 @@ from .lib.component import (
     Input,
     Label,
     Form,
+    ProgressBar,
 )
 
 from .lib.condition import Condition
@@ -53,6 +54,7 @@ custom_classes = [
     Label,
     Form,
     Repetition,
+    ProgressBar,
     # Add other classes here
 ]
 
