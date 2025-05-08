@@ -1,5 +1,6 @@
 import {
     CartesianGrid,
+    Legend,
     Line,
     LineChart,
     Tooltip,
@@ -8,97 +9,154 @@ import {
 } from "recharts";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { useWebsocket } from "../hooks/useWebsocket";
-import { useContext, useState } from "react";
-import convertTypeValue from "../utils/convertTypeValue";
+import { useContext, useState, useEffect } from "react";
+import { IoReload } from "react-icons/io5";
+import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
+import { toast } from "react-toastify";
+import { proxyRestCall } from "../api/proxyRestCall";
+import { queryDB } from "../api/dbQuery";
+import { colors } from "../lib/colors";
+import { transformToArrayOfObjects } from "../utils/transformations";
 
 const CustomLineChart = ({
     topic,
-    attributes,
     xLabel,
     yLabel,
     sourceOfContent,
     xValue = null,
-    yValues = null,
-    staticChartData = null
+    yValues = [],
+    staticChartData = null,
+    restData = null,
+    dbData = null,
+    description = null
 }) => {
-    // Generate initial data dynamically based on attributes
-    const initialData = attributes.reduce((acc, attr) => {
-        acc[attr.name] = "0";
-        return acc;
-    }, {});
-
-    const [chartData, setChartData] = useState([initialData]);
+    const [chartData, setChartData] = useState([]);
     const ws = useContext(WebsocketContext);
+    const allPaths = [xValue, ...yValues];
+    const { name, path, method, params } = restData || {};
+    const pathNames = allPaths.map(getNameFromPath);
 
-    // Handle WebSocket messages
+    // Fetch and transform data from REST or DB
+    const fetchExternalData = async () => {
+        try {
+            const response =
+                sourceOfContent === "rest"
+                    ? await proxyRestCall({ name, path, method, params })
+                    : await queryDB(dbData);
+
+            const transformed = transformToArrayOfObjects(
+                response,
+                allPaths,
+                pathNames
+            );
+
+            setChartData(transformed);
+        } catch (err) {
+            console.error("Failed to fetch chart data:", err);
+            toast.error("Failed to load chart data");
+        }
+    };
+
+    // WebSocket handler
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        let newData = {};
-        attributes.forEach((attr) => {
-            newData[attr.name] = convertTypeValue(msg[attr.name], attr.type);
-        });
-        setChartData((prevData) => [...prevData, newData]);
+        try {
+            const newData = {};
+            allPaths.forEach((path, index) => {
+                newData[pathNames[index]] = getValueByPath(msg, path);
+            });
+            setChartData((prevData) => [...prevData, newData]);
+        } catch (error) {
+            toast.error("Error updating chart from WebSocket");
+            console.error("WebSocket error:", error);
+        }
     });
 
-    // Define an array of colors for the lines
-    const colors = ["#fabd2f", "#d3869b", "#83a598", "#8ec07c", "#fe8019"];
+    useEffect(() => {
+        if (sourceOfContent === "rest" || sourceOfContent === "db") {
+            fetchExternalData();
+        }
+        if (sourceOfContent === "static") {
+            setChartData(staticChartData);
+        }
+    }, []);
 
-    const xDataKey = sourceOfContent === "static" ? xValue : attributes[0].name; // First attribute for X-axis or X-value if static content
-    const lineAttributes =
-        sourceOfContent === "static" ? yValues : attributes.slice(1); // Remaining attributes for lines or Y-values if static content
+    const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
+    const lineDataKeys =
+        sourceOfContent === "static" ? yValues : pathNames.slice(1);
 
     return (
-        <LineChart
-            data={sourceOfContent === "static" ? staticChartData : chartData}
-            width={500}
-            height={300}
-        >
-            <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
-
-            <XAxis
-                dataKey={xDataKey}
-                stroke="#fff"
-                label={{
-                    value: xLabel,
-                    position: "insideBottom",
-                    offset: -5,
-                    fill: "#fff"
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
+            {description && (
+                <h1 className="text-lg w-full text-center mb-2 font-semibold">
+                    {description}
+                </h1>
+            )}
+            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
+                <button
+                    onClick={fetchExternalData}
+                    className="absolute top-0 right-0 p-2 text-white hover:text-gray-400 cursor-pointer"
+                    title="Reload chart data"
+                >
+                    <IoReload size={20} />
+                </button>
+            )}
+            <LineChart
+                data={
+                    sourceOfContent === "static" ? staticChartData : chartData
+                }
+                width={450}
+                height={350}
+                style={{
+                    backgroundColor: "#13191e",
+                    borderRadius: "15px",
+                    position: "relative",
+                    padding: "1rem"
                 }}
-            />
-
-            <YAxis
-                stroke="#fff"
-                label={{
-                    value: yLabel,
-                    position: "outsideLeft",
-                    fill: "#fff",
-                    angle: -90,
-                    dx: -10
-                }}
-            />
-
-            <Tooltip
-                contentStyle={{
-                    backgroundColor: "#282828",
-                    border: "none",
-                    color: "#fff",
-                    borderRadius: "10px"
-                }}
-                itemStyle={{ color: "#fff" }}
-            />
-
-            {/* Generate a <Line> for each attribute beyond the first */}
-            {lineAttributes.map((attr, index) => (
-                <Line
-                    key={attr.name || attr} // Use attr.name or attr if static for the key
-                    isAnimationActive={false}
-                    type="monotone"
-                    dataKey={attr.name || attr} // Use attr.name or attr if static for the key
-                    stroke={colors[index % colors.length]}
-                    strokeWidth={2}
-                    dot={{ fill: colors[index % colors.length] }}
+            >
+                <CartesianGrid stroke="#3c3836" strokeDasharray="3 3" />
+                <XAxis
+                    dataKey={xDataKey}
+                    stroke="#fff"
+                    label={{
+                        value: xLabel,
+                        position: "insideBottom",
+                        offset: -5,
+                        fill: "#fff"
+                    }}
                 />
-            ))}
-        </LineChart>
+                <YAxis
+                    stroke="#fff"
+                    label={{
+                        value: yLabel,
+                        position: "outsideLeft",
+                        fill: "#fff",
+                        angle: -90,
+                        dx: -35
+                    }}
+                />
+                <Tooltip
+                    contentStyle={{
+                        backgroundColor: "#282828",
+                        border: "none",
+                        color: "#fff",
+                        borderRadius: "10px"
+                    }}
+                    itemStyle={{ color: "#fff" }}
+                />
+                {lineDataKeys.map((key, index) => (
+                    <Line
+                        key={key}
+                        isAnimationActive={false}
+                        type="monotone"
+                        dataKey={key}
+                        stroke={colors[index % colors.length]}
+                        strokeWidth={2}
+                        dot={{ fill: colors[index % colors.length] }}
+                    />
+                ))}
+                <Legend />
+            </LineChart>
+        </div>
     );
 };
 

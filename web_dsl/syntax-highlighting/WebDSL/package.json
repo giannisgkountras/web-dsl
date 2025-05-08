@@ -1,0 +1,35 @@
+{
+    "name": "WebDSL",
+    "displayName": "WebDSL",
+    "description": "Syntax highlighting for WebDSL",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.99.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "repository": "https://github.com/giannisgkountras/web-dsl",
+    "contributes": {
+        "languages": [
+            {
+                "id": "webdsl",
+                "aliases": [
+                    "WebDSL",
+                    "webdsl"
+                ],
+                "extensions": [
+                    ".wdsl"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "webdsl",
+                "scopeName": "source.WebDSL",
+                "path": "./syntaxes/webdsl.tmLanguage.json"
+            }
+        ]
+    }
+}

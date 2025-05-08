@@ -1,30 +1,35 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
-import convertTypeValue from "../utils/convertTypeValue";
 import { toast } from "react-toastify";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
 import { IoReload } from "react-icons/io5";
+import { getValueByPath } from "../utils/getValueByPath";
 
 const Text = ({
     topic,
-    attribute,
+    contentPath,
     size = 18,
     color,
+    weight = 400,
     sourceOfContent,
     restData,
     staticContent,
-    dbData
+    dbData,
+    repetitionItem = null
 }) => {
     const [content, setContent] = useState("");
+
     const ws = useContext(WebsocketContext);
 
-    const reloadContent = () => {
+    const reloadContent = async () => {
         if (sourceOfContent === "rest") {
-            fetchValueFromRest(restData, attribute, setContent);
+            const data = await fetchValueFromRest(restData, contentPath);
+            setContent(data);
         }
         if (sourceOfContent === "db") {
-            fetchValueFromDB(dbData, attribute, setContent);
+            const data = await fetchValueFromDB(dbData, contentPath);
+            setContent(data);
         }
     };
 
@@ -34,7 +39,8 @@ const Text = ({
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setContent(convertTypeValue(msg[attribute.name], attribute.type));
+            const data = getValueByPath(msg, contentPath);
+            setContent(data);
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -44,25 +50,39 @@ const Text = ({
     });
 
     return (
-        <div className="flex relative w-fit h-fit p-5">
+        <div
+            className="flex relative w-fit h-fit p-5"
+            style={
+                sourceOfContent === "rest" || sourceOfContent === "db"
+                    ? { padding: "1.25rem" }
+                    : { padding: "0.5rem" }
+            }
+        >
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                 <button
-                    className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
+                    className="absolute top-[-5] right-[-25] p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
                     onClick={reloadContent}
                     title="Refresh Value"
                 >
                     <IoReload size={24} />
                 </button>
             )}
-            {sourceOfContent === "static" ? (
-                <h1 style={{ fontSize: `${size}px`, color: `${color}` }}>
-                    {staticContent}
-                </h1>
-            ) : (
-                <h1 style={{ fontSize: `${size}px`, color: `${color}` }}>
-                    {content}
-                </h1>
-            )}
+
+            <h1
+                style={{
+                    ...(size !== 0 && { fontSize: `${size}px` }),
+                    color: color,
+                    fontWeight: weight
+                }}
+                className="text-center"
+            >
+                {typeof repetitionItem === "string" ||
+                typeof repetitionItem === "number"
+                    ? repetitionItem
+                    : sourceOfContent === "static" || sourceOfContent === ""
+                    ? staticContent
+                    : content}
+            </h1>
         </div>
     );
 };

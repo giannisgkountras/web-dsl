@@ -1,3 +1,4 @@
+
 {% macro render_element(element, row_parent=True) %}
     {% if element.__class__.__name__ == 'Row' %}
             {% if row_parent %}
@@ -5,7 +6,7 @@
             {% else %}
                 <div className="row row-child">
             {% endif %}
-                {% for child in element.elements %}
+                {% for child in element.elements %}                    
                     {{ render_element(child, row_parent=False) }}
                 {% endfor %}
             </div>
@@ -25,6 +26,7 @@
         {% set restData={}%}
         {% set dbData={}%}
         {% set topic=None%}
+
         {% if sourceOfContent=="rest" %}
             {% set restData = {
                 "name": element.entity.source.connection.name or 'default',
@@ -38,21 +40,30 @@
                 "database": element.entity.source.connection.database or '',
                 "query": element.entity.source.query or {},
                 "filter": element.entity.source.filter or {},
+                "collection": element.entity.source.collection or '',
             } %}
         {% elif sourceOfContent=="broker"%}
             {% set topic=element.entity.source.topic %}
         {% endif %}
 
+        {% if element.type %}
         {% set type = element.type %}
-
+        {% else %}
+        {% set type = element %}
+        {% endif %}
         {% if type.name=="Gauge"%}
             <Gauge 
                 topic={"{{topic}}"} 
-                attribute={ {name: "{{type.value.name}}", type: "{{type.value.__class__.__name__}}"  } } 
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 staticValue={ {{type.value_static}} }
                 dbData={ {{dbData}} }
+                {% if type.value %}
+                    contentPath={ {{type.value}} }
+                {% endif %}
+                {% if type.description%}
+                    description={ "{{type.description}}" }
+                {% endif %}
             />
         
         {% elif type.name=="LineChart"%}
@@ -61,15 +72,9 @@
                 topic={"{{topic}}"} 
                 xLabel={"{{type.xLabel}}"} 
                 yLabel={"{{type.yLabel}}"} 
-                attributes={[ { name: "{{type.xValue.name}}" ,  type: "{{type.xValue.__class__.__name__}}" },
-                    {% for attr in type.yValues %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                  ]}
                 sourceOfContent={"{{sourceOfContent}}"}
+                dbData={ {{dbData}} }
+                restData={ {{restData}} }
                 {% if type.staticData %}
                     xValue={"{{type.xValue_static}}"}
                     yValues={[ {% for item in type.yValues_static %}
@@ -84,33 +89,85 @@
                             }{% if not loop.last %}, {% endif %}
                         {% endfor %}
                     ] }
+                {% else %}
+                    xValue={ {{type.xValue}}}
+                    yValues={ {{type.yValues}} }
+                {% endif %}
+                {% if type.description%}
+                    description={ "{{type.description}}" }
                 {% endif %}
             />
 
+        {% elif type.name=="BarChart"%}
+
+            <CustomBarChart 
+                topic={"{{topic}}"} 
+                xLabel={"{{type.xLabel}}"} 
+                yLabel={"{{type.yLabel}}"} 
+                sourceOfContent={"{{sourceOfContent}}"}
+                dbData={ {{dbData}} }
+                restData={ {{restData}} }
+                {% if type.staticData %}
+                    xValue={"{{type.xValue_static}}"}
+                    yValues={[ {% for item in type.yValues_static %}
+                                "{{item}}",
+                            {% endfor %}  ]}
+                    staticChartData={ [ 
+                        {% for group in type.staticData.items %}
+                            {   
+                                {% for dictItem in group.items %}
+                                    "{{ dictItem.name }}": "{{ dictItem.value }}"{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            }{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    ] }
+                {% else %}
+                    xValue={ {{type.xValue}}}
+                    yValues={ {{type.yValues}} }
+                {% endif %}
+                {% if type.description%}
+                    description={ "{{type.description}}" }
+                {% endif %}
+            />
+        
+        {% elif type.name=="PieChart"%}
+            <CustomPieChart 
+                topic={"{{topic}}"} 
+                sourceOfContent={"{{sourceOfContent}}"}
+                dbData={ {{dbData}} }
+                restData={ {{restData}} }
+                {% if type.staticData %}
+                    valuePath={ {{type.value_static}} }
+                    namePath={ {{type.dataName_static}} }
+                    staticChartData={ [ 
+                        {% for group in type.staticData.items %}
+                            {   
+                                {% for dictItem in group.items %}
+                                    "{{ dictItem.name }}": "{{ dictItem.value }}"{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            }{% if not loop.last %}, {% endif %}
+                        {% endfor %}
+                    ] }
+                {% else %}
+                    valuePath={ {{type.value}}}
+                    namePath={ {{type.dataName}} }
+                {% endif %}
+                {% if type.description%}
+                    description={ "{{type.description}}" }
+                {% endif %}
+            />
         {% elif type.name=="LiveTable"%}
             <LiveTable 
                 topic={"{{topic}}"} 
-                attributes={[ 
-                    {% for attr in type.columns %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                ]}
+                columns={ {{type.columns}} }
             />
 
         {% elif type.name=="JsonViewer"%}
             <JsonViewer 
                 topic={"{{topic}}"} 
-                attributes={[ 
-                    {% for attr in type.attributes %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                ]}
+                {% if type.attributes %}
+                    attributes={ {{type.attributes}} }
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 dbData={ {{dbData}} }
@@ -120,6 +177,9 @@
             <Alive 
                 topic={"{{topic}}"} 
                 timeout={ {{type.timeout}} }
+                {% if type.description%}
+                    description={ "{{type.description}}" }
+                {% endif %}
             />
 
         {% elif type.name=="Publish" %}
@@ -147,13 +207,19 @@
                     json={ {{type.json}} }
                 {% endif %} 
                 restData={ {{publishRestData}} }
+                {% if type.description %}
+                    description={ "{{type.description}}" }
+                {% endif %}
+
             />
 
         {% elif type.name=="Notification" %}
             <LiveNotification
                 type={"{{type.type}}"}
                 topic={"{{topic}}"} 
-                attribute={ { name: "{{type.message.name}}" ,  type: "{{type.message.__class__.__name__}}"} }
+                {% if type.message %}
+                    contentPath={ {{type.message}} }
+                {% endif %}
             />
 
         {% elif type.name=="Image" %}
@@ -165,48 +231,193 @@
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
                 sourceStatic={"{{type.source_static}}"}
+                {% if type.source %}
+                    contentPath={ {{type.source}} }
+                {% endif %}
+
             />
 
         {% elif type.name=="Text" %}
             <Text 
                 topic={"{{topic}}"} 
-                attribute={ { name: "{{type.content.name}}" ,  type: "{{type.content.__class__.__name__}}"} }
                 size={ {{ type.size | default(18) }} }
                 color={"{{type.color}}"}
+                {% if type.weight %}
+                weight={"{{type.weight}}"}
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }    
                 staticContent={"{{type.content_static}}"}
                 dbData={ {{dbData}} }
+                {% if type.content %}
+                    contentPath={ {{type.content}} }
+                {% endif %}
+
             />
 
         {% elif type.name=="Logs" %}
             <Logs 
                 topic={"{{topic}}"} 
-                attributes={[ 
-                    {% for attr in type.attributes %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-            ]}/>
+                {% if type.attributes %}
+                    attributes={ {{type.attributes}} }
+                {% endif %}
+            />
 
         {% elif type.name=="CrudTable" %}
+            {%if element.entity.source.connection.__class__.__name__ == "MongoDB" %}
+                {%set dbType="mongo"%}
+            {%elif element.entity.source.connection.__class__.__name__ == "MySQL" %}
+                {%set dbType="mysql"%}
+            {%else%}
+                {% set dbType=""%}
+            {%endif%}
             <CrudTable
-                attributes={[ 
-                    {% for attr in type.attributes %}
-                        {
-                        name: "{{ attr.name }}",
-                        type: "{{ attr.__class__.__name__ }}"
-                        },
-                    {% endfor %}    
-                ]}
+                {% if type.attributes %}
+                    attributes={ {{type.attributes}} }
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
                 restData={ {{restData}} }
                 dbData={ {{dbData}} }
+                primaryKey={ "{{type.primary_key}}" }
+                dbType={ "{{dbType}}" }
+                {% if type.description %}
+                    description={ "{{type.description}}" }
+                {% endif %}
+                {% if type.table%}
+                    table={ "{{type.table}}" }
+                {% endif %}
             />
         
+        {% elif type.name=="Form"%}
+            <CustomForm
+                elements={ {{type.elements}} }
+                restData={ {{restData}} }
+                {% if type.description %}
+                    description={ "{{type.description}}" }
+                {% endif %}
+            />
+
+        {% elif type.name=="ProgressBar"%}
+            <ProgressBar
+                topic={"{{topic}}"}
+                sourceOfContent={"{{sourceOfContent}}"}
+                restData={ {{restData}} }
+                dbData={ {{dbData}} }
+                {% if type.max !=None %}
+                    max={ {{type.max}} }
+                {% endif %}
+                {% if type.max_static != None %}
+                    maxStatic={ {{type.max_static}} }
+                {% endif %}
+                {% if type.value %}
+                    contentPath={ {{type.value}} }
+                {% endif %}
+                {% if type.description %}
+                    description={ "{{type.description}}" }
+                {% endif %}
+                staticValue={ {{type.value_static}} }
+                {% if type.barColor %}
+                    barColor={"{{type.barColor}}"}
+                {% endif %}
+                {% if type.trackColor %}
+                    trackColor={"{{type.trackColor}}"}
+                {% endif %}
+                {% if type.textColor %}
+                    textColor={"{{type.textColor}}"}
+                {% endif %}
+            />
         {% endif %}
 
+    {% elif element.__class__.__name__ == 'Condition'%}
+        {% set sourceOfContent = element.sourceOfContent %}
+        {% set restData={}%}
+        {% set dbData={}%}
+        {% set topic=None%}
+
+        {% if sourceOfContent=="rest" %}
+            {% set restData = {
+                "name": element.entity.source.connection.name or 'default',
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "params": element.entity.source.params or {},
+            } %}
+        {% elif sourceOfContent=="db" %}
+            {% set dbData = {
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
+                "collection": element.entity.source.collection or '',
+            } %}
+        {% elif sourceOfContent=="broker"%}
+            {% set topic=element.entity.source.topic %}
+        {% endif %}
+
+        <Condition
+            topic="{{topic}}"
+            restData={ {{restData}} }
+            dbData={ {{dbData}} }
+            sourceOfContent="{{sourceOfContent}}"
+            condition={ {{element.condition}} }
+            elements={ [ 
+                {% for item in element.component %}
+                {{ render_element(item) }},
+                {% endfor %}] }
+            elementsElse={ [ 
+                {% for item in element.componentElse %}
+                {{ render_element(item) }},
+                {% endfor %}] }
+        />
+
+    {% elif element.__class__.__name__ == 'Repetition'%}
+        {% set sourceOfContent = element.sourceOfContent %}
+        {% set restData={}%}
+        {% set dbData={}%}
+        {% set topic=None%}
+
+        {% if sourceOfContent=="rest" %}
+            {% set restData = {
+                "name": element.entity.source.connection.name or 'default',
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "params": element.entity.source.params or {},
+            } %}
+        {% elif sourceOfContent=="db" %}
+            {% set dbData = {
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
+                "collection": element.entity.source.collection or '',
+            } %}
+        {% elif sourceOfContent=="broker"%}
+            {% set topic=element.entity.source.topic %}
+        {% endif %}
+
+        <Repetition
+            topic="{{topic}}"
+            restData={ {{restData}} }
+            dbData={ {{dbData}} }
+            sourceOfContent="{{sourceOfContent}}"
+            item={ {{element.item}} }
+            element={ {{ render_element(element.component) }} }
+            {% if element.data != None %}
+                dataPath={ {{element.data}} }
+                conditionDataPath={ {{element.data}} }
+            {% endif %}
+            {% if element.dataElse !=None %}
+                dataElsePath={ {{element.dataElse}} }
+            {% endif %}
+            {% if element.condition %}
+                condition ={ {{element.condition}} }
+            {% endif %}
+            {% if element.componentElse %}
+                elementElse={ {{ render_element(element.componentElse) }} }
+            {% endif %}
+            orientation={"{{element.orientation}}" }
+   
+        />
     {% endif %}
+
+
 {% endmacro %}

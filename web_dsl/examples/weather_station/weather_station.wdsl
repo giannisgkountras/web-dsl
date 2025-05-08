@@ -1,0 +1,237 @@
+webpage WeatherStation
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A weather station app"
+    navbar: true
+
+     //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    RESTApi OpenMeteo
+        host: "https://api.open-meteo.com"
+        headers: {"Content-Type": "application/json"}
+    end
+
+    Broker<MQTT> SensorBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    //============ Specific endpoints / queries =============//
+
+    RESTEndpoint WeatherEnpoint
+        connection: OpenMeteo
+        path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
+    end
+
+    BrokerTopic espSensor
+        connection: SensorBroker
+        topic: "espdata"
+    end
+
+     //============ Entities ============//
+    
+    Entity weatherData
+        source: WeatherEnpoint
+        attributes:
+            - current: dict
+            - daily: dict
+            - hourly: dict
+    end
+
+    Entity espData
+        source: espSensor
+        attributes:
+            - current: list
+    end
+
+    //============ Components ============//
+
+    Component ESPLiveData
+        entity: espData
+        type: LiveTable
+            columns: this.current.uv[0], this.current.pressure[0], this.current.rainfall[0]
+    end
+
+    Component TemperatureLabel
+        type: Text
+            content: "Tempeprature:"
+    end
+
+    Component HumidityLabel
+        type: Text
+            content: "Humidity:"
+    end
+
+    Component CurrentTemperature
+        entity: weatherData
+        type: Text
+            content: this.current.temperature_2m
+            color: "#EF5361"
+            size: 24
+    end
+
+    Component CurrentHumidity
+        entity: weatherData
+        type: Text
+            content: this.current.relative_humidity_2m
+            color: "#4FADC1"
+            size: 24
+    end
+
+    Component ClearWeather
+        type: Image
+            source: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn3.iconfinder.com%2Fdata%2Ficons%2Fweather-ios-11-1%2F50%2FSunny_Clear_Sun_Sunlight_Apple_Weather-1024.png&f=1&nofb=1&ipt=cdbbe89f81b2a0b5ea2aba4286eb1c095b2636a005a496df00735b07d54bf908"
+            width: 120
+            height: 120
+    end
+
+    Component NotClearWeather
+        type: Image
+            source: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn2.iconfinder.com%2Fdata%2Ficons%2Fweather-flat-14%2F64%2Fweather07-1024.png&f=1&nofb=1&ipt=ccaa95ca2c666c283f3254954fe8b7d12273580455cc096d2ae1890c459cd2da"
+            width: 120
+            height: 120
+    end
+
+    Component CurrentTime
+        entity: weatherData
+        type: Text
+            content: this.current.time
+    end
+
+    Component TempChart
+        entity: weatherData
+        type: LineChart
+            description: "Tempeprature over time"
+            xLabel: "Time"
+            yLabel: "Temperature"
+            xValue: this.hourly.time
+            yValues: this.hourly.temperature_2m
+    end
+
+    Component HumidityChart
+        entity: weatherData
+        type: LineChart
+            description: "Humidity over time"
+            xLabel: "Time"
+            yLabel: "Humidity"
+            xValue: this.hourly.time
+            yValues: this.hourly.relative_humidity_2m
+    end
+
+    Component DailyTempChart
+        entity: weatherData
+        type: BarChart
+            description: "Daily Temperatures"
+            xLabel: "Time"
+            yLabel: "Min & Max Temperature"
+            xValue: this.daily.time
+            yValues: this.daily.temperature_2m_min, this.daily.temperature_2m_max
+    end
+
+    Component solarRadiationData
+        type: LineChart
+            description: "Solar Radiation & Wind over time"
+            xLabel: "Time"
+            yLabel: "Solar Radiation & Wind"
+            xValue: "time"
+            yValues: "solar_radiation", "wind_gust"
+            staticData: [
+                {"time": "2025-05-03T06:00", "solar_radiation": 0, "wind_gust": 15},
+                {"time": "2025-05-03T07:00", "solar_radiation": 50, "wind_gust": 17},
+                {"time": "2025-05-03T08:00", "solar_radiation": 120, "wind_gust": 20},
+                {"time": "2025-05-03T09:00", "solar_radiation": 250, "wind_gust": 22},
+                {"time": "2025-05-03T10:00", "solar_radiation": 420, "wind_gust": 25},
+                {"time": "2025-05-03T11:00", "solar_radiation": 600, "wind_gust": 28},
+                {"time": "2025-05-03T12:00", "solar_radiation": 750, "wind_gust": 30},
+                {"time": "2025-05-03T13:00", "solar_radiation": 820, "wind_gust": 33},
+                {"time": "2025-05-03T14:00", "solar_radiation": 780, "wind_gust": 35},
+                {"time": "2025-05-03T15:00", "solar_radiation": 650, "wind_gust": 32},
+                {"time": "2025-05-03T16:00", "solar_radiation": 480, "wind_gust": 29},
+                {"time": "2025-05-03T17:00", "solar_radiation": 300, "wind_gust": 25},
+                {"time": "2025-05-03T18:00", "solar_radiation": 150, "wind_gust": 20},
+                {"time": "2025-05-03T19:00", "solar_radiation": 50, "wind_gust": 18},
+                {"time": "2025-05-03T20:00", "solar_radiation": 0, "wind_gust": 15}
+            ]
+    end
+
+    //============ Screens ============//
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use ESPLiveData
+            endcol
+
+            col
+                row
+                    row
+                        use TemperatureLabel
+                        use CurrentTemperature
+                    endrow
+                    row
+                        use HumidityLabel
+                        use CurrentHumidity
+                    endrow
+                endrow
+                row
+                    col
+                        if this.current.weather_code == 2 from entity weatherData
+                        then use NotClearWeather
+                    
+                        if this.current.weather_code == 0 from entity weatherData
+                            then use ClearWeather
+            
+                        use CurrentTime
+                    endcol
+                endrow
+            endcol
+
+            col
+                use DailyTempChart
+            endcol
+        endrow 
+
+        row
+            col
+                use TempChart
+            endcol
+
+            col
+                use HumidityChart
+            endcol
+
+            col
+                use solarRadiationData
+            endcol
+        endrow
+    end
+
+
+     //============ For Debugging ============//
+
+    Screen Debug
+        title: "Debug"
+        url: "/debug"
+
+        row
+            col
+                Component espPublisher
+                    type: Publish
+                        broker: SensorBroker
+                end
+            endcol     
+        endrow
+
+    end

@@ -3,7 +3,7 @@ import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from "react-toastify";
 
-const Alive = ({ topic, timeout }) => {
+const Alive = ({ topic, timeout, description }) => {
     const ws = useContext(WebsocketContext);
     const [lastUpdated, setLastUpdated] = useState(null);
     const [status, setStatus] = useState("Offline");
@@ -47,6 +47,9 @@ const Alive = ({ topic, timeout }) => {
 
     return (
         <div className="flex flex-col justify-center items-center">
+            {description && (
+                <h1 className="text-lg font-semibold mb-2">{description}</h1>
+            )}
             <div className="flex justify-evenly items-center">
                 <div
                     className={`w-4 h-4 rounded-full ${

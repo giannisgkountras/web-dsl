@@ -12,7 +12,7 @@ export const queryDB = async ({
         const payload = {
             connection_name,
             database,
-            query,
+            query: query == {} ? "" : query,
             collection,
             filter
         };

@@ -1,11 +1,12 @@
 import React, { useState, useContext, useEffect } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
-import convertTypeValue from "../utils/convertTypeValue";
 import placeholder from "../assets/placeholderimage";
 import { toast } from "react-toastify";
-import { proxyRestCall } from "../api/proxyRestCall";
 import { IoReload } from "react-icons/io5";
+import { getValueByPath } from "../utils/getValueByPath";
+import { fetchValueFromRest } from "../utils/fetchValues";
+import { fetchValueFromDB } from "../utils/fetchValues";
 
 const CustomImage = ({
     topic,
@@ -14,54 +15,33 @@ const CustomImage = ({
     source,
     sourceOfContent,
     restData,
-    sourceStatic
+    sourceStatic,
+    contentPath,
+    repetitionItem = null
 }) => {
     const ws = useContext(WebsocketContext);
     const [frame, setFrame] = useState(placeholder);
 
-    const fetchValue = () => {
-        const { name, path, method, params } = restData;
-
-        proxyRestCall({
-            name,
-            path,
-            method: "GET",
-            params
-        })
-            .then((response) => {
-                try {
-                    const newFrame = `data:image/png;base64,${convertTypeValue(
-                        response[source.name],
-                        source.type
-                    )}`;
-                    setFrame(newFrame);
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
+    const reloadContent = async () => {
+        if (sourceOfContent === "rest") {
+            const value = await fetchValueFromRest(restData, contentPath);
+            setFrame(value);
+        }
+        if (sourceOfContent === "db") {
+            const value = await fetchValueFromDB(dbData, contentPath);
+            setFrame(value);
+        }
     };
 
     useEffect(() => {
-        if (sourceOfContent === "rest") {
-            fetchValue();
-        }
+        reloadContent();
+        if (typeof repetitionItem === "string") setFrame(repetitionItem);
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setFrame(
-                `data:image/png;base64,${convertTypeValue(
-                    msg[source.name],
-                    source.type
-                )}`
-            );
+            const data = getValueByPath(msg, contentPath);
+            setFrame(`data:image/png;base64,${data}`);
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -74,7 +54,7 @@ const CustomImage = ({
             {"rest" === sourceOfContent && (
                 <button
                     className="absolute top-0 right-0 p-4 z-10 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                    onClick={fetchValue}
+                    onClick={reloadContent}
                     title="Refresh Value"
                 >
                     <IoReload size={24} />
@@ -94,7 +74,11 @@ const CustomImage = ({
                         width: `${width ? width : 400}px`,
                         height: `${height ? height : 400}px`
                     }}
-                    src={sourceStatic}
+                    src={
+                        typeof repetitionItem === "string"
+                            ? repetitionItem
+                            : sourceStatic
+                    }
                 ></img>
             )}
         </div>

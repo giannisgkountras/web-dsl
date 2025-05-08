@@ -12,7 +12,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Expose WebSocket port
+{% if websocket and websocket.port %}
 EXPOSE {{websocket.port}}
+{% endif %}
 
 # Expose API port
 {% if api and api.port %}

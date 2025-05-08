@@ -1,29 +1,30 @@
 import React, { useState, useContext } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
-import convertTypeValue from "../utils/convertTypeValue";
 import { GaugeComponent } from "react-gauge-component";
 import { toast } from "react-toastify";
 import { useEffect } from "react";
 import { IoReload } from "react-icons/io5";
 import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
+import { getValueByPath } from "../utils/getValueByPath";
 
 const Gauge = ({
     topic,
-    attribute,
     sourceOfContent,
     restData,
     staticValue,
-    dbData
+    dbData,
+    contentPath,
+    description = null,
+    repetitionItem = null
 }) => {
     const ws = useContext(WebsocketContext);
     const [currentValue, setCurrentValue] = useState(0);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setCurrentValue(
-                convertTypeValue(msg[attribute.name], attribute.type)
-            );
+            const data = getValueByPath(msg, contentPath);
+            setCurrentValue(data);
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message
@@ -32,12 +33,14 @@ const Gauge = ({
         }
     });
 
-    const reloadValue = () => {
+    const reloadValue = async () => {
         if (sourceOfContent === "rest") {
-            fetchValueFromRest(restData, attribute, setCurrentValue);
+            const data = await fetchValueFromRest(restData, contentPath);
+            setCurrentValue(data);
         }
         if (sourceOfContent === "db") {
-            fetchValueFromDB(dbData, attribute, setCurrentValue);
+            const data = await fetchValueFromDB(dbData, contentPath);
+            setCurrentValue(data);
         }
     };
 
@@ -46,7 +49,7 @@ const Gauge = ({
     }, []);
 
     return (
-        <div className="flex justify-center items-center relative">
+        <div className="flex flex-col justify-center items-center relative">
             {(sourceOfContent === "rest" || sourceOfContent === "db") && (
                 <button
                     className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
@@ -56,11 +59,15 @@ const Gauge = ({
                     <IoReload size={24} />
                 </button>
             )}
-            {sourceOfContent === "static" ? (
+            {typeof repetitionItem === "string" ||
+            typeof repetitionItem === "number" ? (
+                <GaugeComponent value={repetitionItem} />
+            ) : sourceOfContent === "static" || sourceOfContent === "" ? (
                 <GaugeComponent value={staticValue} />
             ) : (
                 <GaugeComponent value={currentValue} />
             )}
+            {description && <h1 className="text-lg">{description}</h1>}
         </div>
     );
 };

@@ -3,7 +3,6 @@ from textx import (
     metamodel_from_file,
     TextXSemanticError,
     get_metamodel,
-    get_children_of_type,
 )
 
 from os.path import join, dirname
@@ -21,7 +20,17 @@ from .lib.component import (
     Text,
     Logs,
     CrudTable,
+    BarChart,
+    PieChart,
+    Input,
+    Label,
+    Form,
+    ProgressBar,
 )
+
+from .lib.condition import Condition
+from .lib.repetition import Repetition
+from .validate import validate_model
 
 # Map grammar rules to Python classes
 custom_classes = [
@@ -38,6 +47,14 @@ custom_classes = [
     Text,
     Logs,
     CrudTable,
+    Condition,
+    BarChart,
+    PieChart,
+    Input,
+    Label,
+    Form,
+    Repetition,
+    ProgressBar,
     # Add other classes here
 ]
 
@@ -109,14 +126,6 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
 #     pass
 
 
-# def validate_model(model):
-#     """Validates the model."""
-#     pass
-# Check for duplicate attribute names in global entities
-# Add more validation logic as needed
-# For example, check for required attributes, etc.
-
-
 def build_model(model_path: str):
     """Builds a model from a DSL file."""
     print(f"Attempting to build model from: {model_path}")
@@ -124,5 +133,5 @@ def build_model(model_path: str):
     mm = get_metamodel(debug=False)
     model = mm.model_from_file(model_path)
     # set_defaults(model)  # Set default values for the model
-    # validate_model(model)  # Validate
+    validate_model(model)  # Validate
     return model  # Return the built model

@@ -6,14 +6,21 @@ import httpx
 import os
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 from fastapi import FastAPI, HTTPException, Security, status
+from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from db_connector import DBConnector
-from utils import load_config, load_endpoint_config, load_db_config
+from utils import (
+    load_config,
+    load_endpoint_config,
+    load_db_config,
+    convert_object_ids,
+    transform_list_of_dicts_to_dict_of_lists,
+)
 
 # Load the .env file
 load_dotenv()
@@ -36,7 +43,7 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
 logging.basicConfig(level=logging.INFO)
 
 # Load configuration from config.yaml
-config = load_config()
+config = load_config() or {}
 endpoint_config = load_endpoint_config()
 db_config = load_db_config()
 
@@ -95,7 +102,7 @@ async def main():
     )
 
     # Extract multiple broker connection settings
-    broker_configs = config.get("brokers", [])
+    broker_configs = config.get("brokers") or []
 
     broker_threads = []
 
@@ -156,7 +163,7 @@ async def main():
 
 class PublishRequest(BaseModel):
     broker: str
-    message: dict
+    message: Any
     topic: str
 
 
@@ -187,7 +194,7 @@ class RESTCallRequest(BaseModel):
     name: str  # Name of the REST call
     path: str
     method: str
-    params: dict
+    # params: dict
     body: dict
 
 
@@ -215,11 +222,10 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
     try:
         async with httpx.AsyncClient() as client:
             response = await client.request(
-                method=request.method.upper(),  # use dot notation for request
+                method=request.method.upper(),
                 url=url,
-                headers=current_endpoint.get("headers", {}) or {},
-                params=request.params,  # dot notation here
-                json=request.body,  # dot notation here
+                headers=current_endpoint.get("headers", {}),
+                json=request.body,
             )
 
             if response.headers.get("content-type", "").startswith("application/json"):
@@ -245,7 +251,9 @@ class QueryRequest(BaseModel):
     collection: Optional[str] = (
         None  # For MySQL this is a table; for Mongo, treat as collection.
     )
-    query: str  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    query: Optional[Any] = (
+        None  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    )
     filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
 
 
@@ -253,15 +261,10 @@ class QueryRequest(BaseModel):
 async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     """
     Endpoint to run MySQL or MongoDB queries based on the provided request.
-    - For MySQL:
-      - 'database' is the target database.
-      - 'query' contains the SQL query string.
-    - For MongoDB:
-      - 'collection' is the collection to query.
-      - 'filter' is the filter for the Mongo query.
-      - 'database' and 'query' fields are ignored.
+    - For MySQL: returns results in the form {column1: [...], column2: [...], ...}
+    - For MongoDB: returns documents as-is
     """
-    if request.database:  # If 'database' is provided, assume it's a MySQL query
+    if request.query != {}:  # MySQL
         result = db_connector.mysql_query(
             connection_name=request.connection_name,
             database=request.database,
@@ -269,22 +272,119 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
         )
         if result is None:
             raise HTTPException(status_code=500, detail="Error executing MySQL query")
-        return result
 
-    elif request.collection:  # If 'collection' is provided, assume it's a Mongo query
-        result = db_connector.mongo_find(
+        # Transform list of dicts into dict of lists
+        transformed_result = transform_list_of_dicts_to_dict_of_lists(result)
+        return transformed_result  # fallback in case it's not a list of dicts
+
+    elif request.collection:  # MongoDB
+        result = await asyncio.to_thread(
+            db_connector.mongo_find,
             connection_name=request.connection_name,
             collection=request.collection,
             filter=request.filter or {},
         )
         if result is None:
             raise HTTPException(status_code=500, detail="Error executing Mongo query")
-        return result
+
+        # Clean _id fields
+        cleaned_result = convert_object_ids(result)
+
+        # Transform list of dicts into dict of lists
+        transformed_result = transform_list_of_dicts_to_dict_of_lists(cleaned_result)
+        return transformed_result
 
     else:
         raise HTTPException(
             status_code=400,
             detail="Invalid request: 'database' or 'collection' must be specified",
+        )
+
+
+class ModifyDBRequest(BaseModel):
+    connection_name: str
+    database: Optional[str] = None
+    collection: Optional[str] = None
+    query: Optional[Any] = (
+        None  # For MySQL, the SQL statement. For Mongo, you might ignore this.
+    )
+    filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
+    modification: Optional[str] = None  # The update operation to perform
+    new_data: Optional[dict] = None  # New data to be inserted or updated
+    dbType: Optional[str] = None  # Type of database (MySQL or MongoDB)
+
+
+@app.post("/modifyDB")
+async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_key)):
+    """
+    Endpoint to modify MySQL or MongoDB databases based on the provided request.
+    - For MySQL: executes the SQL statement (e.g., INSERT, UPDATE, DELETE).
+    - For MongoDB: performs the specified modification operation (e.g., update, delete, insert).
+    """
+    # Handle MySQL modifications
+    if request.dbType == "mysql":
+        success = db_connector.execute_query(
+            connection_name=request.connection_name,
+            database=request.database,
+            query=request.query,
+        )
+        if not success:
+            raise HTTPException(
+                status_code=500, detail="Error executing MySQL modification"
+            )
+        return {"status": "success", "engine": "MySQL"}
+
+    # Handle MongoDB modifications
+    elif request.dbType == "mongo":
+        operation = request.modification.lower()
+        # Convert _id to ObjectId for MongoDB update and delete
+        if (
+            operation in ["update", "delete"]
+            and request.filter
+            and "_id" in request.filter
+        ):
+            try:
+                request.filter["_id"] = ObjectId(request.filter["_id"])
+            except:
+                raise HTTPException(status_code=400, detail="Invalid _id format")
+
+        if operation == "update":
+            result = await asyncio.to_thread(
+                db_connector.mongo_update,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                filter=request.filter or {},
+                update=request.new_data,
+            )
+        elif operation == "delete":
+            result = await asyncio.to_thread(
+                db_connector.mongo_delete,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                filter=request.filter or {},
+            )
+        elif operation == "insert":
+            result = await asyncio.to_thread(
+                db_connector.mongo_insert,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                document=request.new_data,
+            )
+        else:
+            raise HTTPException(
+                status_code=400, detail="Unsupported MongoDB modification operation"
+            )
+
+        if result is None:
+            raise HTTPException(
+                status_code=500, detail=f"Error performing MongoDB {operation}"
+            )
+        return {"status": "success", "engine": "MongoDB", "operation": operation}
+
+    else:
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid request: 'query' and 'database' or 'collection' must be specified",
         )
 
 

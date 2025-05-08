@@ -1,0 +1,137 @@
+import {
+    PieChart,
+    Pie,
+    Cell,
+    Tooltip,
+    Legend,
+    ResponsiveContainer
+} from "recharts";
+import { WebsocketContext } from "../context/WebsocketContext";
+import { useWebsocket } from "../hooks/useWebsocket";
+import { useContext, useState, useEffect } from "react";
+import { IoReload } from "react-icons/io5";
+import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
+import { toast } from "react-toastify";
+import { proxyRestCall } from "../api/proxyRestCall";
+import { queryDB } from "../api/dbQuery";
+import { colors } from "../lib/colors";
+import { transformToArrayOfObjects } from "../utils/transformations";
+
+const CustomPieChart = ({
+    topic,
+    sourceOfContent,
+    staticChartData = null,
+    restData = null,
+    dbData = null,
+    valuePath,
+    namePath,
+    description = null
+}) => {
+    const [chartData, setChartData] = useState([]);
+    const ws = useContext(WebsocketContext);
+    const allPaths = [namePath, valuePath];
+    const pathNames = allPaths.map(getNameFromPath);
+    const { name, path, method, params } = restData || {};
+
+    const fetchExternalData = async () => {
+        try {
+            const response =
+                sourceOfContent === "rest"
+                    ? await proxyRestCall({ name, path, method, params })
+                    : await queryDB(dbData);
+
+            const transformed = transformToArrayOfObjects(
+                response,
+                allPaths,
+                pathNames
+            );
+
+            setChartData(transformed);
+        } catch (err) {
+            console.error("Failed to fetch chart data:", err);
+            toast.error("Failed to load chart data");
+        }
+    };
+
+    useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
+        try {
+            const newData = {};
+            allPaths.forEach((path, index) => {
+                newData[pathNames[index]] = getValueByPath(msg, path);
+            });
+            setChartData(newData);
+        } catch (error) {
+            toast.error("Error updating chart from WebSocket");
+            console.error("WebSocket error:", error);
+        }
+    });
+
+    useEffect(() => {
+        if (sourceOfContent === "rest" || sourceOfContent === "db") {
+            fetchExternalData();
+        }
+        if (sourceOfContent === "static") {
+            setChartData(staticChartData);
+        }
+    }, []);
+
+    return (
+        <div className="relative w-full h-full flex flex-col items-center justify-center">
+            {description && (
+                <h1 className="text-lg w-full text-center mb-2 font-semibold">
+                    {description}
+                </h1>
+            )}
+            {/* <ResponsiveContainer> */}
+            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
+                <button
+                    onClick={fetchExternalData}
+                    className="absolute top-0 right-0 p-2 text-white hover:text-gray-400 cursor-pointer "
+                    title="Reload chart data"
+                >
+                    <IoReload size={20} />
+                </button>
+            )}
+            <PieChart
+                width={450}
+                height={350}
+                style={{
+                    backgroundColor: "#13191e",
+                    borderRadius: "15px",
+                    position: "relative"
+                }}
+            >
+                <Pie
+                    dataKey={
+                        sourceOfContent === "static" ? valuePath : pathNames[1]
+                    }
+                    nameKey={
+                        sourceOfContent === "static" ? namePath : pathNames[0]
+                    }
+                    data={
+                        sourceOfContent === "static"
+                            ? staticChartData
+                            : chartData
+                    }
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={100}
+                    fill="#8884d8"
+                    label
+                >
+                    {chartData.map((_, index) => (
+                        <Cell
+                            key={`cell-${index}`}
+                            fill={colors[index % colors.length]}
+                        />
+                    ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+            </PieChart>
+            {/* </ResponsiveContainer> */}
+        </div>
+    );
+};
+
+export default CustomPieChart;

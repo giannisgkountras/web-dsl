@@ -5,7 +5,14 @@ import { publish } from "../api/publish";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { toast } from "react-toastify";
 
-const Publish = ({ brokerName, apiName, destinationTopic, json, restData }) => {
+const Publish = ({
+    brokerName,
+    apiName,
+    destinationTopic,
+    json,
+    restData,
+    description = null
+}) => {
     const [dataToPublish, setDataToPublish] = useState(
         json ? json : { key: "value" }
     );
@@ -61,7 +68,14 @@ const Publish = ({ brokerName, apiName, destinationTopic, json, restData }) => {
                         onClick={postCall}
                         disabled={!!jsonError}
                     >
-                        Post to API {apiName} <IoSend className="ml-2" />
+                        {description ? (
+                            <span>{description}</span>
+                        ) : (
+                            <>
+                                Post to API {apiName}{" "}
+                                <IoSend className="ml-2" />
+                            </>
+                        )}
                     </button>
                 )}
             </>

@@ -1,0 +1,27 @@
+import accessors
+import components
+import entity
+
+
+Condition:
+    'if' condition=Expression
+    'from' 'entity' entity=[Entity]
+    'then' 'use' component+=[Component][',']
+    ('else' 'use' componentElse+=[Component][','])?
+;
+
+Expression:
+    left=NestedAccessPath op=ComparisonOperator right=Value
+;
+
+ComparisonOperator:
+    '==' | '!=' | '<' | '>' | '<=' | '>='
+;
+
+Value:
+    INT | FLOAT | STRING | BOOL
+;
+
+HalfExpression:
+    op=ComparisonOperator right=Value
+;

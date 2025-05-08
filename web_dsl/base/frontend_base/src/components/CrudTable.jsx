@@ -3,62 +3,83 @@ import convertTypeValue from "../utils/convertTypeValue";
 import { proxyRestCall } from "../api/proxyRestCall";
 import { queryDB } from "../api/dbQuery";
 import { FaEdit, FaTrash, FaSave } from "react-icons/fa";
+import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
+import {
+    objectOfListsToListOfObjects,
+    isObjectOfLists
+} from "../utils/transformations";
+import { modifyDB } from "../api/dbModify";
+import CustomCheckbox from "./CustomCheckbox";
 
 const CrudTable = ({
-    attributes,
+    attributes = [],
     restData = {},
     dbData = {},
-    sourceOfContent
+    sourceOfContent,
+    dbType,
+    primaryKey,
+    table,
+    description
 }) => {
+    const extendedAttributes = [[primaryKey], ...attributes];
     const [data, setData] = useState([]);
-    const [editingId, setEditingId] = useState(null);
+    const [editingPkValue, setEditingPkValue] = useState(null);
+    const [newRecord, setNewRecord] = useState({});
 
-    // load from REST or DB
+    const columns = useMemo(() => {
+        if (!data || data.length === 0) return [];
+        return Object.keys(data[0]);
+    }, [data]);
+
+    const emptyRecord = useMemo(() => {
+        const rec = {};
+        columns.forEach((col) => {
+            if (col !== primaryKey) {
+                // Check if the column is a boolean field, set to false if so
+                rec[col] = typeof data[0]?.[col] === "boolean" ? false : "";
+            }
+        });
+        return rec;
+    }, [columns, primaryKey, data]);
+
+    useEffect(() => {
+        setNewRecord(emptyRecord);
+    }, [emptyRecord]);
+
     const reloadValue = async () => {
+        let response;
+
         if (sourceOfContent === "rest") {
-            const response = await proxyRestCall(restData);
-            if (attributes.length === 0) {
-                setData(response);
-            } else {
-                const newData = response.map((item) => {
-                    const newItem = {};
-                    attributes.forEach((attribute) => {
-                        try {
-                            newItem[attribute.name] = convertTypeValue(
-                                item[attribute.name],
-                                attribute.type
-                            );
-                        } catch (error) {
-                            console.error("Error converting value:", error);
-                        }
-                    });
-                    return newItem;
-                });
-                setData(newData);
-            }
+            response = await proxyRestCall(restData);
+        } else if (sourceOfContent === "db") {
+            response = await queryDB(dbData);
+        } else {
+            return;
         }
-        if (sourceOfContent === "db") {
-            const response = await queryDB(dbData);
-            if (attributes.length === 0) {
-                console.log("response", response);
-                setData(response);
-            } else {
-                const newData = response.map((item) => {
-                    const newItem = {};
-                    attributes.forEach((attribute) => {
-                        try {
-                            newItem[attribute.name] = convertTypeValue(
-                                item[attribute.name],
-                                attribute.type
-                            );
-                        } catch (error) {
-                            console.error("Error converting value:", error);
-                        }
-                    });
-                    return newItem;
+
+        let listData = isObjectOfLists(response)
+            ? objectOfListsToListOfObjects(response)
+            : response;
+
+        if (extendedAttributes.length <= 1) {
+            setData(listData);
+        } else {
+            const processedData = listData.map((item) => {
+                const newItem = {};
+                extendedAttributes.forEach((attribute) => {
+                    try {
+                        const value = getValueByPath(item, attribute);
+                        const name = getNameFromPath(attribute);
+                        newItem[name] = value;
+                    } catch (error) {
+                        console.error(
+                            "Error extracting attribute: " + error.message
+                        );
+                    }
                 });
-                setData(newData);
-            }
+                return newItem;
+            });
+            setData(processedData);
         }
     };
 
@@ -66,32 +87,12 @@ const CrudTable = ({
         reloadValue();
     }, []);
 
-    // infer your columns from the first row of data
-    const columns = useMemo(() => {
-        if (!data || data.length === 0) return [];
-        return Object.keys(data[0]).filter((key) => key !== "id");
-    }, [data]);
-
-    // build an “empty” record template whenever your columns change
-    const emptyRecord = useMemo(() => {
-        const rec = {};
-        columns.forEach((col) => {
-            rec[col] = "";
-        });
-        return rec;
-    }, [columns]);
-
-    const [newRecord, setNewRecord] = useState(emptyRecord);
-
-    // keep newRecord in sync if columns ever change
-    useEffect(() => {
-        setNewRecord(emptyRecord);
-    }, [emptyRecord]);
-
-    const handleChange = (id, col, rawValue) => {
+    const handleChange = (pkValue, col, rawValue) => {
         const value = convertTypeValue(rawValue, typeof data[0][col]);
         setData((rows) =>
-            rows.map((r) => (r.id === id ? { ...r, [col]: value } : r))
+            rows.map((r) =>
+                r[primaryKey] === pkValue ? { ...r, [col]: value } : r
+            )
         );
     };
 
@@ -100,23 +101,107 @@ const CrudTable = ({
         setNewRecord((r) => ({ ...r, [col]: value }));
     };
 
-    const handleSave = (id) => setEditingId(null);
+    const handleSave = async (pkValue) => {
+        const item = data.find((r) => r[primaryKey] === pkValue);
+        if (!item) return;
 
-    const handleDelete = (id) =>
-        setData((rows) => rows.filter((r) => r.id !== id));
+        if (sourceOfContent === "db") {
+            if (dbType === "mysql") {
+                const setClause = columns
+                    .filter((col) => col !== primaryKey)
+                    .map((col) => `${col} = '${item[col]}'`)
+                    .join(", ");
+                const query = `UPDATE ${table} SET ${setClause} WHERE ${primaryKey} = '${item[primaryKey]}'`;
+                await modifyDB({
+                    connection_name: dbData.connection_name,
+                    database: dbData.database,
+                    query: query,
+                    dbType: dbType
+                });
+            } else if (dbType === "mongo") {
+                const updateData = { ...item };
+                delete updateData[primaryKey]; // Exclude primary key from update data
+                await modifyDB({
+                    connection_name: dbData.connection_name,
+                    database: dbData.database,
+                    collection: dbData.collection,
+                    modification: "update",
+                    filter: { [primaryKey]: item[primaryKey] },
+                    new_data: updateData,
+                    dbType: dbType
+                });
+            }
+        }
+        setEditingPkValue(null);
+    };
 
-    const handleAdd = () => {
-        const nextId = data.length ? Math.max(...data.map((r) => r.id)) + 1 : 1;
-        setData((rows) => [...rows, { id: nextId, ...newRecord }]);
+    const handleDelete = async (pkValue) => {
+        if (sourceOfContent === "db") {
+            if (dbType === "mysql") {
+                const query = `DELETE FROM ${table} WHERE ${primaryKey} = '${pkValue}'`;
+                await modifyDB({
+                    connection_name: dbData.connection_name,
+                    database: dbData.database,
+                    query: query,
+                    dbType: dbType
+                });
+            } else if (dbType === "mongo") {
+                await modifyDB({
+                    connection_name: dbData.connection_name,
+                    database: dbData.database,
+                    collection: dbData.collection,
+                    modification: "delete",
+                    filter: { [primaryKey]: pkValue },
+                    dbType: dbType
+                });
+            }
+        }
+        setData((rows) => rows.filter((r) => r[primaryKey] !== pkValue));
+    };
+
+    const handleAdd = async () => {
+        if (sourceOfContent === "db") {
+            if (dbType === "mysql") {
+                const columnsToInsert = columns.filter(
+                    (col) => col !== primaryKey
+                );
+                const values = columnsToInsert.map(
+                    (col) => `'${newRecord[col]}'`
+                );
+                const query = `INSERT INTO ${table} (${columnsToInsert.join(
+                    ", "
+                )}) VALUES (${values.join(", ")})`;
+                await modifyDB({
+                    connection_name: dbData.connection_name,
+                    database: dbData.database,
+                    query: query,
+                    dbType: dbType
+                });
+                await reloadValue();
+            } else if (dbType === "mongo") {
+                const newData = { ...newRecord };
+                delete newData[primaryKey];
+                await modifyDB({
+                    connection_name: dbData.connection_name,
+                    database: dbData.database,
+                    collection: dbData.collection,
+                    modification: "insert",
+                    new_data: newData,
+                    dbType: dbType
+                });
+                await reloadValue();
+            }
+        }
         setNewRecord(emptyRecord);
     };
 
     const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 
     return (
-        <div className="flex flex-col text-white justify-start items-center w-full h-fit max-h-96 bg-[#101929] rounded-2xl">
+        <div className="flex flex-col text-white justify-start items-center w-full h-fit max-h-96 bg-[#13191E] rounded-2xl">
             {/* Header */}
-            <div className="w-full sticky top-0 z-10 border-b border-[#111929] bg-[#1A2233] p-4 rounded-t-2xl">
+            <h1 className="p-4 text-lg font-semibold">{description}</h1>
+            <div className="w-full sticky top-0 z-10  bg-[#13191E]  border-b border-[#313641] p-4">
                 <div
                     className="grid gap-2 font-bold"
                     style={{
@@ -138,53 +223,101 @@ const CrudTable = ({
             <div className="w-full max-h-80 overflow-y-auto">
                 {data.map((row) => (
                     <div
-                        key={row.id}
-                        className="grid gap-2 p-2 bg-[#101929] border-b border-[#0D1117] items-center"
+                        key={row[primaryKey]}
+                        className="grid w-full gap-2 p-2 border-b border-[#313641] items-center"
                         style={{
                             gridTemplateColumns: `repeat(${
                                 columns.length + 1
-                            }, minmax(100px,1fr))`
+                            }, minmax(0, 1fr))`
                         }}
                     >
-                        {columns.map((col) =>
-                            editingId === row.id ? (
-                                <input
+                        {columns.map((col) => {
+                            const value = row[col];
+
+                            return (
+                                <div
                                     key={col}
-                                    className="bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2"
-                                    value={row[col]}
-                                    onChange={(e) =>
-                                        handleChange(
-                                            row.id,
-                                            col,
-                                            e.target.value
+                                    className="overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer"
+                                    title={String(value ?? "-")}
+                                >
+                                    {col === primaryKey ||
+                                    editingPkValue !== row[primaryKey] ? (
+                                        typeof value === "boolean" ? (
+                                            <CustomCheckbox
+                                                checked={value}
+                                                disabled={true}
+                                            />
+                                        ) : (
+                                            // <input
+                                            //     type="checkbox"
+                                            //     checked={value}
+                                            //     disabled
+                                            //     className="mx-2 cursor-default"
+                                            // />
+                                            <p className="text-left px-2 text-ellipsis whitespace-nowrap overflow-hidden">
+                                                {value ?? "-"}
+                                            </p>
                                         )
-                                    }
-                                />
-                            ) : (
-                                <p key={col} className="text-left px-2">
-                                    {row[col] ?? "-"}
-                                </p>
-                            )
-                        )}
+                                    ) : typeof value === "boolean" ? (
+                                        <CustomCheckbox
+                                            checked={value}
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    row[primaryKey],
+                                                    col,
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    ) : (
+                                        // <input
+                                        //     type="checkbox"
+                                        //     checked={value}
+                                        //     onChange={(e) =>
+                                        //         handleChange(
+                                        //             row[primaryKey],
+                                        //             col,
+                                        //             e.target.checked
+                                        //         )
+                                        //     }
+                                        //     className="mx-2"
+                                        // />
+                                        <input
+                                            className="bg-transparent w-full text-white focus:outline-none border-b border-transparent focus:border-white px-2"
+                                            value={value}
+                                            onChange={(e) =>
+                                                handleChange(
+                                                    row[primaryKey],
+                                                    col,
+                                                    e.target.value
+                                                )
+                                            }
+                                        />
+                                    )}
+                                </div>
+                            );
+                        })}
                         <div className="flex justify-center space-x-2">
-                            {editingId === row.id ? (
+                            {editingPkValue === row[primaryKey] ? (
                                 <button
-                                    onClick={() => handleSave(row.id)}
-                                    className="p-2 rounded-full hover:bg-[#03C64C]/20"
+                                    onClick={() => handleSave(row[primaryKey])}
+                                    className="p-2 rounded-full hover:bg-[#03C64C]/20 cursor-pointer"
                                 >
                                     <FaSave className="text-[#03C64C]" />
                                 </button>
                             ) : (
                                 <button
-                                    onClick={() => setEditingId(row.id)}
-                                    className="p-2 rounded-full hover:bg-[#2D4272]/20"
+                                    onClick={() =>
+                                        setEditingPkValue(row[primaryKey])
+                                    }
+                                    className="p-2 rounded-full hover:bg-[#2D4272]/20 cursor-pointer"
                                 >
                                     <FaEdit className="text-white" />
                                 </button>
                             )}
                             <button
-                                onClick={() => handleDelete(row.id)}
-                                className="p-2 rounded-full hover:bg-[#FA2C37]/20"
+                                onClick={() => handleDelete(row[primaryKey])}
+                                className="p-2 rounded-full hover:bg-[#FA2C37]/20 cursor-pointer"
                             >
                                 <FaTrash className="text-[#FA2C37]" />
                             </button>
@@ -194,27 +327,53 @@ const CrudTable = ({
 
                 {/* New Record Row */}
                 <div
-                    className="grid gap-2 p-2 bg-[#1A2233] rounded-b-2xl"
+                    className="grid gap-2 p-2 bg-[#13191E] rounded-b-2xl"
                     style={{
                         gridTemplateColumns: `repeat(${
                             columns.length + 1
                         }, minmax(100px,1fr))`
                     }}
                 >
-                    {columns.map((col) => (
-                        <input
-                            key={col}
-                            className="p-1 bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2 placeholder-gray-400"
-                            placeholder={capitalize(col)}
-                            value={newRecord[col]}
-                            onChange={(e) =>
-                                handleNewChange(col, e.target.value)
-                            }
-                        />
-                    ))}
+                    {columns.map((col) => {
+                        const value = newRecord[col];
+
+                        if (col === primaryKey) return <div key={col} />;
+
+                        return typeof value === "boolean" ? (
+                            <div
+                                key={col}
+                                className="flex justify-center items-center"
+                            >
+                                {/* <input
+                                    type="checkbox"
+                                    checked={value}
+                                    onChange={(e) =>
+                                        handleNewChange(col, e.target.checked)
+                                    }
+                                    className="mx-2"
+                                /> */}
+                                <CustomCheckbox
+                                    checked={value}
+                                    onChange={(e) =>
+                                        handleNewChange(col, e.target.checked)
+                                    }
+                                />
+                            </div>
+                        ) : (
+                            <input
+                                key={col}
+                                className="p-1 bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2 placeholder-gray-400"
+                                placeholder={capitalize(col)}
+                                value={value}
+                                onChange={(e) =>
+                                    handleNewChange(col, e.target.value)
+                                }
+                            />
+                        );
+                    })}
                     <button
                         onClick={handleAdd}
-                        className="bg-[#2D4272] px-3 py-1 rounded-md font-medium hover:bg-[#253A66]"
+                        className="bg-[#2D4272] px-3 py-1 rounded-md font-medium hover:bg-[#253A66] cursor-pointer"
                     >
                         Add
                     </button>

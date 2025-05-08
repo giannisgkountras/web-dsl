@@ -1,0 +1,10 @@
+Authentication: AuthPlain | AuthApiKey;
+
+AuthPlain:
+    'username' ':' username=STRING
+    'password' ':' password=STRING
+;
+
+AuthApiKey:
+    'key' ':' key=STRING
+;

@@ -1,0 +1,49 @@
+import connections
+import types
+
+MySQLQuery:
+    'MySQLQuery' name=ID
+    (
+        ( 'connection:' connection=[MySQL] )
+        ( 'query:' query=STRING )
+    )#
+    'end'
+;
+
+MongoDBQuery:
+    'MongoDBQuery' name=ID
+    (
+        ('connection:' connection=[MongoDB] )
+        ('collection:' collection=STRING )
+        ('filter:' filter=STRING)?
+    )#
+    'end'
+;
+
+RESTEndpoint:
+    'RESTEndpoint' name=ID
+    'connection:' connection=[RESTApi]
+    (
+        ('path:' path=STRING)?
+        ('method:' method=RESTVerb)?
+        ('body:' body=Dict)?
+        ('params:' params=Dict)?
+    )#
+    'end'
+;
+
+RESTVerb:
+    'GET'       |
+    'POST'      |
+    'PUT'       |
+    'DELETE'
+;
+
+BrokerTopic:
+    'BrokerTopic' name=ID
+    (
+        ('connection:' connection=[MessageBroker] )
+        ('topic:' topic=STRING )
+    )#
+    'end'
+;
