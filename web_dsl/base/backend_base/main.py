@@ -4,9 +4,12 @@ import logging
 import uvicorn
 import httpx
 import os
+import hashlib
+import json
+import time
 from dotenv import load_dotenv
 from pydantic import BaseModel
-from typing import Optional, Any
+from typing import Optional, Any, Dict, Tuple
 from fastapi import FastAPI, HTTPException, Security, status
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +32,14 @@ API_KEY = os.getenv("API_KEY", "API_KEY")
 SECRET_KEY = os.getenv("SECRET_KEY", "SECRET_KEY")
 api_keys = [API_KEY]
 api_key_header = APIKeyHeader(name="X-API-Key")
+
+# In-memory cache for proxy requests: key -> (timestamp, response)
+request_cache: Dict[str, Tuple[float, Any]] = {}
+
+# Locks for each cache key to prevent race conditions
+cache_locks: Dict[str, asyncio.Lock] = {}
+
+FRESHNESS_WINDOW = 1.0  # seconds
 
 
 def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
@@ -198,48 +209,76 @@ class RESTCallRequest(BaseModel):
     body: dict
 
 
+def generate_restcall_cache_key(request: RESTCallRequest) -> str:
+    """Generate a unique cache key for REST call requests."""
+    raw_key = f"restcall|{request.name}|{request.path}|{request.method}|{json.dumps(request.body, sort_keys=True)}"
+    return hashlib.sha256(raw_key.encode()).hexdigest()
+
+
 @app.post("/restcall")
 async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
-    """Make a REST call to a specified endpoint."""
-    # Load endpoint configuration
+    """Make a REST call to a specified endpoint, with caching based on freshness."""
+
+    # Validate endpoint configuration
     current_endpoint = endpoint_config.get(request.name)
-    print(f"Endpoint config: {current_endpoint}")
     if not current_endpoint:
         raise HTTPException(
             status_code=404, detail=f"Endpoint '{request.name}' not found"
         )
 
-    # Use only dict-style access for current_endpoint
+    # Construct URL
     host = current_endpoint.get("host")
     port = current_endpoint.get("port")
-
-    # Build the URL – omit port if it is 0, 80, or 443
     if port and port not in [0, 80, 443]:
         url = f"{host}:{port}{request.path}"
     else:
         url = f"{host}{request.path}"
 
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.request(
-                method=request.method.upper(),
-                url=url,
-                headers=current_endpoint.get("headers", {}),
-                json=request.body,
-            )
+    # Generate cache key
+    cache_key = generate_restcall_cache_key(request)
+    now = time.time()
 
-            if response.headers.get("content-type", "").startswith("application/json"):
-                return response.json()
-            else:
-                return response.text
+    # Get or create a lock for this cache key
+    lock = cache_locks.get(cache_key)
+    if lock is None:
+        lock = asyncio.Lock()
+        cache_locks[cache_key] = lock
 
-    except httpx.RequestError as e:
-        logging.error(f"HTTP request failed: {e}")
-        raise HTTPException(status_code=500, detail=f"Request error: {str(e)}")
+    # Use the lock to synchronize cache access
+    async with lock:
+        # Check cache again after acquiring lock (another request might have updated it)
+        cached = request_cache.get(cache_key)
+        if cached and (now - cached[0] < FRESHNESS_WINDOW):
+            logging.info("Returning cached response")
+            return cached[1]  # Return cached response
 
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Unexpected error occurred.")
+        # If cache is stale or missing, make the request
+        try:
+            async with httpx.AsyncClient() as client:
+                logging.info("Making new request to REST endpoint")
+                response = await client.request(
+                    method=request.method.upper(),
+                    url=url,
+                    headers=current_endpoint.get("headers", {}),
+                    json=request.body,
+                )
+                content_type = response.headers.get("content-type", "")
+                if content_type.startswith("application/json"):
+                    data = response.json()
+                else:
+                    data = response.text
+
+                # Cache the new response with the current time
+                request_cache[cache_key] = (time.time(), data)
+                return data
+
+        except httpx.RequestError as e:
+            logging.error(f"HTTP request failed: {e}")
+            raise HTTPException(status_code=500, detail=f"Request error: {str(e)}")
+
+        except Exception as e:
+            logging.error(f"Unexpected error: {e}")
+            raise HTTPException(status_code=500, detail="Unexpected error occurred.")
 
 
 # Request Body Model
@@ -257,48 +296,92 @@ class QueryRequest(BaseModel):
     filter: Optional[dict] = None  # For MongoDB, this is the filter for the query.
 
 
+def generate_query_cache_key(request: QueryRequest) -> str:
+    """Generate a unique cache key for query requests."""
+    raw_key = (
+        f"query|{request.connection_name}|{request.database or ''}|"
+        f"{request.collection or ''}|{json.dumps(request.query, sort_keys=True) if request.query else ''}|"
+        f"{json.dumps(request.filter, sort_keys=True) if request.filter else ''}"
+    )
+    return hashlib.sha256(raw_key.encode()).hexdigest()
+
+
 @app.post("/queryDB")
 async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     """
     Endpoint to run MySQL or MongoDB queries based on the provided request.
     - For MySQL: returns results in the form {column1: [...], column2: [...], ...}
     - For MongoDB: returns documents as-is
+    - Caches results for 1 second to reduce database load
     """
-    if request.query != {}:  # MySQL
-        result = db_connector.mysql_query(
-            connection_name=request.connection_name,
-            database=request.database,
-            query=request.query,
-        )
-        if result is None:
-            raise HTTPException(status_code=500, detail="Error executing MySQL query")
+    # Generate cache key
+    cache_key = generate_query_cache_key(request)
+    now = time.time()
 
-        # Transform list of dicts into dict of lists
-        transformed_result = transform_list_of_dicts_to_dict_of_lists(result)
-        return transformed_result  # fallback in case it's not a list of dicts
+    # Get or create a lock for this cache key
+    lock = cache_locks.get(cache_key)
+    if lock is None:
+        lock = asyncio.Lock()
+        cache_locks[cache_key] = lock
 
-    elif request.collection:  # MongoDB
-        result = await asyncio.to_thread(
-            db_connector.mongo_find,
-            connection_name=request.connection_name,
-            collection=request.collection,
-            filter=request.filter or {},
-        )
-        if result is None:
-            raise HTTPException(status_code=500, detail="Error executing Mongo query")
+    # Use the lock to synchronize cache access
+    async with lock:
+        # Check cache after acquiring lock
+        cached = request_cache.get(cache_key)
+        if cached and (now - cached[0] < FRESHNESS_WINDOW):
+            logging.info("Returning cached response")
+            return cached[1]  # Return cached response
 
-        # Clean _id fields
-        cleaned_result = convert_object_ids(result)
+        # Cache miss: execute the query
+        if request.query != {}:  # MySQL
+            result = db_connector.mysql_query(
+                connection_name=request.connection_name,
+                database=request.database,
+                query=request.query,
+            )
+            if result is None:
+                raise HTTPException(
+                    status_code=500, detail="Error executing MySQL query"
+                )
 
-        # Transform list of dicts into dict of lists
-        transformed_result = transform_list_of_dicts_to_dict_of_lists(cleaned_result)
-        return transformed_result
+            # Transform list of dicts into dict of lists
+            transformed_result = transform_list_of_dicts_to_dict_of_lists(result)
+            logging.info("EXECUTED MYSQL QUERY")
 
-    else:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid request: 'database' or 'collection' must be specified",
-        )
+            # Cache the result
+            request_cache[cache_key] = (time.time(), transformed_result)
+            return transformed_result
+
+        elif request.collection:  # MongoDB
+            result = await asyncio.to_thread(
+                db_connector.mongo_find,
+                connection_name=request.connection_name,
+                collection=request.collection,
+                filter=request.filter or {},
+            )
+            if result is None:
+                raise HTTPException(
+                    status_code=500, detail="Error executing Mongo query"
+                )
+
+            # Clean _id fields
+            cleaned_result = convert_object_ids(result)
+
+            # Transform list of dicts into dict of lists
+            transformed_result = transform_list_of_dicts_to_dict_of_lists(
+                cleaned_result
+            )
+            logging.info("EXECUTED MONGO QUERY")
+
+            # Cache the result
+            request_cache[cache_key] = (time.time(), transformed_result)
+            return transformed_result
+
+        else:
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid request: 'database' or 'collection' must be specified",
+            )
 
 
 class ModifyDBRequest(BaseModel):

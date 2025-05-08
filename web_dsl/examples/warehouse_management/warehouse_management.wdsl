@@ -272,7 +272,7 @@ webpage WarehouseManagement
             endcol
             col
                 if this.isOperational[0] == true from entity Warehouses
-                        then use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
+                        use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
                         else use WarehouseNotOperational
             endcol
         endrow
