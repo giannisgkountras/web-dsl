@@ -36,6 +36,18 @@ const CustomImage = ({
     useEffect(() => {
         reloadContent();
         if (typeof repetitionItem === "string") setFrame(repetitionItem);
+        if (sourceOfContent === "rest" && restData?.interval > 0) {
+            const interval = setInterval(() => {
+                reloadContent();
+            }, restData.interval);
+            return () => clearInterval(interval);
+        }
+        if (sourceOfContent === "db" && dbData?.interval > 0) {
+            const interval = setInterval(() => {
+                reloadContent();
+            }, dbData.interval);
+            return () => clearInterval(interval);
+        }
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {

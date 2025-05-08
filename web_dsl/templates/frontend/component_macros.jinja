@@ -27,12 +27,15 @@
         {% set dbData={}%}
         {% set topic=None%}
 
+        {% set interval= element.interval or 0%}
+
         {% if sourceOfContent=="rest" %}
             {% set restData = {
                 "name": element.entity.source.connection.name or 'default',
                 "path": element.entity.source.path or '',
                 "method": element.entity.source.method or 'GET',
                 "params": element.entity.source.params or {},
+                "interval": interval
             } %}
         {% elif sourceOfContent=="db" %}
             {% set dbData = {

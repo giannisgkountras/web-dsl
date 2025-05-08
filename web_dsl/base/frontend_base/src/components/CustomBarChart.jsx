@@ -71,12 +71,28 @@ const CustomBarChart = ({
         }
     });
 
-    useEffect(() => {
+    const reload = () => {
         if (sourceOfContent === "rest" || sourceOfContent === "db") {
             fetchExternalData();
         }
         if (sourceOfContent === "static") {
             setChartData(staticChartData);
+        }
+    };
+
+    useEffect(() => {
+        reload();
+        if (sourceOfContent === "rest" && restData?.interval > 0) {
+            const interval = setInterval(() => {
+                fetchExternalData();
+            }, restData.interval);
+            return () => clearInterval(interval);
+        }
+        if (sourceOfContent === "db" && dbData?.interval > 0) {
+            const interval = setInterval(() => {
+                fetchExternalData();
+            }, dbData.interval);
+            return () => clearInterval(interval);
         }
     }, []);
 

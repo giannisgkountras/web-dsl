@@ -85,6 +85,18 @@ const JsonViewer = ({
     };
     useEffect(() => {
         reloadContent();
+        if (sourceOfContent === "rest" && restData?.interval > 0) {
+            const interval = setInterval(() => {
+                fetchValue();
+            }, restData.interval);
+            return () => clearInterval(interval);
+        }
+        if (sourceOfContent === "db" && dbData?.interval > 0) {
+            const interval = setInterval(() => {
+                fetchDB();
+            }, dbData.interval);
+            return () => clearInterval(interval);
+        }
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {

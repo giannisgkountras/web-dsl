@@ -10,6 +10,7 @@ Component:
     (
         ('entity:'  entity=[Entity])?
         ('type:' type=ComponentType)
+        ('interval:' interval=INT)?
     )#
     'end'
 ;

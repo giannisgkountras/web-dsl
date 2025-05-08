@@ -21,12 +21,23 @@ webpage ConditionsTest
         port: 1883
     end
 
+    RESTApi OpenMeteo
+        host: "https://api.open-meteo.com"
+        headers: {"Content-Type": "application/json"}
+    end
+
     //============ Specific endpoints / topics / queries =============//
 
     BrokerTopic dataTopic
         connection: DataBroker
         topic: "data"
     end
+
+    RESTEndpoint WeatherEnpoint
+        connection: OpenMeteo
+        path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
+    end
+
 
 
     // ============= Entities =============== //
@@ -35,6 +46,14 @@ webpage ConditionsTest
         source: dataTopic
         attributes:
             - data: dict
+    end
+
+    Entity weatherData
+        source: WeatherEnpoint
+        attributes:
+            - current: dict
+            - daily: dict
+            - hourly: dict
     end
 
     Component StaticTextCrazy
@@ -61,6 +80,13 @@ webpage ConditionsTest
         type: Text
             content: this.data.temp
     end
+
+    Component WeatherText
+        entity: weatherData
+        interval: 2000
+        type: Text
+            content: this.daily.temperature_2m_max[0]
+    end
     // ============ Screens ================= //
     Screen Home
         title: "Home"
@@ -68,6 +94,7 @@ webpage ConditionsTest
 
         row
             col
+                // TEST NUMBER 1
                 if (30 < this.data.temp and this.data.hum <80) or (this.data.online == true and this.data.lastIn < this.data.lastInMax)
                 from entity DataFromBroker
                 use StaticTextCrazy
@@ -83,6 +110,9 @@ webpage ConditionsTest
         row
             col
                 use BrokerPublisher
+            endcol
+            col
+                use WeatherText
             endcol
         endrow
     end
