@@ -140,6 +140,7 @@ async def main():
                 ),
                 type=broker_info.get("type"),
                 topics=topics,
+                strict=broker_info.get("strict", False),
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
                 allowed_topic_attributes=allowed_attributes,

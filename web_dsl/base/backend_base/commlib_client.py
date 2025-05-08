@@ -11,6 +11,7 @@ class BrokerCommlibClient:
         type: str,
         topics: list,
         allowed_topic_attributes: dict,
+        strict: bool,
         ws_server,
         global_event_loop,
     ):
@@ -43,6 +44,7 @@ class BrokerCommlibClient:
 
         def callback(msg):
             # # Retrieve the allowed attributes for the given topic
+            # if strict:
             # allowed_attributes = self.allowed_topic_attributes.get(topic)
             # if allowed_attributes is None:
             #     print(
