@@ -19,7 +19,8 @@ const Repetition = ({
     condition = true,
     elementElse = <></>,
     dataElsePath = null,
-    orientation
+    orientation,
+    interval
 }) => {
     const contentPath = item;
     const ws = useContext(WebsocketContext);
@@ -37,6 +38,15 @@ const Repetition = ({
 
     useEffect(() => {
         reloadContent();
+        if (
+            interval > 0 &&
+            (sourceOfContent === "rest" || sourceOfContent === "db")
+        ) {
+            const intervalId = setInterval(() => {
+                reloadContent();
+            }, interval);
+            return () => clearInterval(intervalId);
+        }
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
