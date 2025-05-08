@@ -344,7 +344,6 @@ class ProgressBar(ComponentType):
         textColor=None,
     ):
         super().__init__(parent, name)
-        print(max_static)
         if value is not None:
             self.value = self.format_attribute_path(value)
         self.value_static = value_static

@@ -4,14 +4,32 @@ import entity
 
 
 Condition:
-    'if' condition=Expression
+    'if' expr=Expression
     'from' 'entity' entity=[Entity]
     'then' 'use' component+=[Component][',']
     ('else' 'use' componentElse+=[Component][','])?
+    ('every' interval=INT)?
 ;
 
 Expression:
-    left=NestedAccessPath op=ComparisonOperator right=Value
+    OrExpr
+;
+
+OrExpr:
+    left=AndExpr ( 'or' right=OrExpr )?
+;
+
+AndExpr:
+    left=PrimaryExpr ( 'and' right=AndExpr )?
+;
+
+PrimaryExpr:
+      comp=ComparisonExpr
+    | '(' expr=Expression ')'    // parentheses to group
+;
+
+ComparisonExpr:
+    left=LiveOrStaticValue op=ComparisonOperator right=LiveOrStaticValue
 ;
 
 ComparisonOperator:
@@ -20,6 +38,10 @@ ComparisonOperator:
 
 Value:
     INT | FLOAT | STRING | BOOL
+;
+
+LiveOrStaticValue:
+    Value | NestedAccessPath
 ;
 
 HalfExpression:

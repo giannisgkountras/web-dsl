@@ -1,0 +1,80 @@
+webpage ConditionsTest
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "Conditions Test"
+    navbar: true
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Broker<MQTT> DataBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    //============ Specific endpoints / topics / queries =============//
+
+    BrokerTopic dataTopic
+        connection: DataBroker
+        topic: "data"
+    end
+
+
+    // ============= Entities =============== //
+
+    Entity DataFromBroker
+        source: dataTopic
+        attributes:
+            - data: dict
+    end
+
+    Component StaticTextCrazy
+        type: Text 
+            content: "I am a crazy text." 
+            weight:900 
+            size:25
+    end
+
+    Component StaticTextSimple
+        type: Text 
+            content: "I am a simple text." 
+            weight:500 
+            size:20
+    end
+
+    Component BrokerPublisher
+        type: Publish
+            broker: DataBroker
+    end
+    // ============ Screens ================= //
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                if (30 < this.data.temp and this.data.hum <80) or (this.data.online == true and this.data.lastIn < this.data.lastInMax)
+                from entity DataFromBroker
+                then use StaticTextCrazy
+
+                if 0 < this.data.temp
+                from entity DataFromBroker
+                then use StaticTextSimple 
+            endcol
+
+        endrow
+        row
+            col
+                use BrokerPublisher
+            endcol
+        endrow
+    end

@@ -19,6 +19,17 @@ export const fetchValueFromRest = async (restData, contentPath) => {
     }
 };
 
+export const fetchValueFromRestWithoutAccessor = async (restData) => {
+    const { name, path, method, params } = restData;
+    try {
+        const response = await proxyRestCall({ name, path, method, params });
+        return response;
+    } catch (error) {
+        toast.error("Error fetching REST: " + error.message);
+        console.error("REST fetch error:", error);
+    }
+};
+
 export const fetchValueFromDB = async (dbData, contentPath) => {
     const { connection_name, database, query, collection, filter } = dbData;
 
@@ -38,7 +49,7 @@ export const fetchValueFromDB = async (dbData, contentPath) => {
     }
 };
 
-export const fetchArrayFromDB = async (dbData, setValue) => {
+export const fetchValueFromDBWithoutAccessor = async (dbData) => {
     const { connection_name, database, query, collection, filter } = dbData;
 
     try {
@@ -49,9 +60,9 @@ export const fetchArrayFromDB = async (dbData, setValue) => {
             collection,
             filter
         });
-        setValue(response);
+        return response;
     } catch (error) {
-        toast.error("Error fetching or converting DB value: " + error.message);
+        toast.error("Error fetching DB: " + error.message);
         console.error("DB fetch error:", error);
     }
 };

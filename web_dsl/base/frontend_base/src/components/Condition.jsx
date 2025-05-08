@@ -2,9 +2,11 @@ import { useState, useContext, useEffect, Fragment } from "react";
 import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
 import { toast } from "react-toastify";
-import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
-import { getValueByPath } from "../utils/getValueByPath";
-import { evaluateConditionWithData } from "../utils/evaluateCondition";
+import {
+    fetchValueFromRestWithoutAccessor,
+    fetchValueFromDBWithoutAccessor
+} from "../utils/fetchValues";
+import { evaluateComplexCondition } from "../utils/evaluateCondition";
 
 const Condition = ({
     topic,
@@ -13,31 +15,37 @@ const Condition = ({
     sourceOfContent,
     condition,
     elements,
-    elementsElse = <></>
+    elementsElse = <></>,
+    interval
 }) => {
     const [showComponent, setShowComponent] = useState(false);
-    const contentPath = condition[0];
     const ws = useContext(WebsocketContext);
 
     const reloadContent = async () => {
         if (sourceOfContent === "rest") {
-            const data = await fetchValueFromRest(restData, contentPath);
-            setShowComponent(evaluateConditionWithData(condition, data));
+            const data = await fetchValueFromRestWithoutAccessor(restData);
+            setShowComponent(evaluateComplexCondition(condition, data));
         }
         if (sourceOfContent === "db") {
-            const data = await fetchValueFromDB(dbData, contentPath);
-            setShowComponent(evaluateConditionWithData(condition, data));
+            const data = await fetchValueFromDBWithoutAccessor(dbData);
+            setShowComponent(evaluateComplexCondition(condition, data));
         }
     };
 
     useEffect(() => {
         reloadContent();
+        if (interval !== null && interval > 0) {
+            // Set up an interval to reload content
+            const intervalId = setInterval(() => {
+                reloadContent();
+            }, interval);
+            return () => clearInterval(intervalId);
+        }
     }, []);
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            const data = getValueByPath(msg, contentPath);
-            setShowComponent(evaluateConditionWithData(condition, data));
+            setShowComponent(evaluateComplexCondition(condition, msg));
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message

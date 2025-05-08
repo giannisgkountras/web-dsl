@@ -367,6 +367,7 @@
                 {% for item in element.componentElse %}
                 {{ render_element(item) }},
                 {% endfor %}] }
+            interval={ {{element.interval}} }
         />
 
     {% elif element.__class__.__name__ == 'Repetition'%}
