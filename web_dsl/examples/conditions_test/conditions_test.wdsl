@@ -55,6 +55,12 @@ webpage ConditionsTest
         type: Publish
             broker: DataBroker
     end
+
+    Component LiveText
+        entity: DataFromBroker
+        type: Text
+            content: this.data.temp
+    end
     // ============ Screens ================= //
     Screen Home
         title: "Home"
@@ -64,11 +70,13 @@ webpage ConditionsTest
             col
                 if (30 < this.data.temp and this.data.hum <80) or (this.data.online == true and this.data.lastIn < this.data.lastInMax)
                 from entity DataFromBroker
-                then use StaticTextCrazy
+                use StaticTextCrazy
+                else if this.data.temp < 10 from entity DataFromBroker
+                use LiveText
 
                 if 0 < this.data.temp
                 from entity DataFromBroker
-                then use StaticTextSimple 
+                use StaticTextSimple 
             endcol
 
         endrow

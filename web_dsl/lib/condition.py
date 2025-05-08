@@ -7,13 +7,20 @@ class Condition:
         component=None,
         componentElse=None,
         interval=None,
+        nested=None,
     ):
         self.parent = parent
         self.entity = entity
         self.condition = self.format_condition(expr)
-        print(f"Condition: {self.condition}")
         self.component = component
-        self.componentElse = componentElse
+
+        if len(componentElse) > 0:
+            self.componentElse = componentElse
+        elif nested is not None:
+            self.componentElse = [
+                nested
+            ]  # ARRAY BECAUSE THE COMPOENENT ELSE IS A LIST of components
+
         self.interval = interval
 
         try:
