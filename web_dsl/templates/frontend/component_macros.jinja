@@ -267,7 +267,7 @@
                 {% endif %}
             />
 
-        {% elif type.name=="CrudTable" %}
+        {% elif type.name=="Table" %}
             {%if element.entity.source.connection.__class__.__name__ == "MongoDB" %}
                 {%set dbType="mongo"%}
             {%elif element.entity.source.connection.__class__.__name__ == "MySQL" %}
@@ -275,7 +275,7 @@
             {%else%}
                 {% set dbType=""%}
             {%endif%}
-            <CrudTable
+            <Table
                 {% if type.attributes %}
                     attributes={ {{type.attributes}} }
                 {% endif %}
@@ -290,6 +290,7 @@
                 {% if type.table%}
                     table={ "{{type.table}}" }
                 {% endif %}
+                crud = { "{{type.crud}}" }
             />
         
         {% elif type.name=="Form"%}

@@ -22,7 +22,7 @@ ComponentRef:
 ComponentType:
     Form | Image | Text | Notification | LineChart | 
     LiveTable | Gauge | JsonViewer | Alive | Publish | 
-    Logs | CrudTable | BarChart | PieChart | ProgressBar
+    Logs | Table | BarChart | PieChart | ProgressBar
 ;
 
 Input:
@@ -163,13 +163,14 @@ Logs:
     ('attributes:' attributes+=NestedAccessPath[','])
 ;
 
-CrudTable:
-    'CrudTable'
+Table:
+    'Table'
     (
         'primary_key:' primary_key=STRING
         ('attributes:' attributes+=NestedAccessPath[','])?
         ( 'description:' description=STRING )?
         ( 'table:' table=STRING )?
+        ( 'crud:' crud=BOOL )?
     )#
 ;
 

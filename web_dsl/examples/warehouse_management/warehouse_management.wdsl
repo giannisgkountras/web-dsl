@@ -149,18 +149,20 @@ webpage WarehouseManagement
     //============ Components ============//
     Component ProductsTable
         entity: Products
-        type: CrudTable
+        type: Table
             description: "All products"
             primary_key: "id"
             table: "products"
+            crud: true
     end
 
     Component WarehousesTable
         entity: Warehouses 
-        type: CrudTable
+        type: Table
             description: "All warehouses"
             primary_key: "_id"
             attributes: this.name, this.capacity, this.address, this.isOperational
+            crud: false
     end
 
     Component RevenueBarChart

@@ -264,20 +264,26 @@ class Logs(ComponentType):
             ]
 
 
-class CrudTable(ComponentType):
+class Table(ComponentType):
     def __init__(
         self,
         parent=None,
-        name="CrudTable",
+        name="Table",
         attributes=None,
         primary_key=None,
         table=None,
         description=None,
+        crud=None,
     ):
         super().__init__(parent, name)
         self.primary_key = primary_key
         self.description = description
         self.table = table
+        if crud is not None:
+            self.crud = "true" if crud else "false"
+        else:
+            self.crud = "false"
+
         if attributes is not None:
             self.attributes = [
                 self.format_attribute_path(attribute) for attribute in attributes
