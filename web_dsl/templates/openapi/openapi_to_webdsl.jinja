@@ -1,0 +1,43 @@
+Webpage {{ title }}
+    author: "{{ author }}"
+{% if description %}
+    description: "{{ description }}"
+{% endif %}
+{% if version %}
+    version: "{{ version }}"
+{% endif %}
+    navbar: true
+
+// ========== Connections ========== //
+
+{% for api in apis %}
+RESTApi {{ api.name }}
+    host: "{{ api.base_url }}"
+{% if api.headers %}
+    headers: {{ api.headers | tojson }}
+{% endif %}
+{% if api.auth %}
+    auth: {{ api.auth }}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Specific endpoints ========== //
+
+{% for ep in endpoints %}
+RESTEndpoint {{ ep.name }}
+    connection: {{ ep.connection }}
+{% if ep.path %}
+    path: "{{ ep.path }}"
+{% endif %}
+    method: {{ ep.method }}
+{% if ep.body %}
+    body: {{ ep.body | tojson }}
+{% endif %}
+{% if ep.params %}
+    params: {{ ep.params | tojson }}
+{% endif %}
+end
+
+{% endfor %}

@@ -2,6 +2,7 @@ import re
 from jinja2 import Environment, FileSystemLoader, TemplateError
 from web_dsl.definitions import TEMPLATES_PATH
 from typing import Tuple, List, Dict, Any
+from urllib.parse import urlparse, urlunparse
 
 env = Environment(
     loader=FileSystemLoader(f"{TEMPLATES_PATH}/openapi"),
@@ -13,21 +14,17 @@ env = Environment(
 template = env.get_template("openapi_to_webdsl.jinja")
 
 
-# -- your existing helpers reused here --
-
-
+# Data classes for DSL elements
 class RESTApi:
     def __init__(
         self,
         name: str,
-        host: str,
-        port: int = None,
+        base_url: str,
         headers: Dict[str, Any] = None,
         auth: str = None,
     ):
         self.name = name
-        self.host = host
-        self.port = port
+        self.base_url = base_url
         self.headers = headers or {}
         self.auth = auth
 
@@ -50,87 +47,76 @@ class RESTEndpoint:
         self.params = params or {}
 
 
+# Helpers
 def is_supported_verb(verb: str) -> bool:
     return verb.upper() in {"GET", "POST", "PUT", "DELETE"}
 
 
-def retrieve_server_info(model: dict) -> Tuple[str, str, int]:
-    servers = model.get("servers", [])
+def resolve_server_info(servers: List[dict]) -> str:
+    """
+    Given a list of OpenAPI Server objects, substitute variables
+    and return the base URL (scheme://host[:port][basePath]).
+    """
     if not servers:
         raise ValueError("No servers defined")
-    server = servers[0]
-    url = server.get("url", "")
+    # take first by default
+    url = servers[0].get("url", "")
     # substitute template vars
-    for var, details in server.get("variables", {}).items():
+    for var, details in servers[0].get("variables", {}).items():
         url = url.replace(f"{{{var}}}", details.get("default", ""))
-    m = re.match(r"^(https?://)?([^:/]+)(:(\d+))?(/.*)?$", url)
-    if not m:
-        raise ValueError(f"Invalid URL: {url}")
-    print(m.groups())
-    print(f"URL: {url}")
-    host = m.group(1) + m.group(2)
-    port = int(m.group(4)) if m.group(4) else None
-    return host, url, port
+    parsed = urlparse(url)
+    # reconstruct up to path but drop any trailing paths beyond basePath
+    base_url = urlunparse((parsed.scheme, parsed.netloc, parsed.path or "", "", "", ""))
+    return base_url
 
 
-# -- new transformation function --
-
-
-def transform_to_rest_dsl(
+def transform_openapi_to_webdsl(
     model: Dict[str, Any],
-) -> Tuple[List[RESTApi], List[RESTEndpoint]]:
+) -> str:
+    """
+    Extracts RESTApi and RESTEndpoint data from an OpenAPI model.
+    Creates a unique RESTApi for each distinct base URL.
+    """
     apis: List[RESTApi] = []
     endpoints: List[RESTEndpoint] = []
+    seen: Dict[str, str] = {}  # base_url -> api_name
 
-    # 1. Build one RESTApi per unique server
-    global_host, global_base, global_port = retrieve_server_info(model)
-    # give it a name based on host
-    default_api_name = re.sub(r"\W+", "_", global_host) or "api"
-    apis.append(RESTApi(name=default_api_name, host=global_host, port=global_port))
-    # index by tuple for lookup
-    api_index = {(global_host, global_port): default_api_name}
+    def register_server(servers: List[dict]) -> str:
+        base_url = resolve_server_info(servers)
+        if base_url not in seen:
+            name = re.sub(r"\W+", "_", base_url).strip("_") or f"api_{len(seen)+1}"
+            seen[base_url] = name
+            apis.append(RESTApi(name=name, base_url=base_url))
+        return seen[base_url]
 
-    # if there are additional top-level servers, register them too
-    for srv in model.get("servers", [])[1:]:
-        host, base, port = retrieve_server_info({"servers": [srv]})
-        name = re.sub(r"\W+", "_", host) or f"api_{len(apis)}"
-        apis.append(RESTApi(name=name, host=host, port=port))
-        api_index[(host, port)] = name
+    # Register top-level server
+    default_conn = register_server(model.get("servers", []))
 
-    # 2. Walk all paths & operations
+    # Walk through paths and operations
     for path, methods in model.get("paths", {}).items():
-        # check for path-level override
-        if srv_list := methods.get("servers"):
-            host, base, port = retrieve_server_info({"servers": srv_list})
-        else:
-            host, base, port = global_host, global_base, global_port
-
-        conn_name = api_index.setdefault((host, port), default_api_name)
-
+        if not isinstance(methods, dict):
+            continue
+        # path-level override
+        conn_name = default_conn
+        if "servers" in methods:
+            conn_name = register_server(methods["servers"])
         for verb, operation in methods.items():
-            if not isinstance(operation, dict):
+            if not isinstance(operation, dict) or not is_supported_verb(verb):
                 continue
-            if not is_supported_verb(verb):
-                continue
-
-            # operation-level server override?
-            if op_srv := operation.get("servers"):
-                h2, b2, p2 = retrieve_server_info({"servers": op_srv})
-                conn_name = api_index.setdefault((h2, p2), conn_name)
-
-            # collect params
-            params = {}
-            for p in operation.get("parameters", []):
-                params[p.get("name")] = {"in": p.get("in"), "schema": p.get("schema")}
-
-            # collect requestBody as body definition
+            # operation-level override
+            if "servers" in operation:
+                conn_name = register_server(operation["servers"])
+            # params
+            params = {
+                p["name"]: {"in": p.get("in"), "schema": p.get("schema")}
+                for p in operation.get("parameters", [])
+            }
+            # body
             body = None
             if rb := operation.get("requestBody"):
-                # naive: just dump the content object
                 body = rb.get("content", {})
-
-            # name the endpoint by method + sanitized path
-            ep_name = f"{verb.upper()}_{path.strip('/').replace('/','_') or 'root'}"
+            # endpoint name
+            ep_name = f"{verb.upper()}_{path.strip('/').replace('/', '_') or 'root'}"
             endpoints.append(
                 RESTEndpoint(
                     name=ep_name,
@@ -142,24 +128,16 @@ def transform_to_rest_dsl(
                 )
             )
 
-    return apis, endpoints
-
-
-def transform_openapi_to_webdsl(openapi_data, output_path):
-    """
-    Transform OpenAPI specification to WebDSL model.
-    """
-
-    # Parse the OpenAPI specification
-    apis, endpoints = transform_to_rest_dsl(openapi_data)
-    for api in apis:
-        print(api.__dict__)
-    # print(f"APIs: {apis}")
-    # print(f"Endpoints: {endpoints}")
-
     # Generate the WebDSL model
-    webdsl_model = template.render(openapi_spec=openapi_data)
+    title = model.get("info", {}).get("title", "API")
+    if not title:
+        title = "My webpage"
+    description = model.get("info", {}).get("description", "")
+    if not description:
+        description = "This is a generated webpage."
 
-    # Write the WebDSL model to the output path
-    with open(output_path, "w") as f:
-        f.write(webdsl_model)
+    webdsl_model = template.render(
+        title=title, description=description, apis=apis, endpoints=endpoints
+    )
+
+    return webdsl_model

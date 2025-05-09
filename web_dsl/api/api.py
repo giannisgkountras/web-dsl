@@ -232,14 +232,14 @@ async def generate_from_file(
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 
-# ============= Transformations Endpoints =============
+# ============= Transformations Endpoint =============
 @app.post("/transform/openapi", tags=["Transformations"])
 async def generate_from_model(
     openapi_model: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     uid = get_unique_id()
     openapi_path = os.path.join(TMP_DIR, f"openapi-{uid}.yaml")
-    webdsl_gen_path = os.path.join(TMP_DIR, f"webdsl-{uid}.wdsl")
+    web_dsl_path = os.path.join(TMP_DIR, f"webdsl-{uid}.wdsl")
 
     save_upload_file(openapi_model, openapi_path)
 
@@ -250,13 +250,14 @@ async def generate_from_model(
         raise HTTPException(status_code=400, detail=f"Invalid YAML: {str(e)}")
 
     try:
-        web_dsl_model = transform_openapi_to_webdsl(openapi_data, webdsl_gen_path)
-        return {"status": "ok"}
-        # return FileResponse(
-        #     web_dsl_model,
-        #     filename=os.path.basename(web_dsl_model),
-        #     media_type="application/x-tar",
-        # )
+        web_dsl_model = transform_openapi_to_webdsl(openapi_data)
+        save_text_to_file(web_dsl_model, web_dsl_path)
+        print(f"Generated WDSL model: {web_dsl_path}")
+        return FileResponse(
+            path=web_dsl_path,
+            filename=os.path.basename(web_dsl_path),
+            media_type="text/plain",  # Use correct MIME type
+        )
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
