@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
 from textx.model import get_children_of_type
 import traceback
-from collections import defaultdict
 from web_dsl.definitions import TEMPLATES_PATH
 
 
