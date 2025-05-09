@@ -84,13 +84,13 @@ const CustomBarChart = ({
         reload();
         if (sourceOfContent === "rest" && restData?.interval > 0) {
             const interval = setInterval(() => {
-                fetchExternalData();
+                reload();
             }, restData.interval);
             return () => clearInterval(interval);
         }
         if (sourceOfContent === "db" && dbData?.interval > 0) {
             const interval = setInterval(() => {
-                fetchExternalData();
+                reload();
             }, dbData.interval);
             return () => clearInterval(interval);
         }

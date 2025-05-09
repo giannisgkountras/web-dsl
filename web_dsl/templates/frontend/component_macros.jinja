@@ -44,6 +44,7 @@
                 "query": element.entity.source.query or {},
                 "filter": element.entity.source.filter or {},
                 "collection": element.entity.source.collection or '',
+                "interval": interval
             } %}
         {% elif sourceOfContent=="broker"%}
             {% set topic=element.entity.source.topic %}

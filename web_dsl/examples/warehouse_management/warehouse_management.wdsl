@@ -274,6 +274,7 @@ webpage WarehouseManagement
                 if this.isOperational[0] == true from entity Warehouses
                         use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
                         else use WarehouseNotOperational
+                        every 2000
             endcol
         endrow
     end
