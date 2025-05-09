@@ -11,7 +11,7 @@ class BrokerCommlibClient:
         type: str,
         topics: list,
         allowed_topic_attributes: dict,
-        strict: bool,
+        strict_modes: list,
         ws_server,
         global_event_loop,
     ):
@@ -38,35 +38,40 @@ class BrokerCommlibClient:
         self.global_event_loop = global_event_loop
         self.pub = self.node.create_mpublisher()
         self.allowed_topic_attributes = allowed_topic_attributes or {}
+        self.strict_modes = strict_modes
 
-    def on_message_callback(self, topic: str):
+    def on_message_callback(self, topic: str, strict: bool):
         """Generate a callback for a specific topic."""
 
         def callback(msg):
-            # # Retrieve the allowed attributes for the given topic
-            # if strict:
-            # allowed_attributes = self.allowed_topic_attributes.get(topic)
-            # if allowed_attributes is None:
-            #     print(
-            #         f"No allowed attributes defined for topic '{topic}'. Message dropped."
-            #     )
-            #     return
+            # Retrieve the allowed attributes for the given topic
+            if strict:
+                allowed_attributes = self.allowed_topic_attributes.get(topic)
+                if allowed_attributes is None:
+                    print(
+                        f"No allowed attributes defined for topic '{topic}'. Message dropped."
+                    )
+                    return
 
-            # # Filter message to include only allowed keys
-            # filtered_msg = {
-            #     key: value for key, value in msg.items() if key in allowed_attributes
-            # }
+                # Filter message to include only allowed keys
+                filtered_msg = {
+                    key: value
+                    for key, value in msg.items()
+                    if key in allowed_attributes
+                }
 
-            # if not filtered_msg:
-            #     print(
-            #         f"No allowed attributes found in the incoming message for topic '{topic}'."
-            #     )
-            #     return
+                if not filtered_msg:
+                    print(
+                        f"No allowed attributes found in the incoming message for topic '{topic}'."
+                    )
+                    return
+            else:
+                # If strict mode is off, use the original message
+                filtered_msg = msg
 
             try:
                 # Convert the filtered message to a JSON string with topic as a prefix.
-                # SHOULD BE FILTERED MESSAGE REMOVED IT FOR TESTING!!!
-                json_msg_with_prefix = f'{{"{topic}": {json.dumps(msg)}}}'
+                json_msg_with_prefix = f'{{"{topic}": {json.dumps(filtered_msg)}}}'
             except Exception as e:
                 print(
                     f"Failed to convert filtered message to JSON for topic '{topic}': {e}"
@@ -85,7 +90,9 @@ class BrokerCommlibClient:
             print(f"Subscribing to topic: {topic}")
             subscriber = self.node.create_subscriber(
                 topic=topic,
-                on_message=self.on_message_callback(topic),
+                on_message=self.on_message_callback(
+                    topic, strict=self.strict_modes[topic]
+                ),
             )
             self.subscribers.append(subscriber)
 

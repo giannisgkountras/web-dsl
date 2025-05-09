@@ -6,6 +6,7 @@ import tarfile
 import subprocess
 import time
 import shutil
+import traceback
 
 from dotenv import load_dotenv
 from fastapi import (
@@ -160,6 +161,7 @@ async def validate_model_file(
         build_model(file_path)
         return {"status": 200, "message": "Model validation success"}
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
 
 
@@ -174,6 +176,7 @@ async def validate_model_base64(fenc: str = "", api_key: str = Security(get_api_
         build_model(file_path)
         return {"status": 200, "message": "Model validation success"}
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
 
 
@@ -197,6 +200,7 @@ async def generate_from_model(
             media_type="application/x-tar",
         )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 
@@ -222,6 +226,7 @@ async def generate_from_file(
             media_type="application/x-tar",
         )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 

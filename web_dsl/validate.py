@@ -36,15 +36,18 @@ def validate_model(model):
         c for c in all_conditions if c.entity and c.entity in strict_entities
     ]
     for item in conditions_to_check:
-        # Item looks like  this: [['name'], '==', 2]
-        attribute_root = item.condition[0][0]
         strict_entity_attributes = item.entity.attributes
         strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
+        condition = item.condition
+        flat_primitives = find_flat_primitive_lists(condition)
 
-        if attribute_root not in strict_entity_attributes_names:
-            errors.append(
-                f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{item.entity.name}'"
-            )
+        for primitive in flat_primitives:
+            attribute_root = primitive[0]
+
+            if attribute_root not in strict_entity_attributes_names:
+                errors.append(
+                    f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{item.entity.name}'"
+                )
 
     # Validate CRUD table
     all_crud_tables = get_children_of_type("CrudTable", model)
@@ -112,3 +115,19 @@ def validate_crud_table(all_crud_tables, errors):
                 )
             else:
                 continue
+
+
+def find_flat_primitive_lists(expr):
+    result = []
+
+    def recurse(sub):
+        if isinstance(sub, list):
+            # Check that all elements are str or int, and none are lists
+            if all(isinstance(x, (str, int)) for x in sub):
+                result.append(sub)
+            else:
+                for item in sub:
+                    recurse(item)
+
+    recurse(expr)
+    return result

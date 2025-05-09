@@ -122,6 +122,14 @@ async def main():
             broker_info.get("topics") or []
         )  # this ensures it's a list, even if None
         topics = [topic.get("topic") for topic in raw_topics if topic.get("topic")]
+
+        # gather all strict modes
+        strict_modes = {
+            item["topic"]: item["strict"]
+            for item in raw_topics
+            if "topic" in item and "strict" in item
+        }
+
         allowed_attributes = {
             topic_info.get("topic"): topic_info.get("attributes")
             for topic_info in raw_topics
@@ -140,7 +148,7 @@ async def main():
                 ),
                 type=broker_info.get("type"),
                 topics=topics,
-                strict=broker_info.get("strict", False),
+                strict_modes=strict_modes,
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
                 allowed_topic_attributes=allowed_attributes,

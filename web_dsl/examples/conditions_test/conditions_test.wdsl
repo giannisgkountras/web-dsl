@@ -44,8 +44,10 @@ webpage ConditionsTest
 
     Entity DataFromBroker
         source: dataTopic
+        strict: true
         attributes:
             - data: dict
+            - test: str
     end
 
     Entity weatherData
@@ -75,6 +77,11 @@ webpage ConditionsTest
             broker: DataBroker
     end
 
+    Component BrokerJson
+        entity: DataFromBroker
+        type: JsonViewer
+    end
+
     Component LiveText
         entity: DataFromBroker
         type: Text
@@ -83,7 +90,7 @@ webpage ConditionsTest
 
     Component WeatherText
         entity: weatherData
-        interval: 2000
+        // interval: 2000
         type: Text
             content: this.daily.temperature_2m_max[0]
     end
@@ -95,7 +102,7 @@ webpage ConditionsTest
         row
             col
                 // TEST NUMBER 1
-                if (30 < this.data.temp and this.data.hum <80) or (this.data.online == true and this.data.lastIn < this.data.lastInMax)
+                if (30 < this.data.temp and this.data.hum <80) or (this.data.online == "yes" and this.data.lastIn < this.data.lastInMax)
                 from entity DataFromBroker
                 use StaticTextCrazy
                 else if this.data.temp < 10 from entity DataFromBroker
@@ -104,6 +111,9 @@ webpage ConditionsTest
                 if 0 < this.data.temp
                 from entity DataFromBroker
                 use StaticTextSimple 
+            endcol
+            col
+                use BrokerJson
             endcol
 
         endrow
@@ -114,5 +124,6 @@ webpage ConditionsTest
             col
                 use WeatherText
             endcol
+
         endrow
     end
