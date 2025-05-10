@@ -41,3 +41,21 @@ RESTEndpoint {{ ep.name }}
 end
 
 {% endfor %}
+
+// ========== Entities ========== //
+
+{% for entity in entities %}
+Entity {{ entity.name }}
+    source: {{ entity.source }}
+{% if entity.description%}
+    description: "{{ entity.description }}"
+{% endif %}
+{% if entity.attribute_list %}
+    attributes:
+    {% for attr in entity.attribute_list %}
+        - {{ attr }}
+    {% endfor %}
+{% endif %}
+end
+
+{% endfor %}
