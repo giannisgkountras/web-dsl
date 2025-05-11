@@ -66,24 +66,24 @@ end
 {% endfor %}
 
 // ========== Components ========== //
-
+    
 {% for component in components %}
-Component {{ component.name }} 
+Component {{ component.name }}
 {% if component.entity %}
-entity: {{ component.entity }} 
-{% endif %} 
-type: {{ component.type }} 
-{% if component.type == "Text" and component.content %} 
-    content: {{ component.content }} 
-{% elif component.type == "Gauge" and component.value %} 
-    value: {{ component.value }} 
-{% elif component.type == "ProgressBar" and component.value %} 
-    value: {{ component.value }} 
-{% elif component.type == "Notification" and component.message %} 
-    message: {{ component.message }} 
-{% elif component.type == "Image" and component.source %} 
-    source: {{ component.source }} 
-{% endif %} 
+    entity: {{ component.entity }}
+{% endif %}
+    type: {{ component.type }}
+{% if component.type == "Text" and component.content %}
+        content: {{ component.content }}
+{% elif component.type == "Gauge" and component.value %}
+        value: {{ component.value }}
+{% elif component.type == "ProgressBar" and component.value %}
+        value: {{ component.value }}
+{% elif component.type == "Notification" and component.message %}
+        message: {{ component.message }}
+{% elif component.type == "Image" and component.source %}
+        source: {{ component.source }}
+{% endif %}
 end
 
 {% endfor %}
