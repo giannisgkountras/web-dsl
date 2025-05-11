@@ -13,7 +13,7 @@ class Component:
         try:
             entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
-            entityRef = None  # or "Unknown", or whatever fallback you prefer
+            entityRef = None
         source_map = {
             "MQTTBroker": "broker",
             "AMQPBroker": "broker",

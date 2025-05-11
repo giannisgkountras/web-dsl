@@ -1,29 +1,23 @@
 import re
-from jinja2 import Environment, FileSystemLoader
 from typing import List, Dict, Any
 from urllib.parse import urlparse, urlunparse
+from jinja2 import Environment, FileSystemLoader
 from web_dsl.definitions import TEMPLATES_PATH
 
-# Set up Jinja2 environment
+
+# ─── Jinja2 Template Setup ──────────────────────────────────────────────────────
 env = Environment(
     loader=FileSystemLoader(f"{TEMPLATES_PATH}/openapi"),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
 )
-
 template = env.get_template("openapi_to_webdsl.jinja")
 
 
-# Data classes for DSL elements
+# ─── DSL Data Classes ───────────────────────────────────────────────────────────
 class RESTApi:
-    def __init__(
-        self,
-        name: str,
-        base_url: str,
-        headers: Dict[str, Any] = None,
-        auth: str = None,
-    ):
+    def __init__(self, name: str, base_url: str, headers=None, auth=None):
         self.name = name
         self.base_url = base_url
         self.headers = headers or {}
@@ -32,13 +26,7 @@ class RESTApi:
 
 class RESTEndpoint:
     def __init__(
-        self,
-        name: str,
-        connection: str,
-        path: str = None,
-        method: str = None,
-        body: Dict[str, Any] = None,
-        params: Dict[str, Any] = None,
+        self, name: str, connection: str, path=None, method=None, body=None, params=None
     ):
         self.name = name
         self.connection = connection
@@ -54,133 +42,36 @@ class Entity:
     ):
         self.name = name
         self.description = description
-        self.source = source  # Single string, not a set
+        self.source = source
         self.attributes = attributes
         self.strict = strict
 
     @property
     def attribute_list(self):
-        """Return a list of formatted attribute strings for the template."""
-        return [
-            map_openapi_type(name, schema) for name, schema in self.attributes.items()
-        ]
+        return [map_openapi_type(n, s) for n, s in self.attributes.items()]
 
 
-# Helper functions
+# ─── Constants ──────────────────────────────────────────────────────────────────
+attribute_map = {
+    "Text": "content",
+    "Gauge": "value",
+    "ProgressBar": "value",
+    "Notification": "message",
+    "Image": "source",
+}
+
+
+# ─── Utility Functions ──────────────────────────────────────────────────────────
 def clean_path(path: str) -> str:
-    """Clean an OpenAPI path by removing parameter braces and replacing slashes with underscores."""
-    path = path.strip("/")  # Remove leading/trailing slashes
-    path = re.sub(r"{(\w+)}", r"\1", path)  # Replace {param} with param
-    path = path.replace("/", "_")  # Replace slashes with single underscores
-    return path if path else "root"  # Use 'root' for empty paths (e.g., '/')
+    path = re.sub(r"{(\w+)}", r"\1", path.strip("/"))
+    return path.replace("/", "_") or "root"
 
 
 def is_supported_verb(verb: str) -> bool:
-    """Check if the HTTP verb is supported."""
     return verb.upper() in {"GET", "POST", "PUT", "DELETE"}
 
 
-def resolve_server_info(servers: List[dict]) -> str:
-    """Resolve the base URL from a list of OpenAPI server objects."""
-    if not servers:
-        return "http://default.api"  # Fallback for missing servers
-    url = servers[0].get("url", "")
-    for var, details in servers[0].get("variables", {}).items():
-        url = url.replace(f"{{{var}}}", details.get("default", ""))
-    parsed = urlparse(url)
-    return urlunparse((parsed.scheme, parsed.netloc, parsed.path or "", "", "", ""))
-
-
-def register_server(
-    servers: List[dict], seen: Dict[str, str], apis: List[RESTApi]
-) -> str:
-    """Register a server and return its connection name, adding to apis if new."""
-    base_url = resolve_server_info(servers)
-    if base_url not in seen:
-        name = re.sub(r"\W+", "_", base_url).strip("_") or f"api_{len(seen)+1}"
-        seen[base_url] = name
-        apis.append(RESTApi(name=name, base_url=base_url))
-    return seen[base_url]
-
-
-def resolve_schema_ref(ref: str, model: Dict[str, Any]) -> Dict[str, Any]:
-    """Resolve a schema reference to the actual schema definition."""
-    if ref.startswith("#/components/schemas/"):
-        schema_name = ref.split("/")[-1]
-        components = model.get("components", {})
-        schemas = components.get("schemas", {})
-        return schemas.get(schema_name, {})
-    return {}
-
-
-def extract_schema_props(
-    schema: dict, parent_name: str, source: str, entities_dict: dict, model: dict
-):
-    """Extract properties from an OpenAPI schema and create an entity."""
-    if "$ref" in schema:
-        schema = resolve_schema_ref(schema["$ref"], model)  # Resolve schema references
-    if not schema or "type" not in schema:
-        return
-
-    if schema["type"] == "object":
-        # Use schema title if available, otherwise construct name from endpoint
-        entity_name = schema.get("title", f"{parent_name}__Entity")
-        entity_name = re.sub(r"\W+", "_", entity_name)  # Clean non-word characters
-        description = schema.get("description", "")
-        strict = not schema.get("additionalProperties", True)
-        props = schema.get("properties", {})
-
-        # Only create entity if it doesn’t already exist
-        if entity_name not in entities_dict:
-            entities_dict[entity_name] = Entity(
-                name=entity_name,
-                description=description,
-                source=source,  # Single endpoint name
-                attributes=props,
-                strict=strict,
-            )
-    elif schema["type"] == "array":
-        # Recursively process array items if they are objects
-        items = schema.get("items", {})
-        if "$ref" in items:
-            items = resolve_schema_ref(items["$ref"], model)
-        if items.get("type") == "object":
-            extract_schema_props(items, parent_name, source, entities_dict, model)
-
-
-def process_operation(
-    path: str,
-    verb: str,
-    operation: dict,
-    conn_name: str,
-    entities_dict: dict,
-    model: dict,
-) -> "RESTEndpoint":
-    """Process an OpenAPI operation to create an endpoint and extract schemas."""
-    path_clean = clean_path(path)
-    ep_name = f"{verb.lower()}__{path_clean}"  # e.g., post__rouleta
-    parent_name = ep_name  # Used for entity naming
-
-    # Process request body
-    if rb := operation.get("requestBody", {}).get("content"):
-        for mime, item in rb.items():
-            schema = item.get("schema", {})
-            extract_schema_props(schema, parent_name, ep_name, entities_dict, model)
-
-    # Process responses
-    for code, resp in operation.get("responses", {}).items():
-        if content := resp.get("content"):
-            for mime, item in content.items():
-                schema = item.get("schema", {})
-                extract_schema_props(schema, parent_name, ep_name, entities_dict, model)
-
-    return RESTEndpoint(
-        name=ep_name, connection=conn_name, path=path, method=verb.upper()
-    )
-
-
-def map_openapi_type(name, schema):
-    """Map OpenAPI schema types to Python-like type annotations."""
+def map_openapi_type(name: str, schema: dict) -> str:
     type_map = {
         "string": "str",
         "integer": "int",
@@ -189,55 +80,174 @@ def map_openapi_type(name, schema):
         "array": "list",
         "object": "dict",
     }
-    attr_type = schema.get("type", "string")  # Default to "string" if type is missing
-    return f"{name}: {type_map.get(attr_type, 'str')}"
+    return f"{name}: {type_map.get(schema.get('type', 'string'), 'str')}"
 
 
+# ─── Server Resolution ──────────────────────────────────────────────────────────
+def resolve_server_info(servers: List[dict]) -> str:
+    if not servers:
+        return "http://default.api"
+    url = servers[0].get("url", "")
+    for var, var_data in servers[0].get("variables", {}).items():
+        url = url.replace(f"{{{var}}}", var_data.get("default", ""))
+    parsed = urlparse(url)
+    return urlunparse((parsed.scheme, parsed.netloc, parsed.path or "", "", "", ""))
+
+
+def register_server(
+    servers: List[dict], seen: Dict[str, str], apis: List[RESTApi]
+) -> str:
+    base_url = resolve_server_info(servers)
+    if base_url not in seen:
+        name = re.sub(r"\W+", "_", base_url).strip("_") or f"api_{len(seen)+1}"
+        seen[base_url] = name
+        apis.append(RESTApi(name=name, base_url=base_url))
+    return seen[base_url]
+
+
+# ─── Entity Extraction ──────────────────────────────────────────────────────────
+def resolve_schema_ref(ref: str, model: Dict[str, Any]) -> Dict[str, Any]:
+    if ref.startswith("#/components/schemas/"):
+        name = ref.split("/")[-1]
+        return model.get("components", {}).get("schemas", {}).get(name, {})
+    return {}
+
+
+def extract_schema_props(
+    schema: dict, parent: str, source: str, entities: dict, model: dict
+) -> List[str]:
+    generated = []
+
+    if "$ref" in schema:
+        schema = resolve_schema_ref(schema["$ref"], model)
+
+    if not schema or schema.get("type") != "object":
+        if schema.get("type") == "array":
+            items = schema.get("items", {})
+            if "$ref" in items:
+                items = resolve_schema_ref(items["$ref"], model)
+            if items.get("type") == "object":
+                generated += extract_schema_props(
+                    items, parent, source, entities, model
+                )
+        return generated
+
+    name = re.sub(r"\W+", "_", schema.get("title", f"{parent}__Entity"))
+    if name not in entities:
+        entities[name] = Entity(
+            name=name,
+            description=schema.get("description", ""),
+            source=source,
+            attributes=schema.get("properties", {}),
+            strict=not schema.get("additionalProperties", True),
+        )
+        generated.append(name)
+
+    return generated
+
+
+# ─── Operation and Endpoint Processing ──────────────────────────────────────────
+def parse_component_annotations(
+    description: str, ep_name: str, entity_name: str
+) -> List[Dict[str, Any]]:
+    annotations = re.findall(r"webdsl\.(\w+)\.(\w+(?:\.\w+|\[\d+\])*)", description)
+    result = []
+    for ctype, path in annotations:
+        ctype = ctype.capitalize()
+        if ctype in attribute_map:
+            comp = {
+                "name": f"{ep_name}__{ctype}_{path.replace('.', '_').replace('[', '_').replace(']', '_')}",
+                "type": ctype,
+                "entity": entity_name,
+                attribute_map[ctype]: path,
+            }
+            result.append(comp)
+    return result
+
+
+def process_operation(
+    path: str,
+    verb: str,
+    operation: dict,
+    conn_name: str,
+    entities: dict,
+    model: dict,
+) -> tuple[RESTEndpoint, List[Dict[str, Any]]]:
+    ep_name = f"{verb.lower()}__{clean_path(path)}"
+    generated_entities = set()
+
+    # Handle request body
+    if rb := operation.get("requestBody", {}).get("content"):
+        for content in rb.values():
+            generated_entities.update(
+                extract_schema_props(
+                    content.get("schema", {}), ep_name, ep_name, entities, model
+                )
+            )
+
+    # Handle response and infer main entity
+    main_entity = None
+    for code, resp in operation.get("responses", {}).items():
+        if code == "200":
+            for content in resp.get("content", {}).values():
+                schema = content.get("schema", {})
+                new_entities = extract_schema_props(
+                    schema, ep_name, ep_name, entities, model
+                )
+                generated_entities.update(new_entities)
+                if new_entities:
+                    main_entity = entities[new_entities[0]]
+                break
+        if main_entity:
+            break
+
+    # Use all related entities for annotation mapping
+    description = operation.get("description", "")
+    components = []
+    for entity_name in generated_entities:
+        components += parse_component_annotations(description, ep_name, entity_name)
+
+    endpoint = RESTEndpoint(
+        name=ep_name, connection=conn_name, path=path, method=verb.upper()
+    )
+    return endpoint, components
+
+
+# ─── Main Transform Function ────────────────────────────────────────────────────
 def transform_openapi_to_webdsl(model: Dict[str, Any]) -> str:
-    """Transform an OpenAPI specification into a WebDSL model string."""
-    apis: List[RESTApi] = []
-    endpoints: List[RESTEndpoint] = []
-    entities_dict: Dict[str, Entity] = {}
-    seen: Dict[str, str] = {}
+    apis, endpoints, components = [], [], []
+    seen, entities = {}, {}
 
-    # Register top-level server with fallback
-    default_servers = model.get("servers", [])
     default_conn = (
-        register_server(default_servers, seen, apis)
-        if default_servers
+        register_server(model.get("servers", []), seen, apis)
+        if model.get("servers")
         else "default_api"
     )
 
-    # Process paths and operations
-    for path, methods in model.get("paths", {}).items():
-        if not isinstance(methods, dict):
+    for path, operations in model.get("paths", {}).items():
+        if not isinstance(operations, dict):
             continue
-        conn_name = default_conn
-        if "servers" in methods:
-            conn_name = register_server(methods["servers"], seen, apis)
-        for verb, operation in methods.items():
-            if not isinstance(operation, dict) or not is_supported_verb(verb):
-                continue
-            if "servers" in operation:
-                conn_name = register_server(operation["servers"], seen, apis)
-            endpoint = process_operation(
-                path, verb, operation, conn_name, entities_dict, model
-            )
-            endpoints.append(endpoint)
+        conn_name = (
+            register_server(operations.get("servers", []), seen, apis)
+            if "servers" in operations
+            else default_conn
+        )
+        for verb, op in operations.items():
+            if isinstance(op, dict) and is_supported_verb(verb):
+                if "servers" in op:
+                    conn_name = register_server(op["servers"], seen, apis)
+                endpoint, comps = process_operation(
+                    path, verb, op, conn_name, entities, model
+                )
+                endpoints.append(endpoint)
+                components.extend(comps)
 
-    # Render the template with Entity objects directly
-    title = model.get("info", {}).get("title", "API")
-    title = re.sub(r"\W+", "_", title)  # Clean non-word characters
-    if not title:
-        title = "API"
-    description = model.get("info", {}).get(
-        "description", "This is a generated webpage."
-    )
-
+    info = model.get("info", {})
     return template.render(
-        title=title,
-        description=description,
+        title=re.sub(r"\W+", "_", info.get("title", "API")) or "API",
+        description=info.get("description", "This is a generated webpage."),
         apis=apis,
         endpoints=endpoints,
-        entities=entities_dict.values(),
+        entities=entities.values(),
+        components=components,
     )
