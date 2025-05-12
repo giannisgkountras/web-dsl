@@ -176,7 +176,7 @@ webpage AgroDashboard
 
     Component CropsTable
         entity: CropInfoData
-        type: CrudTable
+        type: Table
             primary_key: "_id"
             attributes: this.name, this.type, this.yield_kg_per_hectare
     end
@@ -254,10 +254,10 @@ webpage AgroDashboard
             endcol
             col
                 if this.motion == true from entity FieldCameraData
-                        then use FieldLiveCamera
+                        use FieldLiveCamera
                     
                 if this.motion == false from entity FieldCameraData
-                    then use FieldLiveCameraAlive
+                    use FieldLiveCameraAlive
             endcol
         endrow
 
