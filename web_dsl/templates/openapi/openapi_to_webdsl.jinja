@@ -79,8 +79,6 @@ Component {{ component.name }}
         value: {{ component.value }}
 {% elif component.type == "ProgressBar" and component.value %}
         value: {{ component.value }}
-{% elif component.type == "Notification" and component.message %}
-        message: {{ component.message }}
 {% elif component.type == "Image" and component.source %}
         source: {{ component.source }}
 {% endif %}

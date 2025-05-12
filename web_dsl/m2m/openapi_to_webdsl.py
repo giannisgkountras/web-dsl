@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from web_dsl.definitions import TEMPLATES_PATH
 
 
-# ─── Jinja2 Template Setup ──────────────────────────────────────────────────────
+# ======== Template Setup ========
 env = Environment(
     loader=FileSystemLoader(f"{TEMPLATES_PATH}/openapi"),
     trim_blocks=True,
@@ -15,7 +15,7 @@ env = Environment(
 template = env.get_template("openapi_to_webdsl.jinja")
 
 
-# ─── DSL Data Classes ───────────────────────────────────────────────────────────
+# ====== Help Classes ===========
 class RESTApi:
     def __init__(self, name: str, base_url: str, headers=None, auth=None):
         self.name = name
@@ -51,17 +51,16 @@ class Entity:
         return [map_openapi_type(n, s) for n, s in self.attributes.items()]
 
 
-# ─── Constants ──────────────────────────────────────────────────────────────────
+# ===== Component mapping ========
 attribute_map = {
     "Text": "content",
     "Gauge": "value",
     "ProgressBar": "value",
-    "Notification": "message",
     "Image": "source",
 }
 
 
-# ─── Utility Functions ──────────────────────────────────────────────────────────
+# ========== Helper Functions ==============
 def clean_path(path: str) -> str:
     path = re.sub(r"{(\w+)}", r"\1", path.strip("/"))
     return path.replace("/", "_") or "root"
@@ -83,7 +82,7 @@ def map_openapi_type(name: str, schema: dict) -> str:
     return f"{name}: {type_map.get(schema.get('type', 'string'), 'str')}"
 
 
-# ─── Server Resolution ──────────────────────────────────────────────────────────
+# ========== Server and Connection Handling ==============
 def resolve_server_info(servers: List[dict]) -> str:
     if not servers:
         return "http://default.api"
@@ -105,7 +104,7 @@ def register_server(
     return seen[base_url]
 
 
-# ─── Entity Extraction ──────────────────────────────────────────────────────────
+# ========= Schema and Entity Processing ==============
 def resolve_schema_ref(ref: str, model: Dict[str, Any]) -> Dict[str, Any]:
     if ref.startswith("#/components/schemas/"):
         name = ref.split("/")[-1]
@@ -146,7 +145,7 @@ def extract_schema_props(
     return generated
 
 
-# ─── Operation and Endpoint Processing ──────────────────────────────────────────
+# ========== Component Annotations ==============
 def parse_component_annotations(
     description: str, ep_name: str, entity_name: str
 ) -> List[Dict[str, Any]]:
@@ -213,7 +212,7 @@ def process_operation(
     return endpoint, components
 
 
-# ─── Main Transform Function ────────────────────────────────────────────────────
+# ========= Main Transformation Function ==============
 def transform_openapi_to_webdsl(model: Dict[str, Any]) -> str:
     apis, endpoints, components = [], [], []
     seen, entities = {}, {}
