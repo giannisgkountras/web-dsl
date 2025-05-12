@@ -52,23 +52,42 @@ end
 
 
 // ========== Components ========== //
-
-Component get__todos__Text_this_0__title 
-entity: get__todos__Entity 
- 
-type: Text 
- 
-    content: this[0].title 
- 
+    
+Component get__todos__Text_this_0__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[0].title
 end
 
-Component get__todos_20__Gauge_this_id 
-entity: get__todos_20__Entity 
- 
-type: Gauge 
- 
-    value: this.id 
- 
+Component get__todos__Text_this_1__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[1].title
+end
+
+Component get__todos__Text_this_2__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[2].title
+end
+
+Component get__todos_20__Gauge_this_id
+    entity: get__todos_20__Entity
+    type: Gauge
+        value: this.id
+end
+
+Component get__todos_20__Progressbar_this_id
+    entity: get__todos_20__Entity
+    type: Progressbar
+        value: this.id
+        max: 100
+end
+
+Component get__todos_20__Image_this_name
+    entity: get__todos_20__Entity
+    type: Image
+        source: this.name
 end
 
 
@@ -83,7 +102,21 @@ Screen Home
             use get__todos__Text_this_0__title
         endcol
         col
+            use get__todos__Text_this_1__title
+        endcol
+        col
+            use get__todos__Text_this_2__title
+        endcol
+    endrow
+    row
+        col
             use get__todos_20__Gauge_this_id
+        endcol
+        col
+            use get__todos_20__Progressbar_this_id
+        endcol
+        col
+            use get__todos_20__Image_this_name
         endcol
     endrow
 end

@@ -240,7 +240,7 @@ webpage WarehouseManagement
 
     Component CentralWarehouseCapacity
         entity: Warehouses
-        type: ProgressBar
+        type: Progressbar
             value: this.capacity[0]
             max: this.capacity[2]
             description: "Central warehouse capacity"

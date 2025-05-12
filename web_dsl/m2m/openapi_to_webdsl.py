@@ -55,7 +55,7 @@ class Entity:
 attribute_map = {
     "Text": "content",
     "Gauge": "value",
-    "ProgressBar": "value",
+    "Progressbar": "value",
     "Image": "source",
 }
 

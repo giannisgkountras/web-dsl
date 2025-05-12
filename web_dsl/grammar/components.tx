@@ -175,7 +175,7 @@ Table:
 ;
 
 ProgressBar:
-    'ProgressBar'
+    'Progressbar'
     (
         ('value:' (value=NestedAccessPath |  value_static=FLOAT))
         ('max:' (max_static=INT | max=NestedAccessPath))

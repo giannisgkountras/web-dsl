@@ -77,8 +77,9 @@ Component {{ component.name }}
         content: {{ component.content }}
 {% elif component.type == "Gauge" and component.value %}
         value: {{ component.value }}
-{% elif component.type == "ProgressBar" and component.value %}
+{% elif component.type == "Progressbar" and component.value %}
         value: {{ component.value }}
+        max: 100
 {% elif component.type == "Image" and component.source %}
         source: {{ component.source }}
 {% endif %}
@@ -92,11 +93,13 @@ Screen Home
     title: "Home"
     url: "/"
 
+    {% for i in range(0, components|length, 3) %}
     row
-        {% for component in components %}
+        {% for component in components[i:i+3] %}
         col
             use {{ component.name }}
         endcol
         {% endfor %}
     endrow
+    {% endfor %}
 end

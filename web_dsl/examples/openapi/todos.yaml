@@ -11,7 +11,7 @@ paths:
     /todos:
         get:
             summary: Get all todos
-            description: webdsl.text.this[0].title
+            description: webdsl.Text.this[0].title , webdsl.Text.this[1].title, webdsl.Text.this[2].title
             responses:
                 "200":
                     description: A list of todos
@@ -24,7 +24,7 @@ paths:
     /todos/20:
         get:
             summary: Get a todo by ID
-            description: Retrieve a todo by their unique ID and show it in gauge webdsl.gauge.this.id
+            description: webdsl.Gauge.this.id , webdsl.ProgressBar.this.id, webdsl.Image.this.name
             parameters:
                 - name: userId
                   in: path
