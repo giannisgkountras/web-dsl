@@ -10,7 +10,9 @@ const CustomImage = ({
     contentPath,
     repetitionItem = null
 }) => {
-    const frame = getValueByPath(entityData, contentPath) || placeholder;
+    const frame = entityData
+        ? getValueByPath(entityData, contentPath)
+        : placeholder;
 
     return (
         <div className="w-fit h-fit relative">

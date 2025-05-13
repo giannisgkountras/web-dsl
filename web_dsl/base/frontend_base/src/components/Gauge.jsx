@@ -9,7 +9,7 @@ const Gauge = ({
     description = null,
     repetitionItem = null
 }) => {
-    const value = getValueByPath(entityData, contentPath);
+    const value = entityData ? getValueByPath(entityData, contentPath) : 0;
 
     return (
         <div className="flex flex-col justify-center items-center relative">

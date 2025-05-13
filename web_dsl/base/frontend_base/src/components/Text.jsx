@@ -10,7 +10,7 @@ const Text = ({
     sourceOfContent,
     repetitionItem = null
 }) => {
-    const content = getValueByPath(entityData, contentPath);
+    const content = entityData ? getValueByPath(entityData, contentPath) : "";
 
     return (
         <h1
