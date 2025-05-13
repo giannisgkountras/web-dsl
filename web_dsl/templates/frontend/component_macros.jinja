@@ -23,45 +23,21 @@
     {% elif element.isComponent %}
         
         {% set sourceOfContent = element.sourceOfContent %}
-        {% set restData={}%}
-        {% set dbData={}%}
-        {% set topic=None%}
-
-        {% set interval= element.interval or 0%}
-
-        {% if sourceOfContent=="rest" %}
-            {% set restData = {
-                "name": element.entity.source.connection.name or 'default',
-                "path": element.entity.source.path or '',
-                "method": element.entity.source.method or 'GET',
-                "params": element.entity.source.params or {},
-                "interval": interval
-            } %}
-        {% elif sourceOfContent=="db" %}
-            {% set dbData = {
-                "connection_name": element.entity.source.connection.name or 'default',
-                "database": element.entity.source.connection.database or '',
-                "query": element.entity.source.query or {},
-                "filter": element.entity.source.filter or {},
-                "collection": element.entity.source.collection or '',
-                "interval": interval
-            } %}
-        {% elif sourceOfContent=="broker"%}
-            {% set topic=element.entity.source.topic %}
-        {% endif %}
-
+        {% set entity = element.entity %}
         {% if element.type %}
-        {% set type = element.type %}
+            {% set type = element.type %}
         {% else %}
-        {% set type = element %}
+            {% set type = element %}
         {% endif %}
+
+
         {% if type.name=="Gauge"%}
             <Gauge 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
-                restData={ {{restData}} }
                 staticValue={ {{type.value_static}} }
-                dbData={ {{dbData}} }
                 {% if type.value %}
                     contentPath={ {{type.value}} }
                 {% endif %}
@@ -73,12 +49,12 @@
         {% elif type.name=="LineChart"%}
 
             <CustomLineChart 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 xLabel={"{{type.xLabel}}"} 
                 yLabel={"{{type.yLabel}}"} 
                 sourceOfContent={"{{sourceOfContent}}"}
-                dbData={ {{dbData}} }
-                restData={ {{restData}} }
                 {% if type.staticData %}
                     xValue={"{{type.xValue_static}}"}
                     yValues={[ {% for item in type.yValues_static %}
@@ -105,12 +81,12 @@
         {% elif type.name=="BarChart"%}
 
             <CustomBarChart 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 xLabel={"{{type.xLabel}}"} 
                 yLabel={"{{type.yLabel}}"} 
                 sourceOfContent={"{{sourceOfContent}}"}
-                dbData={ {{dbData}} }
-                restData={ {{restData}} }
                 {% if type.staticData %}
                     xValue={"{{type.xValue_static}}"}
                     yValues={[ {% for item in type.yValues_static %}
@@ -136,10 +112,10 @@
         
         {% elif type.name=="PieChart"%}
             <CustomPieChart 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"}
-                dbData={ {{dbData}} }
-                restData={ {{restData}} }
                 {% if type.staticData %}
                     valuePath={ {{type.value_static}} }
                     namePath={ {{type.dataName_static}} }
@@ -162,24 +138,29 @@
             />
         {% elif type.name=="LiveTable"%}
             <LiveTable 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 columns={ {{type.columns}} }
             />
 
         {% elif type.name=="JsonViewer"%}
             <JsonViewer 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 topic={"{{topic}}"} 
                 {% if type.attributes %}
                     attributes={ {{type.attributes}} }
                 {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
-                restData={ {{restData}} }
-                dbData={ {{dbData}} }
             />
 
         {% elif type.name=="Alive"%}
             <Alive 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 timeout={ {{type.timeout}} }
                 {% if type.description%}
                     description={ "{{type.description}}" }
@@ -220,7 +201,9 @@
         {% elif type.name=="Notification" %}
             <LiveNotification
                 type={"{{type.type}}"}
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 {% if type.message %}
                     contentPath={ {{type.message}} }
                 {% endif %}
@@ -228,12 +211,12 @@
 
         {% elif type.name=="Image" %}
             <CustomImage 
-                topic={"{{topic}}"} 
-                source={ { name: "{{type.source.name}}" ,  type: "{{type.source.__class__.__name__}}" } }
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 width={ {{type.width}} }
                 height={ {{type.height}} }
                 sourceOfContent={"{{sourceOfContent}}"} 
-                restData={ {{restData}} }    
                 sourceStatic={"{{type.source_static}}"}
                 {% if type.source %}
                     contentPath={ {{type.source}} }
@@ -243,25 +226,26 @@
 
         {% elif type.name=="Text" %}
             <Text 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 size={ {{ type.size | default(18) }} }
                 color={"{{type.color}}"}
                 {% if type.weight %}
                 weight={"{{type.weight}}"}
                 {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
-                restData={ {{restData}} }    
                 staticContent={"{{type.content_static}}"}
-                dbData={ {{dbData}} }
                 {% if type.content %}
                     contentPath={ {{type.content}} }
                 {% endif %}
-
             />
 
         {% elif type.name=="Logs" %}
             <Logs 
-                topic={"{{topic}}"} 
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 {% if type.attributes %}
                     attributes={ {{type.attributes}} }
                 {% endif %}
@@ -275,12 +259,22 @@
             {%else%}
                 {% set dbType=""%}
             {%endif%}
+            {% set dbData = {
+                "connection_name": element.entity.source.connection.name or 'default',
+                "database": element.entity.source.connection.database or '',
+                "query": element.entity.source.query or {},
+                "filter": element.entity.source.filter or {},
+                "collection": element.entity.source.collection or '',
+            } %}
+
             <Table
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 {% if type.attributes %}
                     attributes={ {{type.attributes}} }
                 {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"} 
-                restData={ {{restData}} }
                 dbData={ {{dbData}} }
                 primaryKey={ "{{type.primary_key}}" }
                 dbType={ "{{dbType}}" }
@@ -294,6 +288,12 @@
             />
         
         {% elif type.name=="Form"%}
+            {% set restData = {
+                "name": element.entity.source.connection.name or 'default',
+                "path": element.entity.source.path or '',
+                "method": element.entity.source.method or 'GET',
+                "params": element.entity.source.params or {},
+            } %}
             <CustomForm
                 elements={ {{type.elements}} }
                 restData={ {{restData}} }
@@ -304,10 +304,10 @@
 
         {% elif type.name=="ProgressBar"%}
             <ProgressBar
-                topic={"{{topic}}"}
+                {% if entity %}
+                    entityData={ {{element.entity.name}}Data}
+                {% endif %}
                 sourceOfContent={"{{sourceOfContent}}"}
-                restData={ {{restData}} }
-                dbData={ {{dbData}} }
                 {% if type.max !=None %}
                     max={ {{type.max}} }
                 {% endif %}

@@ -55,7 +55,7 @@ const CustomForm = ({ elements, restData, description }) => {
                         key={el.datakey}
                         type={el.type}
                         placeholder={el.placeholder}
-                        required={el.required}
+                        required={el.required === "true"}
                         onChange={handleChange(el.datakey, el.type)}
                     />
                 );

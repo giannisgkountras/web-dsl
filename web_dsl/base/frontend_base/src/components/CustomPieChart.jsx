@@ -1,95 +1,40 @@
-import {
-    PieChart,
-    Pie,
-    Cell,
-    Tooltip,
-    Legend,
-    ResponsiveContainer
-} from "recharts";
+import { PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { WebsocketContext } from "../context/WebsocketContext";
-import { useWebsocket } from "../hooks/useWebsocket";
 import { useContext, useState, useEffect } from "react";
-import { IoReload } from "react-icons/io5";
 import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
-import { toast } from "react-toastify";
-import { proxyRestCall } from "../api/proxyRestCall";
-import { queryDB } from "../api/dbQuery";
 import { colors } from "../lib/colors";
 import { transformToArrayOfObjects } from "../utils/transformations";
 
 const CustomPieChart = ({
-    topic,
+    entityData,
     sourceOfContent,
     staticChartData = null,
-    restData = null,
-    dbData = null,
     valuePath,
     namePath,
     description = null
 }) => {
     const [chartData, setChartData] = useState([]);
-    const ws = useContext(WebsocketContext);
     const allPaths = [namePath, valuePath];
     const pathNames = allPaths.map(getNameFromPath);
-    const { name, path, method, params } = restData || {};
 
-    const fetchExternalData = async () => {
-        try {
-            const response =
-                sourceOfContent === "rest"
-                    ? await proxyRestCall({ name, path, method, params })
-                    : await queryDB(dbData);
-
+    useEffect(() => {
+        if (sourceOfContent === "rest" || sourceOfContent === "db") {
             const transformed = transformToArrayOfObjects(
-                response,
+                entityData,
                 allPaths,
                 pathNames
             );
-
             setChartData(transformed);
-        } catch (err) {
-            console.error("Failed to fetch chart data:", err);
-            toast.error("Failed to load chart data");
-        }
-    };
-
-    useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        try {
+        } else if (sourceOfContent === "broker") {
             const newData = {};
             allPaths.forEach((path, index) => {
-                newData[pathNames[index]] = getValueByPath(msg, path);
+                newData[pathNames[index]] = getValueByPath(entityData, path);
             });
             setChartData(newData);
-        } catch (error) {
-            toast.error("Error updating chart from WebSocket");
-            console.error("WebSocket error:", error);
-        }
-    });
-
-    const reload = () => {
-        if (sourceOfContent === "rest" || sourceOfContent === "db") {
-            fetchExternalData();
-        }
-        if (sourceOfContent === "static") {
+        } else if (sourceOfContent === "static") {
             setChartData(staticChartData);
         }
-    };
-
-    useEffect(() => {
-        reload();
-        if (sourceOfContent === "rest" && restData?.interval > 0) {
-            const interval = setInterval(() => {
-                reload();
-            }, restData.interval);
-            return () => clearInterval(interval);
-        }
-        if (sourceOfContent === "db" && dbData?.interval > 0) {
-            const interval = setInterval(() => {
-                reload();
-            }, dbData.interval);
-            return () => clearInterval(interval);
-        }
-    }, []);
+    }, [entityData]);
 
     return (
         <div className="relative w-full h-full flex flex-col items-center justify-center">
@@ -98,16 +43,7 @@ const CustomPieChart = ({
                     {description}
                 </h1>
             )}
-            {/* <ResponsiveContainer> */}
-            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
-                <button
-                    onClick={fetchExternalData}
-                    className="absolute top-0 right-0 p-2 text-white hover:text-gray-400 cursor-pointer "
-                    title="Reload chart data"
-                >
-                    <IoReload size={20} />
-                </button>
-            )}
+
             <PieChart
                 width={450}
                 height={350}
@@ -135,17 +71,17 @@ const CustomPieChart = ({
                     fill="#8884d8"
                     label
                 >
-                    {chartData.map((_, index) => (
-                        <Cell
-                            key={`cell-${index}`}
-                            fill={colors[index % colors.length]}
-                        />
-                    ))}
+                    {Array.isArray(chartData) &&
+                        chartData.map((_, index) => (
+                            <Cell
+                                key={`cell-${index}`}
+                                fill={colors[index % colors.length]}
+                            />
+                        ))}
                 </Pie>
                 <Tooltip />
                 <Legend />
             </PieChart>
-            {/* </ResponsiveContainer> */}
         </div>
     );
 };

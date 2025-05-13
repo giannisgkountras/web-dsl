@@ -1,101 +1,33 @@
-import React, { useState, useContext, useEffect } from "react";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { WebsocketContext } from "../context/WebsocketContext";
-import { toast } from "react-toastify";
-import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
-import { IoReload } from "react-icons/io5";
 import { getValueByPath } from "../utils/getValueByPath";
 
 const Text = ({
-    topic,
+    entityData,
     contentPath,
     size = 18,
     color,
     weight = 400,
-    sourceOfContent,
-    restData,
     staticContent,
-    dbData,
+    sourceOfContent,
     repetitionItem = null
 }) => {
-    const [content, setContent] = useState("");
-
-    const ws = useContext(WebsocketContext);
-
-    const reloadContent = async () => {
-        if (sourceOfContent === "rest") {
-            const data = await fetchValueFromRest(restData, contentPath);
-            setContent(data);
-        }
-        if (sourceOfContent === "db") {
-            const data = await fetchValueFromDB(dbData, contentPath);
-            setContent(data);
-        }
-    };
-
-    useEffect(() => {
-        reloadContent();
-        if (sourceOfContent === "rest" && restData?.interval > 0) {
-            const interval = setInterval(() => {
-                reloadContent();
-            }, restData.interval);
-            return () => clearInterval(interval);
-        }
-        if (sourceOfContent === "db" && dbData?.interval > 0) {
-            const interval = setInterval(() => {
-                reloadContent();
-            }, dbData.interval);
-            return () => clearInterval(interval);
-        }
-    }, []);
-
-    useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        try {
-            const data = getValueByPath(msg, contentPath);
-            setContent(data);
-        } catch (error) {
-            toast.error(
-                "An error occurred while updating value: " + error.message
-            );
-            console.error("Error updating status:", error);
-        }
-    });
+    const content = getValueByPath(entityData, contentPath);
 
     return (
-        <div
-            className="flex relative w-fit h-fit p-5"
-            style={
-                sourceOfContent === "rest" || sourceOfContent === "db"
-                    ? { padding: "1.25rem" }
-                    : { padding: "0.5rem" }
-            }
+        <h1
+            style={{
+                ...(size !== 0 && { fontSize: `${size}px` }),
+                color: color,
+                fontWeight: weight
+            }}
+            className="text-center"
         >
-            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
-                <button
-                    className="absolute top-[-5] right-[-25] p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer"
-                    onClick={reloadContent}
-                    title="Refresh Value"
-                >
-                    <IoReload size={24} />
-                </button>
-            )}
-
-            <h1
-                style={{
-                    ...(size !== 0 && { fontSize: `${size}px` }),
-                    color: color,
-                    fontWeight: weight
-                }}
-                className="text-center"
-            >
-                {typeof repetitionItem === "string" ||
-                typeof repetitionItem === "number"
-                    ? repetitionItem
-                    : sourceOfContent === "static" || sourceOfContent === ""
-                    ? staticContent
-                    : content}
-            </h1>
-        </div>
+            {typeof repetitionItem === "string" ||
+            typeof repetitionItem === "number"
+                ? repetitionItem
+                : sourceOfContent === "static" || sourceOfContent === ""
+                ? staticContent
+                : content}
+        </h1>
     );
 };
 

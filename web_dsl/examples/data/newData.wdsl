@@ -1,0 +1,55 @@
+webpage CarMonitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A car monitoring dashboard"
+    navbar: true
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+
+    Broker<MQTT> CarBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    BrokerTopic telemetryTopic
+        connection: CarBroker
+        topic: "telemetry"
+    end
+
+     Entity telemetry
+        source: telemetryTopic
+        strict: true
+        attributes:
+            - fps: list
+            - carInfo: dict
+            - hardware: list
+            - notifications: list
+    end
+
+    Component telemetryText
+        entity: telemetry
+        type: Text
+            content: this.hardware[0]
+    end
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use telemetryText
+            endcol
+        endrow
+    end

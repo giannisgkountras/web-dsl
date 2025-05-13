@@ -1,188 +1,39 @@
-import React, { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import JsonView from "@uiw/react-json-view";
-import { useWebsocket } from "../hooks/useWebsocket";
 import { WebsocketContext } from "../context/WebsocketContext";
-import convertTypeValue from "../utils/convertTypeValue";
 import customTheme from "../utils/jsonviewtheme";
 import { toast } from "react-toastify";
 import { IoReload } from "react-icons/io5";
-import { proxyRestCall } from "../api/proxyRestCall";
-import { queryDB } from "../api/dbQuery";
 import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
 
 const JsonViewer = ({
+    entityData,
     topic,
     attributes = [],
-    sourceOfContent,
-    restData,
-    dbData
+    sourceOfContent
 }) => {
     const [jsonData, setJsonData] = useState({});
-    const ws = useContext(WebsocketContext);
 
-    const fetchValue = () => {
-        const { name, path, method, params } = restData;
-
-        proxyRestCall({
-            name,
-            path,
-            method,
-            params
-        })
-            .then((response) => {
-                try {
-                    if (attributes.length === 0) {
-                        // If no attributes are provided, set the entire message as JSON data
-                        try {
-                            setJsonData(response);
-                        } catch (error) {
-                            toast.error(
-                                "An error occurred while updating value: " +
-                                    error.message
-                            );
-                            console.error("Error updating status:", error);
-                        }
-                    } else {
-                        const newJsonData = {};
-                        attributes.forEach((attribute) => {
-                            try {
-                                const value = getValueByPath(
-                                    response,
-                                    attribute
-                                );
-                                const name = getNameFromPath(attribute);
-                                newJsonData[name] = value;
-                            } catch (error) {
-                                toast.error(
-                                    "An error occurred while updating value: " +
-                                        error.message
-                                );
-                                console.error("Error updating status:", error);
-                            }
-                        });
-                        setJsonData(newJsonData);
-                    }
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
-    };
-
-    const reloadContent = () => {
-        if (sourceOfContent === "rest") {
-            fetchValue();
-        }
-        if (sourceOfContent === "db") {
-            fetchDB();
-        }
-    };
     useEffect(() => {
-        reloadContent();
-        if (sourceOfContent === "rest" && restData?.interval > 0) {
-            const interval = setInterval(() => {
-                fetchValue();
-            }, restData.interval);
-            return () => clearInterval(interval);
-        }
-        if (sourceOfContent === "db" && dbData?.interval > 0) {
-            const interval = setInterval(() => {
-                fetchDB();
-            }, dbData.interval);
-            return () => clearInterval(interval);
-        }
-    }, []);
-
-    useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        if (attributes.length === 0) {
-            // If no attributes are provided, set the entire message as JSON data
-            try {
-                setJsonData(msg);
-            } catch (error) {
-                toast.error(
-                    "An error occurred while updating value: " + error.message
-                );
-                console.error("Error updating status:", error);
-            }
-        } else {
-            const newJsonData = {};
-            attributes.forEach((attribute) => {
-                try {
-                    const value = getValueByPath(msg, attribute);
+        try {
+            if (attributes.length === 0) {
+                // If no attributes are provided, set the entire message as JSON data
+                setJsonData(entityData);
+            } else {
+                const newJsonData = {};
+                attributes.forEach((attribute) => {
+                    const value = getValueByPath(entityData, attribute);
                     const name = getNameFromPath(attribute);
                     newJsonData[name] = value;
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while updating value: " +
-                            error.message
-                    );
-                    console.error("Error updating status:", error);
-                }
-            });
-            setJsonData(newJsonData);
+                });
+                setJsonData(newJsonData);
+            }
+        } catch (error) {
+            toast.error(
+                "An error occurred while converting value: " + error.message
+            );
         }
-    });
-
-    const fetchDB = () => {
-        const { connection_name, database, query, collection, filter } = dbData;
-        queryDB({
-            connection_name,
-            database,
-            query,
-            collection,
-            filter
-        })
-            .then((response) => {
-                try {
-                    if (attributes.length === 0) {
-                        // If no attributes are provided, set the entire message as JSON data
-                        try {
-                            setJsonData(response);
-                        } catch (error) {
-                            toast.error(
-                                "An error occurred while updating value: " +
-                                    error.message
-                            );
-                            console.error("Error updating status:", error);
-                        }
-                    } else {
-                        const newJsonData = {};
-                        attributes.forEach((attribute) => {
-                            try {
-                                const value = getValueByPath(
-                                    response,
-                                    attribute
-                                );
-                                const name = getNameFromPath(attribute);
-                                newJsonData[name] = value;
-                            } catch (error) {
-                                toast.error(
-                                    "An error occurred while updating value: " +
-                                        error.message
-                                );
-                                console.error("Error updating status:", error);
-                            }
-                        });
-                        setJsonData(newJsonData);
-                    }
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while converting value: " +
-                            error.message
-                    );
-                }
-            })
-            .catch((error) => {
-                toast.error("Error fetching initial value: " + error.message);
-                console.error("Error fetching initial value:", error);
-            });
-    };
+    }, [entityData]);
 
     return (
         <div className="flex justify-center flex-col items-center p-4 w-fit bg-[#111828] rounded-2xl relative">
@@ -191,16 +42,13 @@ const JsonViewer = ({
                     Watching <span className="text-pink-400">{topic}</span>
                 </h1>
             )}
-            {"rest" === sourceOfContent && (
-                <button
-                    className="absolute top-0 right-0 p-4 text-gray-100 hover:text-gray-500 hover:cursor-pointer z-10"
-                    onClick={reloadContent}
-                    title="Refresh Value"
-                >
-                    <IoReload size={24} />
-                </button>
+
+            {jsonData && <JsonView value={jsonData} style={customTheme} />}
+            {!jsonData && (
+                <div className="flex justify-center items-center w-full h-64 text-white">
+                    <p className="animate-pulse">Loading data...</p>
+                </div>
             )}
-            <JsonView value={jsonData} style={customTheme} />
         </div>
     );
 };

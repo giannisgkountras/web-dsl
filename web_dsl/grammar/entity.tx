@@ -11,6 +11,7 @@ Entity:
         'source:' source=[EntitySource]
         ('attributes:' '-' attributes*=Attribute['-'])?
         ('strict:' strict=BOOL)?
+        ('interval:' interval=INT)?
     )#
     'end'
 ;

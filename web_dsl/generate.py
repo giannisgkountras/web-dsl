@@ -79,13 +79,40 @@ def generate(model_path, gen_path):
 
     # Generate the screen components
     for screen in model.screens:
-        print(f"Generating screen: {screen.name}")
-        # Get all components
-        all_components = get_children_of_type("Form", screen)
+
+        # Get all entities used in this screen
+        all_components = get_children_of_type("Component", screen)
+
+        # Get all component references
+        all_component_references = get_children_of_type("ComponentRef", screen)
+
+        # Augument the components with the references
+        for component_ref in all_component_references:
+            all_components.append(component_ref.ref)
+
+        # Get all entities used in this screen
+        entities = set()
         for component in all_components:
-            print(component.__class__.__name__)
+            if getattr(component, "entity", None) is not None:
+                entities.add(component.entity)
+
+        # Get all conditions used in this screen
+        all_conditions = get_children_of_type("Condition", screen)
+        for condition in all_conditions:
+            if getattr(condition, "entity", None) is not None:
+                entities.add(condition.entity)
+
+        # Get all repetitions used in this screen
+        all_repetitions = get_children_of_type("Repetition", screen)
+        for repetition in all_repetitions:
+            if getattr(repetition, "entity", None) is not None:
+                entities.add(repetition.entity)
+
+        # Transform the entities into a list
+        entities = list(entities)
+        print(f"Generating screen: {screen.name}")
         try:
-            html_content = screen_template.render(screen=screen)
+            html_content = screen_template.render(screen=screen, entities=entities)
         except TemplateError as e:
             print("Jinja2 Template Error:", e)
             traceback.print_exc()

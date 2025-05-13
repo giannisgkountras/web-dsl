@@ -1,26 +1,14 @@
-import React, { useContext, useEffect, useState } from "react";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { WebsocketContext } from "../context/WebsocketContext";
-import { toast } from "react-toastify";
+import { useEffect, useState } from "react";
 
-const Alive = ({ topic, timeout, description }) => {
-    const ws = useContext(WebsocketContext);
+const Alive = ({ entityData, timeout, description }) => {
     const [lastUpdated, setLastUpdated] = useState(null);
     const [status, setStatus] = useState("Offline");
 
-    // When a new message is received, build an object based on the entity's attributes.
-    useWebsocket(ws, topic, (msg) => {
-        try {
-            const now = new Date();
-            setStatus("Active");
-            setLastUpdated(now);
-        } catch (error) {
-            toast.error(
-                "An error occurred while updating status: " + error.message
-            );
-            console.error("Error updating status:", error);
-        }
-    });
+    useEffect(() => {
+        const now = new Date();
+        setStatus("Active");
+        setLastUpdated(now);
+    }, [entityData]);
 
     useEffect(() => {
         const interval = setInterval(() => {

@@ -30,6 +30,7 @@ from .lib.component import (
 
 from .lib.condition import Condition
 from .lib.repetition import Repetition
+from .lib.entity import Entity
 from .validate import validate_model
 
 # Map grammar rules to Python classes
@@ -55,6 +56,7 @@ custom_classes = [
     Form,
     Repetition,
     ProgressBar,
+    Entity,
     # Add other classes here
 ]
 
