@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
-import {ToastContainer, Bounce} from 'react-toastify';
+import {ToastContainer, Flip} from 'react-toastify';
 {% for screen in screens %}
 import {{ screen.name }} from './screens/{{ screen.name }}';
 {% endfor %}
@@ -46,8 +46,8 @@ const App = () => {
         rtl={false}
         pauseOnHover
         theme="dark"
-        transition={Bounce}
-        limit={4}
+        transition={Flip}
+        limit={10}
         stacked={true}
       />
     </WebsocketProvider>
