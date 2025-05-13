@@ -31,23 +31,23 @@ def validate_model(model):
             )
 
     # Validate conditions with strict entities
-    all_conditions = get_children_of_type("Condition", model)
-    conditions_to_check = [
-        c for c in all_conditions if c.entity and c.entity in strict_entities
-    ]
-    for item in conditions_to_check:
-        strict_entity_attributes = item.entity.attributes
-        strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
-        condition = item.condition
-        flat_primitives = find_flat_primitive_lists(condition)
+    # all_conditions = get_children_of_type("Condition", model)
+    # conditions_to_check = [
+    #     c for c in all_conditions if c.entity and c.entity in strict_entities
+    # ]
+    # for item in conditions_to_check:
+    #     strict_entity_attributes = item.entity.attributes
+    #     strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
+    #     condition = item.condition
+    #     flat_primitives = find_flat_primitive_lists(condition)
 
-        for primitive in flat_primitives:
-            attribute_root = primitive[0]
+    #     for primitive in flat_primitives:
+    #         attribute_root = primitive[0]
 
-            if attribute_root not in strict_entity_attributes_names:
-                errors.append(
-                    f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{item.entity.name}'"
-                )
+    #         if attribute_root not in strict_entity_attributes_names:
+    #             errors.append(
+    #                 f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{item.entity.name}'"
+    #             )
 
     # Validate CRUD table
     all_crud_tables = get_children_of_type("CrudTable", model)

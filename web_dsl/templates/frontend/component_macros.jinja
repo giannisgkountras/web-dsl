@@ -334,35 +334,15 @@
         {% endif %}
 
     {% elif element.__class__.__name__ == 'Condition'%}
-        {% set sourceOfContent = element.sourceOfContent %}
-        {% set restData={}%}
-        {% set dbData={}%}
-        {% set topic=None%}
-
-        {% if sourceOfContent=="rest" %}
-            {% set restData = {
-                "name": element.entity.source.connection.name or 'default',
-                "path": element.entity.source.path or '',
-                "method": element.entity.source.method or 'GET',
-                "params": element.entity.source.params or {},
-            } %}
-        {% elif sourceOfContent=="db" %}
-            {% set dbData = {
-                "connection_name": element.entity.source.connection.name or 'default',
-                "database": element.entity.source.connection.database or '',
-                "query": element.entity.source.query or {},
-                "filter": element.entity.source.filter or {},
-                "collection": element.entity.source.collection or '',
-            } %}
-        {% elif sourceOfContent=="broker"%}
-            {% set topic=element.entity.source.topic %}
-        {% endif %}
-
         <Condition
-            topic="{{topic}}"
-            restData={ {{restData}} }
-            dbData={ {{dbData}} }
-            sourceOfContent="{{sourceOfContent}}"
+            allDataNeededFromEntities={ 
+                {
+                {% for entity in element.entities_list %}
+                    {# Create a dictionary with all the entities screen data #}
+                    {{entity.name}}: {{entity.name}}Data ,
+                {% endfor %}
+                }
+            }
             condition={ {{element.condition}} }
             elements={ [ 
                 {% for item in element.component %}
@@ -372,7 +352,6 @@
                 {% for item in element.componentElse %}
                 {{ render_element(item) }},
                 {% endfor %}] }
-            interval={ {{element.interval}} }
         />
 
     {% elif element.__class__.__name__ == 'Repetition'%}

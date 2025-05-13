@@ -2,18 +2,15 @@ class Condition:
     def __init__(
         self,
         parent=None,
-        entity=None,
         expr=None,
         component=None,
         componentElse=None,
-        interval=None,
         nested=None,
     ):
+        self.entities = set()
         self.parent = parent
-        self.entity = entity
         self.condition = self.format_condition(expr)
         self.component = component
-
         if len(componentElse) > 0:
             self.componentElse = componentElse
         elif nested is not None:
@@ -21,23 +18,7 @@ class Condition:
                 nested
             ]  # ARRAY BECAUSE THE COMPOENENT ELSE IS A LIST of components
 
-        self.interval = interval
-
-        try:
-            entityRef = entity.source.connection.__class__.__name__
-        except AttributeError:
-            entityRef = None  # or "Unknown", or whatever fallback you prefer
-        source_map = {
-            "MQTTBroker": "broker",
-            "AMQPBroker": "broker",
-            "RedisBroker": "broker",
-            "RESTApi": "rest",
-            "Database": "db",
-            "MySQL": "db",
-            "MongoDB": "db",
-        }
-
-        self.sourceOfContent = source_map.get(entityRef, "static")
+        self.entities_list = list(self.entities)
 
     def format_attribute_path(self, path):
         """
@@ -51,6 +32,10 @@ class Condition:
             return "true" if path else "false"
 
         path_array = []
+
+        if hasattr(path, "entity") and path.entity is not None:
+            self.entities.add(path.entity)
+            path_array.append(path.entity.name)
         for accessor in path.accessors:
             if hasattr(accessor, "index") and accessor.index is not None:
                 accessor.index = int(accessor.index)

@@ -5,7 +5,6 @@ import entity
 
 Condition:
     'if' expr=Expression
-    'from' 'entity' entity=[Entity]
     'use' component+=[Component][',']
     (
       'else'
@@ -15,9 +14,7 @@ Condition:
           'use' componentElse+=[Component][',']
       )
     )?
-    ('every' interval=INT)?
 ;
-
 
 ElseClause:
     'else'
@@ -57,7 +54,7 @@ Value:
 ;
 
 LiveOrStaticValue:
-    Value | NestedAccessPath
+    Value | NestedAccessPathEntity
 ;
 
 HalfExpression:

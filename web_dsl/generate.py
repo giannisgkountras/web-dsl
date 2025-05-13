@@ -99,8 +99,10 @@ def generate(model_path, gen_path):
         # Get all conditions used in this screen
         all_conditions = get_children_of_type("Condition", screen)
         for condition in all_conditions:
-            if getattr(condition, "entity", None) is not None:
-                entities.add(condition.entity)
+            if getattr(condition, "entities", None) is not None:
+                entities_list = list(condition.entities)
+                for entity in entities_list:
+                    entities.add(entity)
 
         # Get all repetitions used in this screen
         all_repetitions = get_children_of_type("Repetition", screen)

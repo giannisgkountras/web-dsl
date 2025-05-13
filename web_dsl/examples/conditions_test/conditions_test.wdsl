@@ -102,15 +102,13 @@ webpage ConditionsTest
         row
             col
                 // TEST NUMBER 1
-                if (30 < this.data.temp and this.data.hum <80) or (this.data.online == "yes" and this.data.lastIn < this.data.lastInMax)
-                from entity DataFromBroker
-                use StaticTextCrazy
-                else if this.data.temp < 10 from entity DataFromBroker
-                use LiveText
+                if (30 < DataFromBroker.data.temp and weatherData.data.hum <80) or (DataFromBroker.data.online == "yes" and DataFromBroker.data.lastIn < DataFromBroker.data.lastInMax)
+                    use StaticTextCrazy
+                else if DataFromBroker.data.temp < 10
+                    use LiveText
 
-                if 0 < this.data.temp
-                from entity DataFromBroker
-                use StaticTextSimple 
+                if 0 < DataFromBroker.data.temp
+                    use StaticTextSimple 
             endcol
             col
                 use BrokerJson
