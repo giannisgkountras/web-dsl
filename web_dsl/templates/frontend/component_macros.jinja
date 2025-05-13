@@ -27,12 +27,15 @@
         {% set dbData={}%}
         {% set topic=None%}
 
+        {% set interval= element.interval or 0%}
+
         {% if sourceOfContent=="rest" %}
             {% set restData = {
                 "name": element.entity.source.connection.name or 'default',
                 "path": element.entity.source.path or '',
                 "method": element.entity.source.method or 'GET',
                 "params": element.entity.source.params or {},
+                "interval": interval
             } %}
         {% elif sourceOfContent=="db" %}
             {% set dbData = {
@@ -41,6 +44,7 @@
                 "query": element.entity.source.query or {},
                 "filter": element.entity.source.filter or {},
                 "collection": element.entity.source.collection or '',
+                "interval": interval
             } %}
         {% elif sourceOfContent=="broker"%}
             {% set topic=element.entity.source.topic %}
@@ -263,7 +267,7 @@
                 {% endif %}
             />
 
-        {% elif type.name=="CrudTable" %}
+        {% elif type.name=="Table" %}
             {%if element.entity.source.connection.__class__.__name__ == "MongoDB" %}
                 {%set dbType="mongo"%}
             {%elif element.entity.source.connection.__class__.__name__ == "MySQL" %}
@@ -271,7 +275,7 @@
             {%else%}
                 {% set dbType=""%}
             {%endif%}
-            <CrudTable
+            <Table
                 {% if type.attributes %}
                     attributes={ {{type.attributes}} }
                 {% endif %}
@@ -286,6 +290,7 @@
                 {% if type.table%}
                     table={ "{{type.table}}" }
                 {% endif %}
+                crud = { "{{type.crud}}" }
             />
         
         {% elif type.name=="Form"%}
@@ -367,6 +372,7 @@
                 {% for item in element.componentElse %}
                 {{ render_element(item) }},
                 {% endfor %}] }
+            interval={ {{element.interval}} }
         />
 
     {% elif element.__class__.__name__ == 'Repetition'%}
@@ -415,6 +421,7 @@
                 elementElse={ {{ render_element(element.componentElse) }} }
             {% endif %}
             orientation={"{{element.orientation}}" }
+            interval={ {{element.interval}} }
    
         />
     {% endif %}

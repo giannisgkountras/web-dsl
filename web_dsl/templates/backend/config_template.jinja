@@ -12,6 +12,7 @@ brokers:
     topics:
     {% for topic_config in topic_configs if topic_config.broker == broker.name %}
       - topic: "{{ topic_config.topic }}"
+        strict: {{ topic_config.strict }}
         attributes:
         {% for attribute in topic_config.attributes %}
           - "{{ attribute }}"

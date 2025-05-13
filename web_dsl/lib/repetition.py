@@ -12,6 +12,7 @@ class Repetition:
         componentElseRef=None,
         dataElse=None,
         orientation=None,
+        interval=None,
     ):
 
         self.parent = parent
@@ -41,6 +42,11 @@ class Repetition:
             self.orientation = "row"
         else:
             self.orientation = orientation
+
+        if interval is None:
+            self.interval = 0
+        else:
+            self.interval = interval
 
         try:
             entityRef = entity.source.connection.__class__.__name__

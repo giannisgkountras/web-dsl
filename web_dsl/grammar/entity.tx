@@ -9,7 +9,7 @@ Entity:
     (
         ('description:' description=STRING)?
         'source:' source=[EntitySource]
-        'attributes:' '-' attributes*=Attribute['-']
+        ('attributes:' '-' attributes*=Attribute['-'])?
         ('strict:' strict=BOOL)?
     )#
     'end'

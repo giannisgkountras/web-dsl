@@ -63,6 +63,18 @@ const ProgressBar = ({
 
     useEffect(() => {
         reloadValue();
+        if (sourceOfContent === "rest" && restData?.interval > 0) {
+            const interval = setInterval(() => {
+                reloadValue();
+            }, restData.interval);
+            return () => clearInterval(interval);
+        }
+        if (sourceOfContent === "db" && dbData?.interval > 0) {
+            const interval = setInterval(() => {
+                reloadValue();
+            }, dbData.interval);
+            return () => clearInterval(interval);
+        }
     }, []);
     return (
         <div className="w-full flex flex-col justify-center items-center relative">

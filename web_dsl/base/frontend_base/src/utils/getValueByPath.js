@@ -7,7 +7,8 @@ export const getValueByPath = (obj, path) => {
             if (acc && key in acc) {
                 return acc[key];
             } else {
-                throw new Error(`Invalid path at key: ${key}`);
+                toast.error(`Invalid path at key: ${key}`);
+                return undefined;
             }
         }, obj);
         return result;

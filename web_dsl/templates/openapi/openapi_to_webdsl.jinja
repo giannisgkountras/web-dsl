@@ -1,0 +1,105 @@
+webpage {{ title }}
+    author: "{{ author }}"
+{% if description %}
+    description: "{{ description }}"
+{% endif %}
+{% if version %}
+    version: "{{ version }}"
+{% endif %}
+    navbar: true
+
+// ========== Connections ========== //
+
+API backendAPI
+    host: "0.0.0.0"
+    port: 8321
+end
+
+{% for api in apis %}
+RESTApi {{ api.name }}
+    host: "{{ api.base_url }}"
+{% if api.headers %}
+    headers: {{ api.headers | tojson }}
+{% endif %}
+{% if api.auth %}
+    auth: {{ api.auth }}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Specific endpoints ========== //
+
+{% for ep in endpoints %}
+RESTEndpoint {{ ep.name }}
+    connection: {{ ep.connection }}
+{% if ep.path %}
+    path: "{{ ep.path }}"
+{% endif %}
+    method: {{ ep.method }}
+{% if ep.body %}
+    body: {{ ep.body | tojson }}
+{% endif %}
+{% if ep.params %}
+    params: {{ ep.params | tojson }}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Entities ========== //
+
+{% for entity in entities %}
+Entity {{ entity.name }}
+    source: {{ entity.source }}
+{% if entity.description%}
+    description: "{{ entity.description }}"
+{% endif %}
+{% if entity.attribute_list %}
+    attributes:
+    {% for attr in entity.attribute_list %}
+        - {{ attr }}
+    {% endfor %}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Components ========== //
+    
+{% for component in components %}
+Component {{ component.name }}
+{% if component.entity %}
+    entity: {{ component.entity }}
+{% endif %}
+    type: {{ component.type }}
+{% if component.type == "Text" and component.content %}
+        content: {{ component.content }}
+{% elif component.type == "Gauge" and component.value %}
+        value: {{ component.value }}
+{% elif component.type == "Progressbar" and component.value %}
+        value: {{ component.value }}
+        max: 100
+{% elif component.type == "Image" and component.source %}
+        source: {{ component.source }}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Screens ========== //
+
+Screen Home
+    title: "Home"
+    url: "/"
+
+    {% for i in range(0, components|length, 3) %}
+    row
+        {% for component in components[i:i+3] %}
+        col
+            use {{ component.name }}
+        endcol
+        {% endfor %}
+    endrow
+    {% endfor %}
+end

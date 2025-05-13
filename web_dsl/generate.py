@@ -6,7 +6,6 @@ from jinja2 import Environment, FileSystemLoader, TemplateError
 from .language import build_model
 from textx.model import get_children_of_type
 import traceback
-from collections import defaultdict
 from web_dsl.definitions import TEMPLATES_PATH
 
 
@@ -156,11 +155,13 @@ def generate(model_path, gen_path):
             attributes.append(attribute.name)
 
         if entity.source.__class__.__name__ == "BrokerTopic":
+
             topic_configs.append(
                 {
                     "topic": entity.source.topic,
                     "broker": entity.source.connection.name,
                     "attributes": attributes,
+                    "strict": entity.strict,
                 }
             )
 

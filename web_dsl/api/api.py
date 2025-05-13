@@ -6,6 +6,8 @@ import tarfile
 import subprocess
 import time
 import shutil
+import traceback
+import yaml
 
 from dotenv import load_dotenv
 from fastapi import (
@@ -26,6 +28,7 @@ from pydantic import BaseModel
 
 from web_dsl.language import build_model
 from web_dsl.generate import generate
+from web_dsl.m2m.openapi_to_webdsl import transform_openapi_to_webdsl
 
 # Load the .env file
 load_dotenv()
@@ -160,6 +163,7 @@ async def validate_model_file(
         build_model(file_path)
         return {"status": 200, "message": "Model validation success"}
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
 
 
@@ -174,6 +178,7 @@ async def validate_model_base64(fenc: str = "", api_key: str = Security(get_api_
         build_model(file_path)
         return {"status": 200, "message": "Model validation success"}
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
 
 
@@ -197,6 +202,7 @@ async def generate_from_model(
             media_type="application/x-tar",
         )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 
@@ -222,6 +228,38 @@ async def generate_from_file(
             media_type="application/x-tar",
         )
     except Exception as e:
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
+
+
+# ============= Transformations Endpoint =============
+@app.post("/transform/openapi", tags=["Transformations"])
+async def generate_from_model(
+    openapi_model: UploadFile = File(...), api_key: str = Security(get_api_key)
+):
+    uid = get_unique_id()
+    openapi_path = os.path.join(TMP_DIR, f"openapi-{uid}.yaml")
+    web_dsl_path = os.path.join(TMP_DIR, f"webdsl-{uid}.wdsl")
+
+    save_upload_file(openapi_model, openapi_path)
+
+    try:
+        with open(openapi_path, "r") as f:
+            openapi_data = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid YAML: {str(e)}")
+
+    try:
+        web_dsl_model = transform_openapi_to_webdsl(openapi_data)
+        save_text_to_file(web_dsl_model, web_dsl_path)
+        print(f"Generated WDSL model: {web_dsl_path}")
+        return FileResponse(
+            path=web_dsl_path,
+            filename=os.path.basename(web_dsl_path),
+            media_type="text/plain",  # Use correct MIME type
+        )
+    except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 

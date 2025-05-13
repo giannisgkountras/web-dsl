@@ -15,6 +15,7 @@ Repetition:
         ('with' dataElse=NestedAccessPathItem)?
     )?
     ('orientation:' orientation=OrientationType)?
+    ('interval:' interval=INT)?
     
 ;
 

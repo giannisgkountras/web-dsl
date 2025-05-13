@@ -1,15 +1,19 @@
 class Component:
-    def __init__(self, parent=None, name=None, entity=None, type=None):
+    def __init__(self, parent=None, name=None, entity=None, type=None, interval=None):
         self.isComponent = True
         self.parent = parent
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
+        if interval is not None and interval > 0:
+            self.interval = interval
+        else:
+            self.interval = None
 
         try:
             entityRef = entity.source.connection.__class__.__name__
         except AttributeError:
-            entityRef = None  # or "Unknown", or whatever fallback you prefer
+            entityRef = None
         source_map = {
             "MQTTBroker": "broker",
             "AMQPBroker": "broker",
@@ -260,20 +264,26 @@ class Logs(ComponentType):
             ]
 
 
-class CrudTable(ComponentType):
+class Table(ComponentType):
     def __init__(
         self,
         parent=None,
-        name="CrudTable",
+        name="Table",
         attributes=None,
         primary_key=None,
         table=None,
         description=None,
+        crud=None,
     ):
         super().__init__(parent, name)
         self.primary_key = primary_key
         self.description = description
         self.table = table
+        if crud is not None:
+            self.crud = "true" if crud else "false"
+        else:
+            self.crud = "false"
+
         if attributes is not None:
             self.attributes = [
                 self.format_attribute_path(attribute) for attribute in attributes
@@ -344,7 +354,6 @@ class ProgressBar(ComponentType):
         textColor=None,
     ):
         super().__init__(parent, name)
-        print(max_static)
         if value is not None:
             self.value = self.format_attribute_path(value)
         self.value_static = value_static

@@ -1,0 +1,122 @@
+webpage Simple_Todos_API
+    author: ""
+    description: "A simple API to manage todos"
+    navbar: true
+
+// ========== Connections ========== //
+
+API backendAPI
+    host: "0.0.0.0"
+    port: 8321
+end
+
+RESTApi https_jsonplaceholder_typicode_com
+    host: "https://jsonplaceholder.typicode.com/"
+end
+
+
+// ========== Specific endpoints ========== //
+
+RESTEndpoint get__todos
+    connection: https_jsonplaceholder_typicode_com
+    path: "/todos"
+    method: GET
+end
+
+RESTEndpoint get__todos_20
+    connection: https_jsonplaceholder_typicode_com
+    path: "/todos/20"
+    method: GET
+end
+
+
+// ========== Entities ========== //
+
+Entity get__todos__Entity
+    source: get__todos
+    attributes:
+        - userId: float
+        - id: float
+        - title: str
+        - completed: bool
+end
+
+Entity get__todos_20__Entity
+    source: get__todos_20
+    attributes:
+        - userId: float
+        - id: float
+        - title: str
+        - completed: bool
+end
+
+
+// ========== Components ========== //
+    
+Component get__todos__Text_this_0__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[0].title
+end
+
+Component get__todos__Text_this_1__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[1].title
+end
+
+Component get__todos__Text_this_2__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[2].title
+end
+
+Component get__todos_20__Gauge_this_id
+    entity: get__todos_20__Entity
+    type: Gauge
+        value: this.id
+end
+
+Component get__todos_20__Progressbar_this_id
+    entity: get__todos_20__Entity
+    type: Progressbar
+        value: this.id
+        max: 100
+end
+
+Component get__todos_20__Image_this_name
+    entity: get__todos_20__Entity
+    type: Image
+        source: this.name
+end
+
+
+// ========== Screens ========== //
+
+Screen Home
+    title: "Home"
+    url: "/"
+
+    row
+        col
+            use get__todos__Text_this_0__title
+        endcol
+        col
+            use get__todos__Text_this_1__title
+        endcol
+        col
+            use get__todos__Text_this_2__title
+        endcol
+    endrow
+    row
+        col
+            use get__todos_20__Gauge_this_id
+        endcol
+        col
+            use get__todos_20__Progressbar_this_id
+        endcol
+        col
+            use get__todos_20__Image_this_name
+        endcol
+    endrow
+end

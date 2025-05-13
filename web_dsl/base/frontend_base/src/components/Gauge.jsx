@@ -46,6 +46,18 @@ const Gauge = ({
 
     useEffect(() => {
         reloadValue();
+        if (sourceOfContent === "rest" && restData?.interval > 0) {
+            const interval = setInterval(() => {
+                reloadValue();
+            }, restData.interval);
+            return () => clearInterval(interval);
+        }
+        if (sourceOfContent === "db" && dbData?.interval > 0) {
+            const interval = setInterval(() => {
+                reloadValue();
+            }, dbData.interval);
+            return () => clearInterval(interval);
+        }
     }, []);
 
     return (
