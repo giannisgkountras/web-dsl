@@ -2,12 +2,10 @@ class Repetition:
     def __init__(
         self,
         parent=None,
-        entity=None,
         item=None,
         component=None,
         data=None,
         expr=None,
-        condition=None,
         componentElse=None,
         componentRef=None,
         componentElseRef=None,
@@ -17,7 +15,6 @@ class Repetition:
 
         self.entities = set()
         self.parent = parent
-        self.entity = entity
         self.item = self.format_attribute_path(item)
         if data is not None:
             self.data = self.format_attribute_path(data)
@@ -46,25 +43,9 @@ class Repetition:
 
         self.entities_list = list(self.entities)
 
-        try:
-            entityRef = entity.source.connection.__class__.__name__
-        except AttributeError:
-            entityRef = None  # or "Unknown", or whatever fallback you prefer
-        source_map = {
-            "MQTTBroker": "broker",
-            "AMQPBroker": "broker",
-            "RedisBroker": "broker",
-            "RESTApi": "rest",
-            "Database": "db",
-            "MySQL": "db",
-            "MongoDB": "db",
-        }
-
-        self.sourceOfContent = source_map.get(entityRef, "static")
         self.condition = self.format_condition(expr)
         if self.condition == None:
             self.condition = "true"
-        print("Condition: ", self.condition)
 
     def format_attribute_path(self, path):
         """
@@ -99,7 +80,6 @@ class Repetition:
         Here we use Half Expression
         """
         if condition is not None:
-            # WE INITIALIZE THE CONDITION ARRAY WITH ONE ELEMENT BECAUSE WE WILL USE HALF EXPRESSION
             condition_array = []
             if hasattr(condition, "left") and condition.op is not None:
                 condition_array.append(self.format_attribute_path(condition.left))

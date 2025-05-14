@@ -16,19 +16,19 @@ def validate_model(model):
         components_referencing_strict_entities
     )
 
-    # Validate repetitions with strict entities
-    all_repetitions = get_children_of_type("Repetition", model)
-    repetitions_to_check = [
-        r for r in all_repetitions if r.entity and r.entity in strict_entities
-    ]
-    for repetition in repetitions_to_check:
-        attribute_root = repetition.item[0]
-        strict_entity_attributes = repetition.entity.attributes
-        strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
-        if attribute_root not in strict_entity_attributes_names:
-            errors.append(
-                f"Repetition uses attribute '{attribute_root}' not allowed by strict entity '{repetition.entity.name}'"
-            )
+    # # Validate repetitions with strict entities
+    # all_repetitions = get_children_of_type("Repetition", model)
+    # repetitions_to_check = [
+    #     r for r in all_repetitions if r.entity and r.entity in strict_entities
+    # ]
+    # for repetition in repetitions_to_check:
+    #     attribute_root = repetition.item[0]
+    #     strict_entity_attributes = repetition.entity.attributes
+    #     strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
+    #     if attribute_root not in strict_entity_attributes_names:
+    #         errors.append(
+    #             f"Repetition uses attribute '{attribute_root}' not allowed by strict entity '{repetition.entity.name}'"
+    #         )
 
     # Validate conditions with strict entities
     # all_conditions = get_children_of_type("Condition", model)
