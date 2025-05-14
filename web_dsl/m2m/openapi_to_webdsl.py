@@ -55,8 +55,13 @@ class Entity:
 attribute_map = {
     "Text": "content",
     "Gauge": "value",
-    "Progressbar": "value",
+    "ProgressBar": "value",
     "Image": "source",
+    "LineChart": "",
+    "BarChart": "",
+    "PieChart": "",
+    "JsonViewer": "",
+    "Table": "",
 }
 
 
@@ -147,20 +152,56 @@ def extract_schema_props(
 
 # ========== Component Annotations ==============
 def parse_component_annotations(
-    description: str, ep_name: str, entity_name: str
+    x_webdsl: str, ep_name: str, entity_name: str
 ) -> List[Dict[str, Any]]:
-    annotations = re.findall(r"webdsl\.(\w+)\.(\w+(?:\.\w+|\[\d+\])*)", description)
+
+    # ——— Normalize input to one string ———
+    if isinstance(x_webdsl, list):
+        content = "\n".join(x_webdsl)
+    else:
+        content = x_webdsl
+
     result = []
-    for ctype, path in annotations:
-        ctype = ctype.capitalize()
-        if ctype in attribute_map:
-            comp = {
-                "name": f"{ep_name}__{ctype}_{path.replace('.', '_').replace('[', '_').replace(']', '_')}",
-                "type": ctype,
-                "entity": entity_name,
-                attribute_map[ctype]: path,
-            }
-            result.append(comp)
+
+    new_rx = re.compile(
+        r"(?:-\s*)?"  # optional leading "-"
+        r"(?:"  # start optional path + arrow group
+        r"(?P<path>\w+(?:\[\d+\])?(?:\.\w+)+)"  # foo.bar or foo[0].bar...
+        r"\s*->\s*"
+        r")?"  # end optional path + arrow
+        r"(?P<ctype>\w+)"  # component type
+        r"(?:\s*@\s*(?P<row>\d+)\s*,\s*(?P<col>\d+))?"  # optional @ row, col
+    )
+
+    for m in new_rx.finditer(content):
+        path = m.group("path")
+        ctype = m.group("ctype")
+        row = int(m.group("row")) if m.group("row") else 0
+        col = int(m.group("col")) if m.group("col") else 0
+
+        if ctype not in attribute_map:
+            print(f"Unsupported component type: {ctype}")
+            continue
+
+        # build the component dict
+        suffix = (
+            path.replace(".", "_").replace("[", "_").replace("]", "_")
+            if path
+            else f"_r{row}_c{col}" if row and col else ""
+        )
+
+        name_safe = f"{ep_name}__{ctype}_{suffix}"
+        comp = {
+            "name": name_safe,
+            "type": ctype,
+            "entity": entity_name,
+            attribute_map[ctype]: path,
+            "row": row,
+            "col": col,
+        }
+
+        print(f"Component: {comp}")
+        result.append(comp)
     return result
 
 
@@ -201,10 +242,10 @@ def process_operation(
             break
 
     # Use all related entities for annotation mapping
-    description = operation.get("description", "")
+    x_webdsl = operation.get("x-webdsl", "")
     components = []
     for entity_name in generated_entities:
-        components += parse_component_annotations(description, ep_name, entity_name)
+        components += parse_component_annotations(x_webdsl, ep_name, entity_name)
 
     endpoint = RESTEndpoint(
         name=ep_name, connection=conn_name, path=path, method=verb.upper()
