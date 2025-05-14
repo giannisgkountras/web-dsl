@@ -9,7 +9,9 @@ import accessors
 import conditions
 import repetition
 
+
 WebPage:
+    (imports+=Import)?
     'webpage' name=ID 
     ('author:' author=STRING)?
     ('version:' version=STRING)?

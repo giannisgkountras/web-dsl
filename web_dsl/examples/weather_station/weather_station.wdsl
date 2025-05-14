@@ -187,10 +187,10 @@ webpage WeatherStation
                 endrow
                 row
                     col
-                        if this.current.weather_code == 2 from entity weatherData
+                        if weatherData.current.weather_code == 2
                         use NotClearWeather
                     
-                        if this.current.weather_code == 0 from entity weatherData
+                        if weatherData.current.weather_code == 0
                             use ClearWeather
             
                         use CurrentTime

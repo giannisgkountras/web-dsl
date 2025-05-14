@@ -18,6 +18,9 @@ const CustomPieChart = ({
     const pathNames = allPaths.map(getNameFromPath);
 
     useEffect(() => {
+        if (!entityData) {
+            return;
+        }
         if (sourceOfContent === "rest" || sourceOfContent === "db") {
             const transformed = transformToArrayOfObjects(
                 entityData,

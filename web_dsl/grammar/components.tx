@@ -3,7 +3,7 @@ import connections
 import types
 import accessors
 import sources
-
+import utils
 
 Component:
     'Component' name=ID

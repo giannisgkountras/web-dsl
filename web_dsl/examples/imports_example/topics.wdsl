@@ -1,0 +1,11 @@
+import "connections.wdsl"
+
+BrokerTopic Notifications
+    connection: NotificationsBroker
+    topic: "notifications"
+end
+
+BrokerTopic Chart
+    connection: NotificationsBroker
+    topic: "chart"
+end

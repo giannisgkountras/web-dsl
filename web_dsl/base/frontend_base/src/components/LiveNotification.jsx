@@ -1,9 +1,15 @@
 import { toast } from "react-toastify";
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getValueByPath } from "../utils/getValueByPath";
 
 const LiveNotification = ({ entityData, type = "info", contentPath }) => {
-    const message = getValueByPath(entityData, contentPath) || "";
+    const [message, setMessage] = useState("");
+    useEffect(() => {
+        if (!entityData) {
+            return;
+        }
+        setMessage(getValueByPath(entityData, contentPath));
+    }, [entityData]);
 
     const notify = {
         success: () => toast.success(message),

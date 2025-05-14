@@ -6,6 +6,9 @@ const Logs = ({ entityData, attributes = [] }) => {
     const [logs, setLogs] = useState([]);
 
     useEffect(() => {
+        if (!entityData) {
+            return;
+        }
         try {
             if (attributes.length === 0) {
                 // If no attributes are provided, set the entire message as JSON data

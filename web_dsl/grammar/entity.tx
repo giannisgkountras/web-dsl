@@ -1,6 +1,7 @@
 import sources
 import types
 import connections
+import utils
 
 EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 

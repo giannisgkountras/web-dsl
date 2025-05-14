@@ -1,0 +1,42 @@
+import "connections.wdsl"
+
+MySQLQuery allProducts
+    connection: WarehouseSQL
+    query: "SELECT * from products"
+end
+
+MySQLQuery salesCategory
+    connection: WarehouseSQL
+    query: "SELECT * from sales_by_category"
+end
+
+MySQLQuery yearlyIncome
+    connection: WarehouseSQL
+    query: "SELECT
+                year,
+                SUM(CASE WHEN category = 'Electronics' THEN income ELSE 0 END) AS Electronics,
+                SUM(CASE WHEN category = 'Furniture' THEN income ELSE 0 END) AS Furniture,
+                SUM(CASE WHEN category = 'Clothing' THEN income ELSE 0 END) AS Clothing,
+                SUM(CASE WHEN category = 'Toys' THEN income ELSE 0 END) AS Toys
+            FROM
+                yearly_income
+            GROUP BY
+                year
+            ORDER BY
+                year;"
+end
+
+MongoDBQuery allWarehouses
+    connection: WarehouseMongo
+    collection: "warehouses"
+end
+
+MongoDBQuery allRevenue
+    connection: WarehouseMongo
+    collection: "revenue"
+end
+
+RESTEndpoint WeatherEnpoint
+    connection: OpenMeteo
+    path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
+end

@@ -1,8 +1,11 @@
 from textx import get_children_of_type, TextXSemanticError
 
 
-def validate_model(model):
+def validate_model(model, main_file):
     """Validates the model."""
+
+    validate_webpage(model, main_file)
+
     all_entities = get_children_of_type("Entity", model)
     strict_entities = strict_entities = [e for e in all_entities if e.strict]
 
@@ -58,6 +61,24 @@ def validate_model(model):
         raise TextXSemanticError(
             f"Model validation failed with {len(errors)} errors:\n{error_text}"
         )
+
+
+def validate_webpage(model, main_file):
+    """
+    Validate that only the main file contains a webpage definition.
+    """
+    # Check if the main file has exactly one webpage
+    if not model.webpage:
+        raise Exception(
+            f"Main file {main_file} must contain exactly one 'webpage' definition."
+        )
+
+    # Check imported files (recursively loaded models are accessible via _tx_model_repository)
+    for imported_model in model._tx_model_repository.all_models:
+        if imported_model != model and imported_model.webpage:
+            raise Exception(
+                f"Imported file {imported_model._tx_filename} contains a 'webpage' definition, which is only allowed in the main file."
+            )
 
 
 def validate_components_with_strict_entities(components):

@@ -6,6 +6,9 @@ const LiveTable = ({ entityData, columns }) => {
     const [names, setNames] = useState([]);
 
     useEffect(() => {
+        if (!entityData) {
+            return;
+        }
         const newData = {};
         const newNames = [];
         columns.forEach((column) => {
