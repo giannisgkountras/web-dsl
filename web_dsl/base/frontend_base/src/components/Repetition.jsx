@@ -1,17 +1,9 @@
-import { useState, useContext, useEffect, Fragment, cloneElement } from "react";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { WebsocketContext } from "../context/WebsocketContext";
-import { toast } from "react-toastify";
-import { fetchValueFromRest, fetchValueFromDB } from "../utils/fetchValues";
+import { useState, useEffect, cloneElement } from "react";
 import { getValueByPath } from "../utils/getValueByPath";
-import { evaluateConditionWithData } from "../utils/evaluateCondition";
-import { IoReload } from "react-icons/io5";
+import { evaluateComplexCondition } from "../utils/evaluateCondition";
 
 const Repetition = ({
-    topic,
-    restData,
-    dbData,
-    sourceOfContent,
+    allDataNeededFromEntities,
     item,
     element,
     conditionDataPath = "",
@@ -19,71 +11,33 @@ const Repetition = ({
     condition = true,
     elementElse = <></>,
     dataElsePath = null,
-    orientation,
-    interval
+    orientation
 }) => {
     const contentPath = item;
-    const ws = useContext(WebsocketContext);
     const [allData, setAllData] = useState();
-    const reloadContent = async () => {
-        if (sourceOfContent === "rest") {
-            const data = await fetchValueFromRest(restData, contentPath);
-            setAllData(data);
-        }
-        if (sourceOfContent === "db") {
-            const data = await fetchValueFromDB(dbData, contentPath);
-            setAllData(data);
-        }
-    };
 
     useEffect(() => {
-        reloadContent();
-        if (
-            interval > 0 &&
-            (sourceOfContent === "rest" || sourceOfContent === "db")
-        ) {
-            const intervalId = setInterval(() => {
-                reloadContent();
-            }, interval);
-            return () => clearInterval(intervalId);
+        const values = Object.values(allDataNeededFromEntities);
+        const allUndefined = values.every((value) => value === undefined);
+        if (allUndefined) {
+            return;
         }
-    }, []);
+        const data = getValueByPath(allDataNeededFromEntities, contentPath);
+        setAllData(data);
+    }, [allDataNeededFromEntities]);
 
-    useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        try {
-            const data = getValueByPath(msg, contentPath);
-            setAllData(data);
-        } catch (error) {
-            toast.error(
-                "An error occurred while updating value: " + error.message
-            );
-            console.error("Error updating status:", error);
-        }
-    });
     return (
         <div
             className="flex justify-evenly items-center w-full relative"
             style={{ flexDirection: orientation }}
         >
-            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
-                <button
-                    className="absolute top-0 right-0 text-gray-100 hover:text-gray-500 hover:cursor-pointer box-content"
-                    onClick={reloadContent}
-                    title="Refresh Value"
-                >
-                    <IoReload size={24} />
-                </button>
-            )}
             {Array.isArray(allData) ? (
                 allData.map((item, idx) => (
                     <div
                         key={idx}
                         className="flex w-full justify-center items-center"
                     >
-                        {evaluateConditionWithData(
-                            condition,
-                            getValueByPath(item, conditionDataPath)
-                        )
+                        {evaluateComplexCondition(condition, item)
                             ? cloneElement(
                                   element,
                                   dataPath !== null

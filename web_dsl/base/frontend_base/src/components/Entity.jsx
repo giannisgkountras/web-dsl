@@ -31,7 +31,10 @@ const Entity = ({
     useEffect(() => {
         reloadData();
 
-        if (interval > 0) {
+        if (
+            interval > 0 &&
+            (sourceOfContent === "rest" || sourceOfContent === "db")
+        ) {
             const intervalId = setInterval(() => {
                 reloadData();
             }, interval);

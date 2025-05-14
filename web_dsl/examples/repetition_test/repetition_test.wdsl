@@ -121,25 +121,25 @@ webpage RepetitionsTest
 
         row
             col
-                for item this.metrics in entity CarData
+                for item in CarData.metrics
                     use Text with item.name   
                     orientation: column
             endcol
             col
-                for item this.metrics in entity CarData 
+                for item in CarData.metrics 
                     use Gauge with item.value
-                    if > 30
+                    if item.value > 30
                     orientation: column
             endcol
             col
-                for item this.metrics in entity CarData
+                for item in CarData.metrics
                     use Image width: 100 height: 100
                     with item.frame
                     orientation: column
             endcol
             col
-                for item this.test in entity CarData
-                    use Text if == "Hello" with item
+                for item in CarData.test
+                    use Text with item if item == "Hello"
                     orientation: column
             endcol
         endrow
@@ -159,24 +159,24 @@ webpage RepetitionsTest
 
         row
             col
-                for item this.name in entity Products
+                for item in Products.name
                     use Text with item
                     orientation: column
             endcol
             col
-                for item this.name in entity Warehouses
+                for item in Warehouses.name
                     use Text with item
             endcol
         endrow
         row
             col
                 row
-                    for item this.name in entity Warehouses
+                    for item in Warehouses.name
                     use Text with item
                 endrow
                 row
-                    for item this.isOperational in entity Warehouses
-                    use Text content:"Operational" color: "#7DB242" size: 20 weight:900 if ==true
+                    for item in Warehouses.isOperational
+                    use Text content:"Operational" color: "#7DB242" size: 20 weight:900 if item == true
                     else use Text content:"Not Operational" color: "#DC2A35" size: 20 
                 endrow
             endcol
@@ -196,28 +196,29 @@ webpage RepetitionsTest
                     end
                 endrow
                 row
-                    for item this.daily.weather_code in entity weatherData
-                        use ClearWeather if == 3
+                    for item in weatherData.daily.weather_code
+                        use ClearWeather if item == 3
                         else use NotClearWeather
                 endrow
                 row
-                    for item this.daily.temperature_2m_max in entity weatherData
-                        use Text color: "#EE535E" size: 20 with item
+                    for item in weatherData.daily.temperature_2m_max
+                        use Text color: "#EE535E" size: 20 with item if item > 21
+                        else use Text content:"Cold" size: 20
                 endrow
                 row
-                    for item this.daily.temperature_2m_min in entity weatherData
+                    for item in weatherData.daily.temperature_2m_min
                         use Text color: "#2C627B" size: 20 with item
                 endrow
                 row
-                    for item this.daily.time in entity weatherData
+                    for item in weatherData.daily.time
                         use Text size:16 with item
                 endrow
             endcol
 
             col
                 row
-                    for item this.daily.weather_code in entity weatherData
-                        use ClearWeather if == 3
+                    for item in weatherData.daily.weather_code
+                        use ClearWeather if item == 3
                         else use Text color: "#7DB242" size: 20 with item
                 endrow
             endcol
@@ -232,16 +233,16 @@ webpage RepetitionsTest
                     end
                 endrow
                 row
-                    for item this.hourly.weather_code in entity weatherData
-                        use ClearWeather if == 1
+                    for item in weatherData.hourly.weather_code
+                        use ClearWeather if item == 1
                         else use NotClearWeather
                 endrow
                 row
-                    for item this.hourly.temperature_2m in entity weatherData
+                    for item in weatherData.hourly.temperature_2m
                         use Text color: "#EE535E" size: 20 with item
                 endrow
                 row
-                    for item this.hourly.time in entity weatherData
+                    for item in weatherData.hourly.time
                         use Text size:10 with item
                 endrow
             endcol

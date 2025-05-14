@@ -6,15 +6,16 @@ class Repetition:
         item=None,
         component=None,
         data=None,
+        expr=None,
         condition=None,
         componentElse=None,
         componentRef=None,
         componentElseRef=None,
         dataElse=None,
         orientation=None,
-        interval=None,
     ):
 
+        self.entities = set()
         self.parent = parent
         self.entity = entity
         self.item = self.format_attribute_path(item)
@@ -43,10 +44,7 @@ class Repetition:
         else:
             self.orientation = orientation
 
-        if interval is None:
-            self.interval = 0
-        else:
-            self.interval = interval
+        self.entities_list = list(self.entities)
 
         try:
             entityRef = entity.source.connection.__class__.__name__
@@ -63,7 +61,10 @@ class Repetition:
         }
 
         self.sourceOfContent = source_map.get(entityRef, "static")
-        self.condition = self.format_condition(condition)
+        self.condition = self.format_condition(expr)
+        if self.condition == None:
+            self.condition = "true"
+        print("Condition: ", self.condition)
 
     def format_attribute_path(self, path):
         """
@@ -77,6 +78,11 @@ class Repetition:
             return "true" if path else "false"
 
         path_array = []
+
+        if hasattr(path, "entity") and path.entity is not None:
+            self.entities.add(path.entity)
+            path_array.append(path.entity.name)
+
         for accessor in path.accessors:
             if hasattr(accessor, "index") and accessor.index is not None:
                 accessor.index = int(accessor.index)
@@ -94,7 +100,9 @@ class Repetition:
         """
         if condition is not None:
             # WE INITIALIZE THE CONDITION ARRAY WITH ONE ELEMENT BECAUSE WE WILL USE HALF EXPRESSION
-            condition_array = [""]
+            condition_array = []
+            if hasattr(condition, "left") and condition.op is not None:
+                condition_array.append(self.format_attribute_path(condition.left))
             if hasattr(condition, "op") and condition.op is not None:
                 condition_array.append(condition.op)
             if hasattr(condition, "right") and condition.right is not None:

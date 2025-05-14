@@ -44,22 +44,6 @@ class Condition:
                 path_array.append(accessor.attribute)
         return path_array
 
-    def format_condition_old(self, condition):
-        """
-        This method formats the condition for the component.
-        It converts the condition into an array and also convert the path into an array.
-        For example, if the condition is "data[0].value > 10", it will be converted to [['data', 0, 'value'], ['>'], [10]]".
-        """
-        if condition is not None:
-            condition_array = []
-            if hasattr(condition, "left") and condition.left is not None:
-                condition_array.append(self.format_attribute_path(condition.left))
-            if hasattr(condition, "op") and condition.op is not None:
-                condition_array.append(condition.op)
-            if hasattr(condition, "right") and condition.right is not None:
-                condition_array.append(self.format_attribute_path(condition.right))
-            return condition_array
-
     def format_condition(self, expr):
         """
         Walk the AST (OrExpr, AndExpr, PrimaryExpr, ComparisonExpr)

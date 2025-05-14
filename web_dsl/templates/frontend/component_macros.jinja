@@ -356,33 +356,16 @@
 
     {% elif element.__class__.__name__ == 'Repetition'%}
         {% set sourceOfContent = element.sourceOfContent %}
-        {% set restData={}%}
-        {% set dbData={}%}
-        {% set topic=None%}
-
-        {% if sourceOfContent=="rest" %}
-            {% set restData = {
-                "name": element.entity.source.connection.name or 'default',
-                "path": element.entity.source.path or '',
-                "method": element.entity.source.method or 'GET',
-                "params": element.entity.source.params or {},
-            } %}
-        {% elif sourceOfContent=="db" %}
-            {% set dbData = {
-                "connection_name": element.entity.source.connection.name or 'default',
-                "database": element.entity.source.connection.database or '',
-                "query": element.entity.source.query or {},
-                "filter": element.entity.source.filter or {},
-                "collection": element.entity.source.collection or '',
-            } %}
-        {% elif sourceOfContent=="broker"%}
-            {% set topic=element.entity.source.topic %}
-        {% endif %}
 
         <Repetition
-            topic="{{topic}}"
-            restData={ {{restData}} }
-            dbData={ {{dbData}} }
+            allDataNeededFromEntities={ 
+                {
+                {% for entity in element.entities_list %}
+                    {# Create a dictionary with all the entities screen data #}
+                    {{entity.name}}: {{entity.name}}Data ,
+                {% endfor %}
+                }
+            }
             sourceOfContent="{{sourceOfContent}}"
             item={ {{element.item}} }
             element={ {{ render_element(element.component) }} }
@@ -400,7 +383,6 @@
                 elementElse={ {{ render_element(element.componentElse) }} }
             {% endif %}
             orientation={"{{element.orientation}}" }
-            interval={ {{element.interval}} }
    
         />
     {% endif %}

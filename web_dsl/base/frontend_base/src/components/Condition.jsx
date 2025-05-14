@@ -10,11 +10,14 @@ const Condition = ({
     const [showComponent, setShowComponent] = useState(false);
 
     useEffect(() => {
-        if (allDataNeededFromEntities) {
-            setShowComponent(
-                evaluateComplexCondition(condition, allDataNeededFromEntities)
-            );
+        const values = Object.values(allDataNeededFromEntities);
+        const allUndefined = values.every((value) => value === undefined);
+        if (allUndefined) {
+            return;
         }
+        setShowComponent(
+            evaluateComplexCondition(condition, allDataNeededFromEntities)
+        );
     }, [allDataNeededFromEntities]);
 
     return showComponent

@@ -107,8 +107,10 @@ def generate(model_path, gen_path):
         # Get all repetitions used in this screen
         all_repetitions = get_children_of_type("Repetition", screen)
         for repetition in all_repetitions:
-            if getattr(repetition, "entity", None) is not None:
-                entities.add(repetition.entity)
+            if getattr(repetition, "entities_list", None) is not None:
+                entities_list = list(repetition.entities)
+                for entity in entities_list:
+                    entities.add(entity)
 
         # Transform the entities into a list
         entities = list(entities)

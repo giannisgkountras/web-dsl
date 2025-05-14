@@ -58,5 +58,5 @@ LiveOrStaticValue:
 ;
 
 HalfExpression:
-    op=ComparisonOperator right=Value
+    left=NestedAccessPathItem op=ComparisonOperator right=Value
 ;
