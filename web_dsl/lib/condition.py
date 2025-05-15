@@ -9,7 +9,7 @@ class Condition:
     ):
         self.entities = set()
         self.parent = parent
-        self.condition = self.format_condition(expr)
+        self.raw_condition = expr
         self.component = component
         if len(componentElse) > 0:
             self.componentElse = componentElse
@@ -17,8 +17,6 @@ class Condition:
             self.componentElse = [
                 nested
             ]  # ARRAY BECAUSE THE COMPOENENT ELSE IS A LIST of components
-
-        self.entities_list = list(self.entities)
 
     def format_attribute_path(self, path):
         """

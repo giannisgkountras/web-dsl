@@ -6,7 +6,7 @@ import utils
 EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 
 Entity:
-    'Entity' name=ID
+    'Entity' name=ID ('overloads' overloads=[Entity])?
     (
         ('description:' description=STRING)?
         'source:' source=[EntitySource]

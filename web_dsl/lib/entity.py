@@ -8,6 +8,7 @@ class Entity:
         strict=None,
         interval=None,
         source=None,
+        overloads=None,
     ):
         self.name = name
         self.parent = parent
@@ -17,6 +18,7 @@ class Entity:
         self.source = source
         self.interval = interval
         self.source_classname = source.connection.__class__.__name__
+        self.overloads = overloads
 
         source_map = {
             "MQTTBroker": "broker",

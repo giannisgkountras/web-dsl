@@ -227,7 +227,7 @@ webpage RepetitionsTest
         row
             col 
                 row
-                    Component WeeklyTitle
+                    Component HourlyTitle
                         type: Text
                             content: "Hourly Weather" size:24
                     end

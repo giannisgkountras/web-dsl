@@ -15,16 +15,11 @@ class Repetition:
 
         self.entities = set()
         self.parent = parent
-        self.item = self.format_attribute_path(item)
-        if data is not None:
-            self.data = self.format_attribute_path(data)
-        else:
-            self.data = None
+        self.raw_item = item
 
-        if dataElse is not None:
-            self.dataElse = self.format_attribute_path(dataElse)
-        else:
-            self.dataElse = None
+        self.raw_data = data
+
+        self.raw_dataElse = dataElse
 
         if componentRef is not None:
             self.component = componentRef
@@ -41,11 +36,7 @@ class Repetition:
         else:
             self.orientation = orientation
 
-        self.entities_list = list(self.entities)
-
-        self.condition = self.format_condition(expr)
-        if self.condition == None:
-            self.condition = "true"
+        self.raw_expr = expr
 
     def format_attribute_path(self, path):
         """

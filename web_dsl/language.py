@@ -5,8 +5,7 @@ from textx import (
     get_metamodel,
 )
 from textx.model import get_children_of_type
-from textx.scoping.providers import FQNImportURI, PlainName, FQNGlobalRepo
-
+from textx.scoping.providers import FQNImportURI
 from os.path import join, dirname
 from .lib.component import (
     Component,
@@ -128,6 +127,7 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
             "BrokerTopic.connection": FQNImportURI(),
         }
     )
+
     metamodel.register_model_processor(model_proc)
 
     return metamodel
@@ -289,6 +289,26 @@ def get_model_websocket(model):
     return websocket[0] if websocket else None
 
 
+def get_model_repetitions(model):
+    repetitions = []
+    if model._tx_model_repository is not None and model._tx_model_repository.all_models:
+        for m in model._tx_model_repository.all_models:
+            repetitions += get_children_of_type("Repetition", m)
+    else:
+        repetitions = get_children_of_type("Repetition", model)
+    return repetitions
+
+
+def get_model_conditions(model):
+    conditions = []
+    if model._tx_model_repository is not None and model._tx_model_repository.all_models:
+        for m in model._tx_model_repository.all_models:
+            conditions += get_children_of_type("Condition", m)
+    else:
+        conditions = get_children_of_type("Condition", model)
+    return conditions
+
+
 def model_proc(model, metamodel):
     """
     Processes the main model and augments it with aggregated elements
@@ -312,3 +332,100 @@ def model_proc(model, metamodel):
     model.processed_webpage = get_model_webpage(model)
     model.processed_api = get_model_api(model)
     model.processed_websocket = get_model_websocket(model)
+
+    # Resolve overloads
+    resolve_entity_overloads(model)
+
+    # Finilize all repetitions with the new entities
+    # This is needed due to the need for formatted paths
+    # with base being the entity name
+    all_repetitions = get_model_repetitions(model)
+    for rep in all_repetitions:
+        finalize_repetition(rep)
+
+    # Finilize all conditions with the new entities
+    # This is needed due to the need for formatted paths
+    # with base being the entity name
+    all_conditions = get_model_conditions(model)
+    for cond in all_conditions:
+        finalize_condition(cond)
+
+
+def resolve_entity_overloads(model):
+    overload_map = {}
+    all_entities = get_model_entities(model)
+    for entity in all_entities:
+        if hasattr(entity, "overloads") and entity.overloads:
+            overload_map[entity.overloads] = entity
+
+    print("Overload map:")
+    for k, v in overload_map.items():
+        print(f"{k.name} -> {v.name}")
+
+    print("Patching references...")
+    patch_references(model, overload_map)
+
+
+def patch_references(obj, overload_map, visited=None):
+    if visited is None:
+        visited = set()
+
+    obj_id = id(obj)
+    if obj_id in visited:
+        return
+    visited.add(obj_id)
+
+    if isinstance(obj, list):
+        for i, item in enumerate(obj):
+            try:
+                if item in overload_map:
+                    obj[i] = overload_map[item]
+                    print(f"Patched reference: {obj[i]} -> {overload_map[item].name}")
+                else:
+                    patch_references(item, overload_map, visited)
+            except TypeError:
+                patch_references(item, overload_map, visited)
+
+    elif hasattr(obj, "__dict__"):
+        for attr in dir(obj):
+            if attr.startswith("_"):
+                continue
+            try:
+                value = getattr(obj, attr)
+            except Exception:
+                continue  # Skip inaccessible attributes
+
+            if isinstance(value, (str, int, float, bool, type(None))):
+                continue
+
+            try:
+                if value in overload_map and value is not overload_map[value]:
+                    print(f"Patched reference: {obj} -> {overload_map[value]}")
+                    setattr(obj, attr, overload_map[value])
+                else:
+                    patch_references(value, overload_map, visited)
+            except TypeError:
+                patch_references(value, overload_map, visited)
+
+
+def finalize_repetition(rep):
+    """
+    Finalizes the repetition component by setting its attributes to formatted paths
+    """
+    rep.entities = set()
+    rep.item = rep.format_attribute_path(rep.raw_item)
+    rep.data = rep.format_attribute_path(rep.raw_data) if rep.raw_data else None
+    rep.dataElse = (
+        rep.format_attribute_path(rep.raw_dataElse) if rep.raw_dataElse else None
+    )
+    rep.condition = rep.format_condition(rep.raw_expr) or "true"
+    rep.entities_list = list(rep.entities)
+
+
+def finalize_condition(cond):
+    """
+    Finalizes the condition component by setting its attributes to formatted paths
+    """
+    cond.entities = set()
+    cond.condition = cond.format_condition(cond.raw_condition) or "true"
+    cond.entities_list = list(cond.entities)
