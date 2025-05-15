@@ -30,11 +30,13 @@ const Table = ({
     const isCrudEnabled = crud === true || crud === "true";
 
     const columns = useMemo(() => {
-        if (!data || data.length === 0) return [];
+        if (!data || data.length === 0 || data?.status === "error") return [];
+        console.log("data", data);
         return Object.keys(data[0]);
     }, [data]);
 
     const emptyRecord = useMemo(() => {
+        if (!data || data.length === 0 || data?.status === "error") return {};
         const rec = {};
         columns.forEach((col) => {
             if (col !== primaryKey) {
@@ -83,6 +85,7 @@ const Table = ({
     };
 
     useEffect(() => {
+        if (!entityData) return;
         reloadValue();
     }, [entityData]);
 

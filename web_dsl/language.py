@@ -150,27 +150,6 @@ def build_model(model_path: str):
     return model  # Return the built model
 
 
-class WebPageModel:
-    def __init__(self):
-        self.name = None
-        self.author = None
-        self.version = None
-        self.description = None
-        self.navbar = None
-        self.brokers = []
-        self.databases = []
-        self.restapis = []
-        self.endpoints = []
-        self.mysqlqueries = []
-        self.mongodbqueries = []
-        self.brokertopics = []
-        self.api = None
-        self.websocket = None
-        self.reusableComponents = []
-        self.globalEntities = []
-        self.screens = []
-
-
 def get_model_webpage(model):
     webpage = []
     if model._tx_model_repository is not None and model._tx_model_repository.all_models:
@@ -291,12 +270,22 @@ def get_model_endpoints(model):
 
 
 def get_model_api(model):
-    api = get_children_of_type("API", model)
+    api = []
+    if model._tx_model_repository is not None and model._tx_model_repository.all_models:
+        for m in model._tx_model_repository.all_models:
+            api += get_children_of_type("API", m)
+    else:
+        api = get_children_of_type("API", model)
     return api[0] if api else None
 
 
 def get_model_websocket(model):
-    websocket = get_children_of_type("Websocket", model)
+    websocket = []
+    if model._tx_model_repository is not None and model._tx_model_repository.all_models:
+        for m in model._tx_model_repository.all_models:
+            websocket += get_children_of_type("Websocket", m)
+    else:
+        websocket = get_children_of_type("Websocket", model)
     return websocket[0] if websocket else None
 
 
@@ -320,6 +309,6 @@ def model_proc(model, metamodel):
     model.aggregated_mysqlqueries = get_model_mysqlqueries(model)
     model.aggregated_mongodbqueries = get_model_mongodbqueries(model)
     model.aggregated_brokertopics = get_model_brokertopics(model)
-    model.processed_webpage = model.webpage
+    model.processed_webpage = get_model_webpage(model)
     model.processed_api = get_model_api(model)
     model.processed_websocket = get_model_websocket(model)
