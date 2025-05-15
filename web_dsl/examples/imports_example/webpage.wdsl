@@ -16,4 +16,10 @@ webpage WarehouseManagement
         port: 8080
     end
     
+    Entity RevenueNew overloads Revenue
+        source: allRevenue
+        attributes:
+            - date: str
+            - amount: float
+    end
    

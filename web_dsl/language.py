@@ -125,6 +125,7 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
             "MongoDBQuery.connection": FQNImportURI(),
             "RESTEndpoint.connection": FQNImportURI(),
             "BrokerTopic.connection": FQNImportURI(),
+            "Entity.overloads": FQNImportURI(),
         }
     )
 
@@ -341,14 +342,20 @@ def model_proc(model, metamodel):
     # with base being the entity name
     all_repetitions = get_model_repetitions(model)
     for rep in all_repetitions:
-        finalize_repetition(rep)
+        try:
+            finalize_repetition(rep)
+        except Exception as e:
+            print(f"Error finalizing repetition: {e}")
 
     # Finilize all conditions with the new entities
     # This is needed due to the need for formatted paths
     # with base being the entity name
     all_conditions = get_model_conditions(model)
     for cond in all_conditions:
-        finalize_condition(cond)
+        try:
+            finalize_condition(cond)
+        except Exception as e:
+            print(f"Error finalizing condition: {e}")
 
 
 def resolve_entity_overloads(model):
