@@ -18,7 +18,7 @@ webpage WeatherStation
 
     RESTApi OpenMeteo
         host: "https://api.open-meteo.com"
-        headers: {"Content-Type": "application/json"}
+        headers: {"Content-Type": "application/json", "X-API-key": "MitsosOTrelos"}
     end
 
     Broker<MQTT> SensorBroker

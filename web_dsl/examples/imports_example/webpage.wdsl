@@ -1,6 +1,4 @@
-import "components.wdsl"
-import "entities.wdsl"
-import "connections.wdsl"
+import "screens.wdsl"
 
 webpage WarehouseManagement
     author: "Giannis Gkountras"
@@ -18,53 +16,4 @@ webpage WarehouseManagement
         port: 8080
     end
     
-    Screen Home
-        title: "Home"
-        url: "/"
-
-        use InfoNotifications
-        use WarningNotifications
-
-        row
-            col
-                use ProductsTable
-            endcol
-            col
-                use WarehousesTable
-            endcol
-        endrow
-        row
-            col
-                use RevenueBarChart
-            endcol
-            col
-                use CategorySalesPieChart
-            endcol
-            col
-                use YearlyIncomeChart
-            endcol
-            col
-                if Warehouses.isOperational[0] == true
-                    use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
-                else 
-                    use WarehouseNotOperational
-            endcol
-        endrow
-    end
-
-    Screen Debug
-        title: "Debug"
-        url: "/debug"
-
-        row
-            col
-                Component NotificationsPublisher
-                    type: Publish
-                        broker: NotificationsBroker
-                end
-            endcol
-        endrow
-        row
-            use ChartDebug
-        endrow
-    end
+   
