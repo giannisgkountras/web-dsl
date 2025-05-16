@@ -1,5 +1,5 @@
 Broker<MQTT> HomeMQTT
-    host: 'localhost'
+    host: '192.168.1.6'
     port: 1883
 end
 
@@ -46,6 +46,15 @@ Entity TempSensor3
 end
 
 Entity AirQualitySensor1
+    type: sensor
+    uri: 'kitchen.sensor.airq'
+    source: HomeMQTT
+    attributes:
+        - gas: float
+        - humidity: float
+end
+
+Entity AirQualitySensor2
     type: sensor
     uri: 'kitchen.sensor.airq'
     source: HomeMQTT

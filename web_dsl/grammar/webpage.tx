@@ -12,7 +12,7 @@ import repetition
 
 WebPage:
     (imports+=Import)?
-    'webpage' name=ID 
+    'Webpage' name=ID 
     ('author:' author=STRING)?
     ('version:' version=STRING)?
     ('description:' description=STRING)?

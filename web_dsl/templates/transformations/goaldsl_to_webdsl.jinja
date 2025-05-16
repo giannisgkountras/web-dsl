@@ -1,6 +1,7 @@
+// Broker Connections
 {% for broker in mqtt_brokers %}
 Broker<MQTT> {{broker.name}}
-    host: {{broker.host}}
+    host: "{{broker.host}}"
     port: {{broker.port}}
 {% if broker.auth %}
     auth:
@@ -10,10 +11,9 @@ Broker<MQTT> {{broker.name}}
 end
 
 {% endfor %}
-
 {% for broker in redis_brokers %}
 Broker<Redis> {{broker.name}}
-    host: {{broker.host}}
+    host: "{{broker.host}}"
     port: {{broker.port}}
 {% if broker.db %}
     db: {{broker.db}}
@@ -26,7 +26,32 @@ Broker<Redis> {{broker.name}}
 end
 
 {% endfor %}
+{% for broker in amqp_brokers %}
+Broker<AMQP> {{broker.name}}
+    host: "{{broker.host}}"
+    port: {{broker.port}}
+{% if broker.vhost %}
+    vhost: {{broker.vhost}}
+{% endif %}
+{% if broker.auth %}
+    auth:
+        username: {{broker.auth.username}}
+        password: {{broker.auth.password}}
+{% endif %}
+end
 
+{% endfor %}
+
+// Broker Topics
+{% for entry in all_broker_topics %}
+BrokerTopic {{entry.name}}
+    connection: {{entry.source}}
+    topic: "{{entry.topic}}"
+end
+
+{% endfor %}
+
+// Rest API Servers
 {% for rest in rest_endpoints %}
 RESTApi {{rest.name}}Server
     host: "{{rest.host}}"
@@ -41,6 +66,7 @@ end
 
 {% endfor %}
 
+// Rest API Endpoints
 {% for rest in rest_endpoints %}
 RESTEndpoint {{rest.name}}
     connection: {{rest.name}}Server
@@ -56,27 +82,10 @@ end
 
 {% endfor %}
 
-
-
-{% for broker in amqp_brokers %}
-Broker<AMQP> {{broker.name}}
-    host: {{broker.host}}
-    port: {{broker.port}}
-{% if broker.vhost %}
-    vhost: {{broker.vhost}}
-{% endif %}
-{% if broker.auth %}
-    auth:
-        username: {{broker.auth.username}}
-        password: {{broker.auth.password}}
-{% endif %}
-end
-
-{% endfor %}
-
+// Entities
 {% for entity in entities %}
 Entity {{ entity.name }}
-    source: {{ entity.source.ref.name }}
+    source: {{ entity.webdsl_entity_source}}
 {% if entity.description%}
     description: "{{ entity.description }}"
 {% endif %}

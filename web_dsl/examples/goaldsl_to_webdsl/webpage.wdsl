@@ -1,0 +1,42 @@
+import "generated.wdsl"
+
+Webpage GoalTestPage
+    author: "Giannis Gkountras"
+    version: "1.0"
+    navbar: true
+
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+    
+    Component TextSensor
+        entity: TempSensor1
+        type: Text  
+            content: this.temp
+    end
+
+    Entity TempSensor1New overloads TempSensor1
+        source: TestTopic
+        attributes:
+            - temp: float
+    end
+    
+    BrokerTopic TestTopic
+        connection: HomeMQTT
+        topic: "bedroom.test.test"
+    end
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            use TextSensor
+        endrow
+    end

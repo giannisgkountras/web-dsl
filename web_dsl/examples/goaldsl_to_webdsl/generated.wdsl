@@ -1,0 +1,85 @@
+// Broker Connections
+Broker<MQTT> HomeMQTT
+    host: "192.168.1.6"
+    port: 1883
+end
+
+
+// Broker Topics
+BrokerTopic TempSensor1_Topic
+    connection: HomeMQTT
+    topic: "bedroom.sensor.temperature"
+end
+
+BrokerTopic TempSensor2_Topic
+    connection: HomeMQTT
+    topic: "bathroom.sensor.temperature"
+end
+
+BrokerTopic TempSensor3_Topic
+    connection: HomeMQTT
+    topic: "livingroom.sensor.temperature"
+end
+
+BrokerTopic AirQualitySensor1_Topic
+    connection: HomeMQTT
+    topic: "kitchen.sensor.airq"
+end
+
+
+// Rest API Servers
+RESTApi WeatherForecastSvcServer
+    host: "api.openweathermap.org"
+    port: 8080
+end
+
+
+// Rest API Endpoints
+RESTEndpoint WeatherForecastSvc
+    connection: WeatherForecastSvcServer
+    method: GET
+    path: "/data/3.0"
+end
+
+
+// Entities
+Entity WeatherForecast
+    source: WeatherForecastSvc
+    attributes:
+        - current: dict
+        - minutely: dict
+        - hourly: dict
+        - daily: dict
+end
+
+Entity TempSensor1
+    source: TempSensor1_Topic
+    attributes:
+        - temp: float
+end
+
+Entity TempSensor2
+    source: TempSensor2_Topic
+    attributes:
+        - temp: float
+end
+
+Entity TempSensor3
+    source: TempSensor3_Topic
+    attributes:
+        - temp: float
+end
+
+Entity AirQualitySensor1
+    source: AirQualitySensor1_Topic
+    attributes:
+        - gas: float
+        - humidity: float
+end
+
+Entity AirQualitySensor2
+    source: AirQualitySensor1_Topic
+    attributes:
+        - gas: float
+        - humidity: float
+end
