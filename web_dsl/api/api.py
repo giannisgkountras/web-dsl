@@ -300,11 +300,8 @@ async def generate_from_model(
 
     save_upload_file(goaldsl_model, goaldsl_path)
 
-    with open(goaldsl_path, "r") as f:
-        goaldsl_content = f.read()
-
     try:
-        web_dsl_model = transform_goaldsl_to_webdsl(goaldsl_content)
+        web_dsl_model = transform_goaldsl_to_webdsl(goaldsl_path)
         save_text_to_file(web_dsl_model, web_dsl_path)
         print(f"Generated WDSL model: {web_dsl_path}")
         return FileResponse(

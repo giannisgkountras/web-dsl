@@ -7,7 +7,7 @@ from web_dsl.definitions import TEMPLATES_PATH
 
 # ======== Template Setup ========
 env = Environment(
-    loader=FileSystemLoader(f"{TEMPLATES_PATH}/openapi"),
+    loader=FileSystemLoader(f"{TEMPLATES_PATH}/transformations"),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
@@ -200,7 +200,7 @@ def parse_component_annotations(
             "col": col,
         }
 
-        print(f"Component: {comp}")
+        # print(f"Component: {comp}")
         result.append(comp)
     return result
 
