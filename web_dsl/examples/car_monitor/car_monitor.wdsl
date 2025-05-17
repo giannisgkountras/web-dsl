@@ -1,4 +1,4 @@
-webpage CarMonitor
+Webpage CarMonitor
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A car monitoring dashboard"

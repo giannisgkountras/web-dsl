@@ -11,7 +11,6 @@ import repetition
 
 
 WebPage:
-    (imports+=Import)?
     'Webpage' name=ID 
     ('author:' author=STRING)?
     ('version:' version=STRING)?

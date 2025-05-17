@@ -1,6 +1,6 @@
 import "screens.wdsl"
 
-webpage WarehouseManagement
+Webpage WarehouseManagement
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A dashboard for managing warehouses"

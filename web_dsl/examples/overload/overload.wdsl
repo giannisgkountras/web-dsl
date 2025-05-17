@@ -1,4 +1,4 @@
-webpage WeatherStation
+Webpage WeatherStation
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A weather station app"

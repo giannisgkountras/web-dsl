@@ -1,4 +1,4 @@
-webpage AgroDashboard
+Webpage AgroDashboard
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A dashboard for agriculture"
