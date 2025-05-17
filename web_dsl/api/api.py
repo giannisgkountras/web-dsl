@@ -7,7 +7,6 @@ import subprocess
 import time
 import shutil
 import traceback
-import yaml
 
 from dotenv import load_dotenv
 from fastapi import (
@@ -270,13 +269,7 @@ async def generate_from_model(
     save_upload_file(openapi_model, openapi_path)
 
     try:
-        with open(openapi_path, "r") as f:
-            openapi_data = yaml.safe_load(f)
-    except yaml.YAMLError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid YAML: {str(e)}")
-
-    try:
-        web_dsl_model = transform_openapi_to_webdsl(openapi_data)
+        web_dsl_model = transform_openapi_to_webdsl(openapi_path)
         save_text_to_file(web_dsl_model, web_dsl_path)
         print(f"Generated WDSL model: {web_dsl_path}")
         return FileResponse(

@@ -7,6 +7,7 @@ from .language import build_model
 from textx.model import get_children_of_type
 import traceback
 from web_dsl.definitions import TEMPLATES_PATH
+from textx import generator
 
 
 def generate_api_key(length=32):
@@ -299,3 +300,6 @@ def map_attribute_class_names_to_types(attribute):
     if attribute.__class__.__name__ not in attribute_types:
         raise ValueError(f"Unsupported attribute type: {attribute.__class__.__name__}")
     return attribute_types[attribute.__class__.__name__]
+
+
+# @generator("web_dsl","Application")

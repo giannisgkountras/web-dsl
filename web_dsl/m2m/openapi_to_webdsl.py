@@ -3,7 +3,8 @@ from typing import List, Dict, Any
 from urllib.parse import urlparse, urlunparse
 from jinja2 import Environment, FileSystemLoader
 from web_dsl.definitions import TEMPLATES_PATH
-
+import yaml
+from fastapi import HTTPException
 
 # ======== Template Setup ========
 env = Environment(
@@ -254,7 +255,13 @@ def process_operation(
 
 
 # ========= Main Transformation Function ==============
-def transform_openapi_to_webdsl(model: Dict[str, Any]) -> str:
+def transform_openapi_to_webdsl(openapi_path):
+
+    try:
+        with open(openapi_path, "r") as f:
+            model = yaml.safe_load(f)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid YAML: {str(e)}")
     apis, endpoints, components = [], [], []
     seen, entities = {}, {}
 

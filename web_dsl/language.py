@@ -1,9 +1,5 @@
 # --- Imports ---
-from textx import (
-    metamodel_from_file,
-    TextXSemanticError,
-    get_metamodel,
-)
+from textx import metamodel_from_file, TextXSemanticError, get_metamodel, language
 from textx.model import get_children_of_type
 from textx.scoping.providers import FQNImportURI
 from os.path import join, dirname
@@ -436,3 +432,17 @@ def finalize_condition(cond):
     cond.entities = set()
     cond.condition = cond.format_condition(cond.raw_condition) or "true"
     cond.entities_list = list(cond.entities)
+
+
+@language("web_dsl", "*.wdsl")
+def web_dsl_language():
+    """
+    DSL for building web applications.
+    """
+    return get_metamodel()
+
+
+def get_model_grammar(model_path):
+    mm = get_metamodel()
+    grammar_model = mm.grammar_model_from_file(model_path)
+    return grammar_model
