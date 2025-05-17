@@ -180,8 +180,8 @@ def generate(model_path, gen_path):
     # Gather all topics from the model
     entities = get_children_of_type("Entity", model)
     topic_configs = []
-    if model.aggregated_entities:  # CHANGED
-        for entity_obj in model.aggregated_entities:  # CHANGED
+    if model.aggregated_entities:
+        for entity_obj in model.aggregated_entities:
             # collect attributes
             attributes = [attr.name for attr in entity_obj.attributes]
             # Ensure entity_obj.source and entity_obj.source.connection are resolved
@@ -191,6 +191,13 @@ def generate(model_path, gen_path):
                 and entity_obj.source.__class__.__name__ == "BrokerTopic"
                 and hasattr(entity_obj.source, "connection")
                 and entity_obj.source.connection
+                # ensure the connection isnt already in the list
+                and entity_obj.source.connection.name
+                not in [
+                    config.get("broker", None)
+                    for config in topic_configs
+                    if config.get("topic", None) == entity_obj.source.topic
+                ]
             ):
                 topic_configs.append(
                     {
@@ -239,8 +246,8 @@ def generate(model_path, gen_path):
     # Generate Database config
     mysql_databases_list = []
     mongo_databases_list = []
-    if model.aggregated_databases:  # CHANGED
-        for db in model.aggregated_databases:  # CHANGED
+    if model.aggregated_databases:
+        for db in model.aggregated_databases:
             if db.__class__.__name__ == "MySQL":
                 mysql_databases_list.append(db)
             elif db.__class__.__name__ == "MongoDB":

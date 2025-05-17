@@ -39,4 +39,10 @@ Webpage GoalTestPage
         row
             use TextSensor
         endrow
+        row
+            Component BrokerPublisher
+                type: Publish
+                    broker: HomeMQTT
+            end
+        endrow
     end
