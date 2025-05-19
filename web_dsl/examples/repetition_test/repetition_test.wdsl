@@ -94,6 +94,7 @@ Webpage RepetitionsTest
 
     Entity weatherData
         source: WeatherEnpoint
+        strict: true
         attributes:
             - current: dict
             - daily: dict
