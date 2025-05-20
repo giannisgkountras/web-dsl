@@ -1,6 +1,6 @@
 # Textual DSL for web applications
 
-<img src="./web_dsl/assets/web_dsl_logo_3.png" alt="web-dsl" width="550px"/>
+<img src="./web_dsl/assets/web_dsl_logo_4.png" alt="web-dsl" width="550px"/>
 
 ## How to setup
 
