@@ -1,0 +1,29 @@
+Database<MySQL> WarehouseSQL
+    host: "192.168.1.6"
+    port: 3306
+    auth:
+        username: "thesis"
+        password: "password"
+    database: "thesis"
+end
+
+Database<MongoDB> WarehouseMongo
+    host: "192.168.1.6"
+    database: "thesis"
+    port: 27017
+    auth:
+        username: "thesis"
+        password: "password"
+end
+
+Broker<MQTT> NotificationsBroker
+    host: "192.168.1.6"
+    port: 1883
+end
+
+RESTApi OpenMeteo
+    host: "https://api.open-meteo.com"
+    headers: {"Content-Type": "application/json"}
+end
+
+  

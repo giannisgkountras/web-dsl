@@ -1,44 +1,33 @@
-import { WebsocketContext } from "../context/WebsocketContext";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { useContext, useState } from "react";
-import convertTypeValue from "../utils/convertTypeValue";
+import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
 
-const Logs = ({ topic, attributes = [] }) => {
+const Logs = ({ entityData, attributes = [] }) => {
     const [logs, setLogs] = useState([]);
-    const ws = useContext(WebsocketContext);
 
-    // Handle incoming WebSocket messages using the 'topic' prop
-    useWebsocket(ws, topic, (msg) => {
-        if (attributes.length === 0) {
-            // If no attributes are provided, set the entire message as JSON data
-            try {
-                setLogs((prev) => [...prev, msg]);
-            } catch (error) {
-                toast.error(
-                    "An error occurred while updating value: " + error.message
-                );
-                console.error("Error updating logs:", error);
-            }
-        } else {
-            const newJsonData = {};
-            attributes.forEach((attribute) => {
-                try {
-                    const value = getValueByPath(msg, attribute);
+    useEffect(() => {
+        if (!entityData) {
+            return;
+        }
+        try {
+            if (attributes.length === 0) {
+                // If no attributes are provided, set the entire message as JSON data
+                setLogs((prev) => [...prev, entityData]);
+            } else {
+                const newJsonData = {};
+                attributes.forEach((attribute) => {
+                    const value = getValueByPath(entityData, attribute);
                     const name = getNameFromPath(attribute);
                     newJsonData[name] = value;
-                } catch (error) {
-                    toast.error(
-                        "An error occurred while updating value: " +
-                            error.message
-                    );
-                    console.error("Error updating status:", error);
-                }
-            });
-            setLogs((prev) => [...prev, newJsonData]);
+                });
+                setLogs((prev) => [...prev, newJsonData]);
+            }
+        } catch (error) {
+            toast.error(
+                "An error occurred while converting value: " + error.message
+            );
         }
-    });
+    }, [entityData]);
 
     return (
         <div className="w-full max-h-[500px] overflow-y-auto flex flex-col gap-2 p-4 rounded-2xl shadow-lg">

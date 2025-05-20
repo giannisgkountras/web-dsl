@@ -7,94 +7,46 @@ import {
     YAxis,
     Legend
 } from "recharts";
-import { WebsocketContext } from "../context/WebsocketContext";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { useContext, useState, useEffect } from "react";
-import { IoReload } from "react-icons/io5";
+import { useState, useEffect } from "react";
 import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
-import { toast } from "react-toastify";
-import { proxyRestCall } from "../api/proxyRestCall";
-import { queryDB } from "../api/dbQuery";
 import { colors } from "../lib/colors";
 import { transformToArrayOfObjects } from "../utils/transformations";
 
 const CustomBarChart = ({
-    topic,
+    entityData,
     xLabel,
     yLabel,
     sourceOfContent,
     xValue = null,
     yValues = [],
     staticChartData = null,
-    restData = null,
-    dbData = null,
     description = null
 }) => {
     const [chartData, setChartData] = useState([]);
-    const ws = useContext(WebsocketContext);
     const allPaths = [xValue, ...yValues];
-    const { name, path, method, params } = restData || {};
     const pathNames = allPaths.map(getNameFromPath);
 
-    const fetchExternalData = async () => {
-        try {
-            const response =
-                sourceOfContent === "rest"
-                    ? await proxyRestCall({ name, path, method, params })
-                    : await queryDB(dbData);
-
+    useEffect(() => {
+        if (!entityData) {
+            return;
+        }
+        if (sourceOfContent === "rest" || sourceOfContent === "db") {
             const transformed = transformToArrayOfObjects(
-                response,
+                entityData,
                 allPaths,
                 pathNames
             );
-
             setChartData(transformed);
-        } catch (err) {
-            console.error("Failed to fetch chart data:", err);
-            toast.error("Failed to load chart data");
-        }
-    };
-
-    useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
-        try {
+        } else if (sourceOfContent === "broker") {
             const newData = {};
-
             allPaths.forEach((path, index) => {
-                newData[pathNames[index]] = getValueByPath(msg, path);
+                newData[pathNames[index]] = getValueByPath(entityData, path);
             });
-            console.log("New data from WebSocket:", newData);
             setChartData((prevData) => [...prevData, newData]);
-        } catch (error) {
-            toast.error("Error updating chart from WebSocket");
-            console.error("WebSocket error:", error);
-        }
-    });
-
-    const reload = () => {
-        if (sourceOfContent === "rest" || sourceOfContent === "db") {
-            fetchExternalData();
-        }
-        if (sourceOfContent === "static") {
+        } else if (sourceOfContent === "static") {
             setChartData(staticChartData);
         }
-    };
-
-    useEffect(() => {
-        reload();
-        if (sourceOfContent === "rest" && restData?.interval > 0) {
-            const interval = setInterval(() => {
-                reload();
-            }, restData.interval);
-            return () => clearInterval(interval);
-        }
-        if (sourceOfContent === "db" && dbData?.interval > 0) {
-            const interval = setInterval(() => {
-                reload();
-            }, dbData.interval);
-            return () => clearInterval(interval);
-        }
-    }, []);
+    }, [entityData]);
 
     const xDataKey = sourceOfContent === "static" ? xValue : pathNames[0];
     const barDataKeys =
@@ -107,15 +59,7 @@ const CustomBarChart = ({
                     {description}
                 </h1>
             )}
-            {(sourceOfContent === "rest" || sourceOfContent === "db") && (
-                <button
-                    onClick={fetchExternalData}
-                    className="absolute top-0 right-0 p-2 text-white hover:text-gray-400 cursor-pointer"
-                    title="Reload chart data"
-                >
-                    <IoReload size={20} />
-                </button>
-            )}
+
             <BarChart
                 data={
                     sourceOfContent === "static" ? staticChartData : chartData

@@ -1,3 +1,9 @@
 Comment:
   /\/\/.*$/
 ;
+
+Import: 
+  'import' importURI=STRING
+;
+
+FQN: ID('.'ID)*;

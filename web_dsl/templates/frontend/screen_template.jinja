@@ -1,4 +1,5 @@
 {%import 'component_macros.jinja' as component_macros%}
+import {useState} from 'react';
 import CustomLineChart from "../components/CustomLineChart"; 
 import LiveTable from "../components/LiveTable";
 import Publish from "../components/Publish";
@@ -16,10 +17,26 @@ import CustomPieChart from "../components/CustomPieChart";
 import CustomForm from "../components/CustomForm";
 import Repetition from "../components/Repetition";
 import ProgressBar from "../components/ProgressBar";
+import Entity from "../components/Entity";
 
 const {{screen.name}} = () => {
+{% for entity in entities %}
+    const [{{entity.name}}Data, set{{entity.name | capitalize }}Data] = useState();
+{% endfor %}
+
      return (
         <div className="screen-container">
+            {% for entity in entities %}
+            <Entity
+                topic="{{entity.topic}}"
+                restData={ {{entity.restData}} }
+                dbData={ {{entity.dbData}} }
+                sourceOfContent="{{entity.sourceOfContent}}"
+                interval={ {{entity.interval}} }
+                setEntityData={set{{entity.name | capitalize }}Data}
+                />
+            {% endfor %}
+            
             {% for element in screen.elements %}
                 {% if element.__class__.__name__ == 'ComponentRef' %}
                     {{ component_macros.render_element(element=element.ref) }}

@@ -7,6 +7,7 @@ from .language import build_model
 from textx.model import get_children_of_type
 import traceback
 from web_dsl.definitions import TEMPLATES_PATH
+from textx import generator
 
 
 def generate_api_key(length=32):
@@ -52,7 +53,6 @@ def generate(model_path, gen_path):
     # Read and parse the DSL model
     print(f"Reading model from: {model_path}")
     model = build_model(model_path)
-
     # Create the output directory with frontend and backend subdirectories
     print(f"Creating output directory: {gen_path}")
     os.makedirs(gen_path, exist_ok=True)
@@ -78,14 +78,45 @@ def generate(model_path, gen_path):
         os.makedirs(screens_dir, exist_ok=True)
 
     # Generate the screen components
-    for screen in model.screens:
-        print(f"Generating screen: {screen.name}")
-        # Get all components
-        all_components = get_children_of_type("Form", screen)
+    for screen in model.aggregated_screens:
+
+        # Get all entities used in this screen
+        all_components = get_children_of_type("Component", screen)
+
+        # Get all component references
+        all_component_references = get_children_of_type("ComponentRef", screen)
+
+        # Augument the components with the references
+        for component_ref in all_component_references:
+            all_components.append(component_ref.ref)
+
+        # Get all entities used in this screen
+        entities = set()
         for component in all_components:
-            print(component.__class__.__name__)
+            if getattr(component, "entity", None) is not None:
+                entities.add(component.entity)
+
+        # Get all conditions used in this screen
+        all_conditions = get_children_of_type("Condition", screen)
+        for condition in all_conditions:
+            if getattr(condition, "entities", None) is not None:
+                entities_list = list(condition.entities)
+                for entity in entities_list:
+                    entities.add(entity)
+
+        # Get all repetitions used in this screen
+        all_repetitions = get_children_of_type("Repetition", screen)
+        for repetition in all_repetitions:
+            if getattr(repetition, "entities_list", None) is not None:
+                entities_list = list(repetition.entities)
+                for entity in entities_list:
+                    entities.add(entity)
+
+        # Transform the entities into a list
+        entities = list(entities)
+        print(f"Generating screen: {screen.name}")
         try:
-            html_content = screen_template.render(screen=screen)
+            html_content = screen_template.render(screen=screen, entities=entities)
         except TemplateError as e:
             print("Jinja2 Template Error:", e)
             traceback.print_exc()
@@ -95,13 +126,15 @@ def generate(model_path, gen_path):
         print(f"Generated: {output_file}")
 
     # Generate additional files like App.jsx and index.html
-    app_content = app_template.render(webpage=model, screens=model.screens)
+    app_content = app_template.render(
+        webpage=model.processed_webpage, screens=model.aggregated_screens
+    )
     app_output_file = os.path.join(gen_path, "frontend", "src", "App.jsx")
     with open(app_output_file, "w", encoding="utf-8") as f:
         f.write(app_content)
     print(f"Generated: {app_output_file}")
 
-    index_html_content = index_html_template.render(webpage=model)
+    index_html_content = index_html_template.render(webpage=model.processed_webpage)
     index_html_output_file = os.path.join(gen_path, "frontend", "index.html")
     with open(index_html_output_file, "w", encoding="utf-8") as f:
         f.write(index_html_content)
@@ -109,7 +142,7 @@ def generate(model_path, gen_path):
 
     # Generate websocket context config file
     websocket_context_config_content = websocket_context_config_template.render(
-        websocket=model.websocket
+        websocket=model.processed_websocket
     )
     websocket_context_config_output_file = os.path.join(
         gen_path, "frontend", "src", "context", "websocketConfig.json"
@@ -122,7 +155,7 @@ def generate(model_path, gen_path):
     api_key = generate_api_key()
     secret_key = generate_api_key()
     env_frontend_content = dot_env_frontend_template.render(
-        api=model.api, api_key=api_key, secret_key=secret_key
+        api=model.processed_api, api_key=api_key, secret_key=secret_key
     )
     env_frontend_output_file = os.path.join(gen_path, "frontend", ".env")
     with open(env_frontend_output_file, "w", encoding="utf-8") as f:
@@ -148,26 +181,41 @@ def generate(model_path, gen_path):
     # Gather all topics from the model
     entities = get_children_of_type("Entity", model)
     topic_configs = []
-    for entity in entities:
-        # collect attributes
-        attributes = []
-        for attribute in entity.attributes:
-            attributes.append(attribute.name)
-
-        if entity.source.__class__.__name__ == "BrokerTopic":
-
-            topic_configs.append(
-                {
-                    "topic": entity.source.topic,
-                    "broker": entity.source.connection.name,
-                    "attributes": attributes,
-                    "strict": entity.strict,
-                }
-            )
+    if model.aggregated_entities:
+        for entity_obj in model.aggregated_entities:
+            # collect attributes
+            attributes = [attr.name for attr in entity_obj.attributes]
+            # Ensure entity_obj.source and entity_obj.source.connection are resolved
+            if (
+                hasattr(entity_obj, "source")
+                and entity_obj.source
+                and entity_obj.source.__class__.__name__ == "BrokerTopic"
+                and hasattr(entity_obj.source, "connection")
+                and entity_obj.source.connection
+                # ensure the connection isnt already in the list
+                and entity_obj.source.connection.name
+                not in [
+                    config.get("broker", None)
+                    for config in topic_configs
+                    if config.get("topic", None) == entity_obj.source.topic
+                ]
+            ):
+                topic_configs.append(
+                    {
+                        "topic": entity_obj.source.topic,
+                        "broker": entity_obj.source.connection.name,
+                        "attributes": attributes,
+                        "strict": (
+                            entity_obj.strict
+                            if hasattr(entity_obj, "strict")
+                            else False
+                        ),  # Default if strict not present
+                    }
+                )
 
     # Collect all brokers
     all_brokers = set()
-    for broker in model.brokers:
+    for broker in model.aggregated_brokers:
         all_brokers.add(broker)
     all_brokers = list(all_brokers)
 
@@ -175,8 +223,8 @@ def generate(model_path, gen_path):
     config_output_file = os.path.join(config_dir, "config.yaml")
     config_content = config_template.render(
         brokers=all_brokers,
-        websocket=model.websocket,
-        api=model.api,
+        websocket=model.processed_websocket,
+        api=model.processed_api,
         topic_configs=topic_configs,
     )
     with open(config_output_file, "w", encoding="utf-8") as f:
@@ -184,26 +232,32 @@ def generate(model_path, gen_path):
     print(f"Generated: {config_output_file}")
 
     # Generate rest api config file
-    all_rest_apis = get_children_of_type("RESTApi", model)
+    # all_rest_apis = get_children_of_type("RESTApi", model)
     endpoint_config_dir = os.path.join(gen_path, "backend")
     endpoint_config_output_file = os.path.join(
         endpoint_config_dir, "endpoint_config.yaml"
     )
     endpoint_config_content = endpoint_config_template.render(
-        all_rest_apis=all_rest_apis,
+        all_rest_apis=model.aggregated_restapis,
     )
     with open(endpoint_config_output_file, "w", encoding="utf-8") as f:
         f.write(endpoint_config_content)
     print(f"Generated: {endpoint_config_output_file}")
 
     # Generate Database config
-    mysql_databases = get_children_of_type("MySQL", model)
-    mongo_databases = get_children_of_type("MongoDB", model)
+    mysql_databases_list = []
+    mongo_databases_list = []
+    if model.aggregated_databases:
+        for db in model.aggregated_databases:
+            if db.__class__.__name__ == "MySQL":
+                mysql_databases_list.append(db)
+            elif db.__class__.__name__ == "MongoDB":
+                mongo_databases_list.append(db)
 
     db_config_dir = os.path.join(gen_path, "backend")
     db_config_output_file = os.path.join(db_config_dir, "db_config.yaml")
     db_config_content = db_config_template.render(
-        mysql_databases=mysql_databases, mongo_databases=mongo_databases
+        mysql_databases=mysql_databases_list, mongo_databases=mongo_databases_list
     )
     with open(db_config_output_file, "w", encoding="utf-8") as f:
         f.write(db_config_content)
@@ -212,7 +266,7 @@ def generate(model_path, gen_path):
     # Generate dockerfile
     dockerfile_output_file = os.path.join(gen_path, "backend", "Dockerfile")
     dockerfile_content = dockerfile_template.render(
-        websocket=model.websocket, api=model.api
+        websocket=model.processed_websocket, api=model.processed_api
     )
     with open(dockerfile_output_file, "w", encoding="utf-8") as f:
         f.write(dockerfile_content)
@@ -221,7 +275,7 @@ def generate(model_path, gen_path):
     # ========= Generate docker-compose file============
     docker_compose_output_file = os.path.join(gen_path, "docker-compose.yml")
     docker_compose_content = docker_compose_template.render(
-        websocket=model.websocket, api=model.api
+        websocket=model.processed_websocket, api=model.processed_api
     )
     with open(docker_compose_output_file, "w", encoding="utf-8") as f:
         f.write(docker_compose_content)
@@ -246,3 +300,6 @@ def map_attribute_class_names_to_types(attribute):
     if attribute.__class__.__name__ not in attribute_types:
         raise ValueError(f"Unsupported attribute type: {attribute.__class__.__name__}")
     return attribute_types[attribute.__class__.__name__]
+
+
+# @generator("web_dsl","Application")

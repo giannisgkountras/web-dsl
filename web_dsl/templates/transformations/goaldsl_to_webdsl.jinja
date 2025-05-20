@@ -1,0 +1,100 @@
+// Broker Connections
+{% for broker in mqtt_brokers %}
+Broker<MQTT> {{broker.name}}
+    host: "{{broker.host}}"
+    port: {{broker.port}}
+{% if broker.auth %}
+    auth:
+        username: {{broker.auth.username}}
+        password: {{broker.auth.password}}
+{% endif %}
+end
+
+{% endfor %}
+{% for broker in redis_brokers %}
+Broker<Redis> {{broker.name}}
+    host: "{{broker.host}}"
+    port: {{broker.port}}
+{% if broker.db %}
+    db: {{broker.db}}
+{% endif %}
+{% if broker.auth %}
+    auth:
+        username: {{broker.auth.username}}
+        password: {{broker.auth.password}}
+{% endif %}
+end
+
+{% endfor %}
+{% for broker in amqp_brokers %}
+Broker<AMQP> {{broker.name}}
+    host: "{{broker.host}}"
+    port: {{broker.port}}
+{% if broker.vhost %}
+    vhost: {{broker.vhost}}
+{% endif %}
+{% if broker.auth %}
+    auth:
+        username: {{broker.auth.username}}
+        password: {{broker.auth.password}}
+{% endif %}
+end
+
+{% endfor %}
+
+// Broker Topics
+{% for entry in all_broker_topics %}
+BrokerTopic {{entry.name}}
+    connection: {{entry.source}}
+    topic: "{{entry.topic}}"
+end
+
+{% endfor %}
+
+// Rest API Servers
+{% for rest in rest_endpoints %}
+RESTApi {{rest.name}}Server
+    host: "{{rest.host}}"
+    port: {{rest.port}}
+{% if rest.webdsl_headers %}
+    headers: {{rest.webdsl_headers}}
+{% endif %}
+{% if rest.auth%}
+    auth: {{rest.auth.key}}
+{% endif %}
+end
+
+{% endfor %}
+
+// Rest API Endpoints
+{% for rest in rest_endpoints %}
+RESTEndpoint {{rest.name}}
+    connection: {{rest.name}}Server
+    method: {{rest.verb}}
+    path: "{{rest.webdsl_path}}"
+{% if rest.webdsl_body%}
+    body: {{rest.webdsl_body}}
+{% endif %}
+{% if rest.webdsl_params%}
+    params: {{rest.webdsl_params}}
+{% endif %}
+end
+
+{% endfor %}
+
+// Entities
+{% for entity in entities %}
+Entity {{ entity.name }}
+    source: {{ entity.webdsl_entity_source}}
+{% if entity.description%}
+    description: "{{ entity.description }}"
+{% endif %}
+{% if entity.attributes %}
+    attributes:
+    {% for attr in entity.attributes %}
+        - {{ attr.name }}: {{ attr.webdsl_type }}
+    {% endfor %}
+{% endif %}
+end
+
+{% endfor %}

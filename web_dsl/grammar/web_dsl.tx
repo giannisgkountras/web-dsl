@@ -1,0 +1,30 @@
+import webpage
+import screens
+import components
+import connections
+import sources
+import auth
+import entity
+import utils
+import accessors
+import conditions
+import repetition
+
+Model:
+    (imports+=Import)?
+    (
+        (brokers+=MessageBroker)*
+        (databases+=Database)*
+        (restapis+=RESTApi)*
+        (endpoints+=RESTEndpoint)*
+        (mysqlqueries+=MySQLQuery)*
+        (mongodbqueries+=MongoDBQuery)*
+        (brokertopics+=BrokerTopic)*
+        (apis+=API)*
+        (websockets+=Websocket)*
+        (components+=Component)*
+        (entities+=Entity)*
+        (screens+=Screen)*
+        (webpage=WebPage)?
+    )#
+;

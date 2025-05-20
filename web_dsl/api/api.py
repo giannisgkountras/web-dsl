@@ -7,7 +7,6 @@ import subprocess
 import time
 import shutil
 import traceback
-import yaml
 
 from dotenv import load_dotenv
 from fastapi import (
@@ -19,7 +18,9 @@ from fastapi import (
     Security,
     Body,
     BackgroundTasks,
+    Form,
 )
+from typing import List
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +30,7 @@ from pydantic import BaseModel
 from web_dsl.language import build_model
 from web_dsl.generate import generate
 from web_dsl.m2m.openapi_to_webdsl import transform_openapi_to_webdsl
+from web_dsl.m2m.goaldsl_to_webdsl import transform_goaldsl_to_webdsl
 
 # Load the .env file
 load_dotenv()
@@ -207,26 +209,49 @@ async def generate_from_model(
 
 
 @app.post("/generate/file", tags=["Generation"])
-async def generate_from_file(
-    model_file: UploadFile = File(...),
+async def generate_from_files(
+    model_files: List[UploadFile] = File(...),
+    main_filename: str = Form(None),  # Optional
     background_tasks: BackgroundTasks = BackgroundTasks(),
     api_key: str = Security(get_api_key),
 ):
-    background_tasks.add_task(cleanup_old_generations)
     uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
+    model_dir = os.path.join(TMP_DIR, f"models-{uid}")
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
+    os.makedirs(model_dir, exist_ok=True)
     os.makedirs(gen_dir, exist_ok=True)
-    save_upload_file(model_file, model_path)
-    tarball_path = os.path.join(TMP_DIR, f"{uid}.tar.gz")
+    background_tasks.add_task(cleanup_old_generations)
+
+    model_paths = {}
+
     try:
-        out_dir = generate(model_path, gen_dir)
+        # Save files and keep track of names
+        for model_file in model_files:
+            dest_path = os.path.join(model_dir, model_file.filename)
+            save_upload_file(model_file, dest_path)
+            model_paths[model_file.filename] = dest_path
+
+        # Determine the main file
+        if len(model_files) == 1:
+            main_model_path = next(iter(model_paths.values()))
+        elif main_filename and main_filename in model_paths:
+            main_model_path = model_paths[main_filename]
+        else:
+            raise HTTPException(
+                status_code=400, detail="Main file not specified or not found."
+            )
+
+        out_dir = generate(main_model_path, gen_dir)
+
+        tarball_path = os.path.join(TMP_DIR, f"{uid}.tar.gz")
         make_tarball(tarball_path, out_dir)
+
         return FileResponse(
             tarball_path,
             filename=os.path.basename(tarball_path),
             media_type="application/x-tar",
         )
+
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
@@ -244,13 +269,7 @@ async def generate_from_model(
     save_upload_file(openapi_model, openapi_path)
 
     try:
-        with open(openapi_path, "r") as f:
-            openapi_data = yaml.safe_load(f)
-    except yaml.YAMLError as e:
-        raise HTTPException(status_code=400, detail=f"Invalid YAML: {str(e)}")
-
-    try:
-        web_dsl_model = transform_openapi_to_webdsl(openapi_data)
+        web_dsl_model = transform_openapi_to_webdsl(openapi_path)
         save_text_to_file(web_dsl_model, web_dsl_path)
         print(f"Generated WDSL model: {web_dsl_path}")
         return FileResponse(
@@ -263,59 +282,84 @@ async def generate_from_model(
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 
-# ============= Preview Endpoints =============
-@app.post("/generate/preview", tags=["Preview"])
-async def generate_preview_from_model(
-    gen_model: TransformationModel = Body(...),
-    api_key: str = Security(get_api_key),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
+# ============= Transformations Endpoint =============
+@app.post("/transform/goaldsl", tags=["Transformations"])
+async def generate_from_model(
+    goaldsl_model: UploadFile = File(...), api_key: str = Security(get_api_key)
 ):
     uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
-    gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
-    os.makedirs(gen_dir, exist_ok=True)
-    save_text_to_file(gen_model.model, model_path)
-    try:
-        out_dir = generate(model_path, gen_dir)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Generation error: {e}")
-    frontend_dir = os.path.join(out_dir, "frontend")
+    goaldsl_path = os.path.join(TMP_DIR, f"goaldsl-{uid}.goal")
+    web_dsl_path = os.path.join(TMP_DIR, f"webdsl-{uid}.wdsl")
+
+    save_upload_file(goaldsl_model, goaldsl_path)
 
     try:
-        subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
-        subprocess.run(["npm", "run", "build"], cwd=frontend_dir, check=True)
-        build_dir = os.path.join(frontend_dir, "dist")
-        base_url = f"/generated/gen-{uid}/frontend/dist/"
-        inject_base_href(build_dir, base_url)
-        background_tasks.add_task(cleanup_old_generations)
-        return JSONResponse(content={"frontend_url": base_url}, status_code=200)
+        web_dsl_model = transform_goaldsl_to_webdsl(goaldsl_path)
+        save_text_to_file(web_dsl_model, web_dsl_path)
+        print(f"Generated WDSL model: {web_dsl_path}")
+        return FileResponse(
+            path=web_dsl_path,
+            filename=os.path.basename(web_dsl_path),
+            media_type="text/plain",  # Use correct MIME type
+        )
     except Exception as e:
+        traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
 
 
-@app.post("/generate/file/preview", tags=["Preview"])
-async def generate_preview_from_file(
-    model_file: UploadFile = File(...),
-    api_key: str = Security(get_api_key),
-    background_tasks: BackgroundTasks = BackgroundTasks(),
-):
-    uid = get_unique_id()
-    model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
-    gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
-    os.makedirs(gen_dir, exist_ok=True)
-    save_upload_file(model_file, model_path)
-    try:
-        out_dir = generate(model_path, gen_dir)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Generation error: {e}")
-    frontend_dir = os.path.join(out_dir, "frontend")
-    try:
-        subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
-        subprocess.run(["npm", "run", "build"], cwd=frontend_dir, check=True)
-        build_dir = os.path.join(frontend_dir, "dist")
-        base_url = f"/generated/gen-{uid}/frontend/dist/"
-        inject_base_href(build_dir, base_url)
-        background_tasks.add_task(cleanup_old_generations)
-        return JSONResponse(content={"frontend_url": base_url}, status_code=200)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
+# # ============= Preview Endpoints =============
+# @app.post("/generate/preview", tags=["Preview"])
+# async def generate_preview_from_model(
+#     gen_model: TransformationModel = Body(...),
+#     api_key: str = Security(get_api_key),
+#     background_tasks: BackgroundTasks = BackgroundTasks(),
+# ):
+#     uid = get_unique_id()
+#     model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
+#     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
+#     os.makedirs(gen_dir, exist_ok=True)
+#     save_text_to_file(gen_model.model, model_path)
+#     try:
+#         out_dir = generate(model_path, gen_dir)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=f"Generation error: {e}")
+#     frontend_dir = os.path.join(out_dir, "frontend")
+
+#     try:
+#         subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+#         subprocess.run(["npm", "run", "build"], cwd=frontend_dir, check=True)
+#         build_dir = os.path.join(frontend_dir, "dist")
+#         base_url = f"/generated/gen-{uid}/frontend/dist/"
+#         inject_base_href(build_dir, base_url)
+#         background_tasks.add_task(cleanup_old_generations)
+#         return JSONResponse(content={"frontend_url": base_url}, status_code=200)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")
+
+
+# @app.post("/generate/file/preview", tags=["Preview"])
+# async def generate_preview_from_file(
+#     model_file: UploadFile = File(...),
+#     api_key: str = Security(get_api_key),
+#     background_tasks: BackgroundTasks = BackgroundTasks(),
+# ):
+#     uid = get_unique_id()
+#     model_path = os.path.join(TMP_DIR, f"model-{uid}.wdsl")
+#     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
+#     os.makedirs(gen_dir, exist_ok=True)
+#     save_upload_file(model_file, model_path)
+#     try:
+#         out_dir = generate(model_path, gen_dir)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=f"Generation error: {e}")
+#     frontend_dir = os.path.join(out_dir, "frontend")
+#     try:
+#         subprocess.run(["npm", "install"], cwd=frontend_dir, check=True)
+#         subprocess.run(["npm", "run", "build"], cwd=frontend_dir, check=True)
+#         build_dir = os.path.join(frontend_dir, "dist")
+#         base_url = f"/generated/gen-{uid}/frontend/dist/"
+#         inject_base_href(build_dir, base_url)
+#         background_tasks.add_task(cleanup_old_generations)
+#         return JSONResponse(content={"frontend_url": base_url}, status_code=200)
+#     except Exception as e:
+#         raise HTTPException(status_code=400, detail=f"Transformation error: {e}")

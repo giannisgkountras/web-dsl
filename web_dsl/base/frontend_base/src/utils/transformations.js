@@ -1,5 +1,5 @@
 import { getValueByPath } from "./getValueByPath";
-
+import { toast } from "react-toastify";
 export const objectOfListsToListOfObjects = (obj) => {
     const keys = Object.keys(obj);
     const length = obj[keys[0]]?.length || 0;
@@ -54,13 +54,13 @@ export function transformToArrayOfObjects(response, allPaths, keys) {
         return combineData(allData, keys);
     }
 
-    throw new Error("Unsupported data format.");
+    toast.error("Unsupported data format.");
 }
 
 // Helper function to combine data based on paths and keys
 function combineData(allData, keys) {
     if (allData.length === 0 || !allData[0]) {
-        throw new Error("No data found at provided paths.");
+        toast.error("No data found at provided paths.");
     }
 
     if (Array.isArray(allData[0])) {
@@ -83,6 +83,6 @@ function combineData(allData, keys) {
             return obj;
         });
     } else {
-        throw new Error("Unsupported data format.");
+        toast.error("Unsupported data format.");
     }
 }

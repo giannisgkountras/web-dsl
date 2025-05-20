@@ -1,28 +1,25 @@
-import { WebsocketContext } from "../context/WebsocketContext";
-import { useWebsocket } from "../hooks/useWebsocket";
-import { useContext, useEffect, useRef, useState } from "react";
-import convertTypeValue from "../utils/convertTypeValue";
+import { useEffect, useState } from "react";
 import { getValueByPath, getNameFromPath } from "../utils/getValueByPath";
 
-const LiveTable = ({ topic, columns }) => {
+const LiveTable = ({ entityData, columns }) => {
     const [logs, setLogs] = useState([]);
     const [names, setNames] = useState([]);
-    const ws = useContext(WebsocketContext);
 
-    // Handle incoming WebSocket messages using the 'topic' prop
-    useWebsocket(ws, topic, (msg) => {
-        let newData = {};
-        let newNames = [];
-        // Dynamically parse the message based on the 'attributes' prop
+    useEffect(() => {
+        if (!entityData) {
+            return;
+        }
+        const newData = {};
+        const newNames = [];
         columns.forEach((column) => {
-            const value = getValueByPath(msg, column);
+            const value = getValueByPath(entityData, column);
             const name = getNameFromPath(column); // <- name from path
             newData[name] = value;
             newNames.push(name);
         });
         setLogs((prevLogs) => [...prevLogs, newData]);
         setNames(newNames);
-    });
+    }, [entityData]);
 
     // Utility function to capitalize attribute names for display
     const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1);

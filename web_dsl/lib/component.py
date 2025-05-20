@@ -1,14 +1,10 @@
 class Component:
-    def __init__(self, parent=None, name=None, entity=None, type=None, interval=None):
+    def __init__(self, parent=None, name=None, entity=None, type=None):
         self.isComponent = True
         self.parent = parent
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
-        if interval is not None and interval > 0:
-            self.interval = interval
-        else:
-            self.interval = None
 
         try:
             entityRef = entity.source.connection.__class__.__name__

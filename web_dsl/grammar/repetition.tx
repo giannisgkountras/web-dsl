@@ -5,17 +5,15 @@ import conditions
 
 
 Repetition:
-    'for' 'item' item=NestedAccessPath
-    'in' 'entity' entity=[Entity]
+    'for' 'item' 'in' item=NestedAccessPathEntity
     'use' (component=RepetitionComponentTypes | componentRef=[Component])
     ('with' data=NestedAccessPathItem)?
     (
-        'if' condition=HalfExpression
+        'if' expr=HalfExpression
         ('else' 'use' (componentElse=RepetitionComponentTypes | componentElseRef=[Component]))?
         ('with' dataElse=NestedAccessPathItem)?
     )?
     ('orientation:' orientation=OrientationType)?
-    ('interval:' interval=INT)?
     
 ;
 

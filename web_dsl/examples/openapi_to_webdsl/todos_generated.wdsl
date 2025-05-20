@@ -1,4 +1,4 @@
-webpage Simple_Todos_API
+Webpage Simple_Todos_API
     author: ""
     description: "A simple API to manage todos"
     navbar: true
@@ -65,10 +65,26 @@ Component get__todos__Text_this_1__title
         content: this[1].title
 end
 
+Component get__todos__LineChart__r1_c3
+    entity: get__todos__Entity
+    type: LineChart
+        xLabel:
+        yLabel:
+        xValue:
+        yValues:
+        description: optional
+end
+
 Component get__todos__Text_this_2__title
     entity: get__todos__Entity
     type: Text
         content: this[2].title
+end
+
+Component get__todos__Text_this_5__title
+    entity: get__todos__Entity
+    type: Text
+        content: this[5].title
 end
 
 Component get__todos_20__Gauge_this_id
@@ -77,9 +93,9 @@ Component get__todos_20__Gauge_this_id
         value: this.id
 end
 
-Component get__todos_20__Progressbar_this_id
+Component get__todos_20__ProgressBar_this_id
     entity: get__todos_20__Entity
-    type: Progressbar
+    type: ProgressBar
         value: this.id
         max: 100
 end
@@ -97,6 +113,12 @@ Screen Home
     title: "Home"
     url: "/"
 
+
+    row
+        col
+            use get__todos__Text_this_5__title
+        endcol
+    endrow
     row
         col
             use get__todos__Text_this_0__title
@@ -105,15 +127,20 @@ Screen Home
             use get__todos__Text_this_1__title
         endcol
         col
-            use get__todos__Text_this_2__title
+            use get__todos__LineChart__r1_c3
         endcol
     endrow
     row
         col
-            use get__todos_20__Gauge_this_id
+            use get__todos__Text_this_2__title
         endcol
         col
-            use get__todos_20__Progressbar_this_id
+            use get__todos_20__Gauge_this_id
+        endcol
+    endrow
+    row
+        col
+            use get__todos_20__ProgressBar_this_id
         endcol
         col
             use get__todos_20__Image_this_name

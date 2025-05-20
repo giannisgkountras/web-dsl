@@ -1,4 +1,4 @@
-webpage {{ title }}
+Webpage {{ title }}
     author: "{{ author }}"
 {% if description %}
     description: "{{ description }}"
@@ -77,11 +77,31 @@ Component {{ component.name }}
         content: {{ component.content }}
 {% elif component.type == "Gauge" and component.value %}
         value: {{ component.value }}
-{% elif component.type == "Progressbar" and component.value %}
+{% elif component.type == "ProgressBar" and component.value %}
         value: {{ component.value }}
         max: 100
 {% elif component.type == "Image" and component.source %}
         source: {{ component.source }}
+{% elif component.type == "LineChart"%}
+        xLabel:
+        yLabel:
+        xValue:
+        yValues:
+        description: optional
+{% elif component.type == "BarChart"%}
+        xLabel:
+        yLabel:
+        xValue:
+        yValues:
+        description: optional
+{% elif component.type == "PieChart"%}
+        dataName:
+        value:
+        description: optional
+{% elif component.type == "JsonViewer"%}
+        attributes: optional
+{% elif component.type == "Table"%}
+        primary_key:
 {% endif %}
 end
 
@@ -93,9 +113,15 @@ Screen Home
     title: "Home"
     url: "/"
 
-    {% for i in range(0, components|length, 3) %}
+    {# Components are sorted by row then col #}
+    {% set by_row = components | sort(attribute='col') | sort(attribute='row') 
+                           | groupby('row') %}
+
+    {# Loop one group per distinct row number #}
+    {% for row_num, comps in by_row %}
     row
-        {% for component in components[i:i+3] %}
+        {# Within that row, you already sorted by col, so just emit each component #}
+        {% for component in comps %}
         col
             use {{ component.name }}
         endcol

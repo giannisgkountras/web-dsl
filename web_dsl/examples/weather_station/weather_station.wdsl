@@ -1,4 +1,4 @@
-webpage WeatherStation
+Webpage WeatherStation
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A weather station app"
@@ -18,7 +18,7 @@ webpage WeatherStation
 
     RESTApi OpenMeteo
         host: "https://api.open-meteo.com"
-        headers: {"Content-Type": "application/json"}
+        headers: {"Content-Type": "application/json", "X-API-key": "MitsosOTrelos"}
     end
 
     Broker<MQTT> SensorBroker
@@ -187,10 +187,10 @@ webpage WeatherStation
                 endrow
                 row
                     col
-                        if this.current.weather_code == 2 from entity weatherData
+                        if weatherData.current.weather_code == 2
                         use NotClearWeather
                     
-                        if this.current.weather_code == 0 from entity weatherData
+                        if weatherData.current.weather_code == 0
                             use ClearWeather
             
                         use CurrentTime

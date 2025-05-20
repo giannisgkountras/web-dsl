@@ -1,12 +1,15 @@
 import { toast } from "react-toastify";
-import { WebsocketContext } from "../context/WebsocketContext";
-import { useContext, useState, useEffect, use } from "react";
-import { useWebsocket } from "../hooks/useWebsocket";
+import { useState, useEffect } from "react";
 import { getValueByPath } from "../utils/getValueByPath";
 
-const LiveNotification = ({ type = "info", topic, contentPath }) => {
-    const ws = useContext(WebsocketContext);
+const LiveNotification = ({ entityData, type = "info", contentPath }) => {
     const [message, setMessage] = useState("");
+    useEffect(() => {
+        if (!entityData) {
+            return;
+        }
+        setMessage(getValueByPath(entityData, contentPath));
+    }, [entityData]);
 
     const notify = {
         success: () => toast.success(message),
@@ -14,17 +17,6 @@ const LiveNotification = ({ type = "info", topic, contentPath }) => {
         info: () => toast.info(message),
         warning: () => toast.warning(message)
     };
-
-    useWebsocket(ws, topic, (msg) => {
-        try {
-            setMessage(getValueByPath(msg, contentPath));
-        } catch (error) {
-            toast.error(
-                "An error occurred while updating value: " + error.message
-            );
-            console.error("Error updating status:", error);
-        }
-    });
 
     useEffect(() => {
         if (message !== "") {

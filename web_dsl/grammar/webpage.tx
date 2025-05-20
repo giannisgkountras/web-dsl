@@ -9,8 +9,9 @@ import accessors
 import conditions
 import repetition
 
+
 WebPage:
-    'webpage' name=ID 
+    'Webpage' name=ID 
     ('author:' author=STRING)?
     ('version:' version=STRING)?
     ('description:' description=STRING)?

@@ -2,31 +2,24 @@ class Repetition:
     def __init__(
         self,
         parent=None,
-        entity=None,
         item=None,
         component=None,
         data=None,
-        condition=None,
+        expr=None,
         componentElse=None,
         componentRef=None,
         componentElseRef=None,
         dataElse=None,
         orientation=None,
-        interval=None,
     ):
 
+        self.entities = set()
         self.parent = parent
-        self.entity = entity
-        self.item = self.format_attribute_path(item)
-        if data is not None:
-            self.data = self.format_attribute_path(data)
-        else:
-            self.data = None
+        self.raw_item = item
 
-        if dataElse is not None:
-            self.dataElse = self.format_attribute_path(dataElse)
-        else:
-            self.dataElse = None
+        self.raw_data = data
+
+        self.raw_dataElse = dataElse
 
         if componentRef is not None:
             self.component = componentRef
@@ -43,27 +36,7 @@ class Repetition:
         else:
             self.orientation = orientation
 
-        if interval is None:
-            self.interval = 0
-        else:
-            self.interval = interval
-
-        try:
-            entityRef = entity.source.connection.__class__.__name__
-        except AttributeError:
-            entityRef = None  # or "Unknown", or whatever fallback you prefer
-        source_map = {
-            "MQTTBroker": "broker",
-            "AMQPBroker": "broker",
-            "RedisBroker": "broker",
-            "RESTApi": "rest",
-            "Database": "db",
-            "MySQL": "db",
-            "MongoDB": "db",
-        }
-
-        self.sourceOfContent = source_map.get(entityRef, "static")
-        self.condition = self.format_condition(condition)
+        self.raw_expr = expr
 
     def format_attribute_path(self, path):
         """
@@ -77,6 +50,11 @@ class Repetition:
             return "true" if path else "false"
 
         path_array = []
+
+        if hasattr(path, "entity") and path.entity is not None:
+            self.entities.add(path.entity)
+            path_array.append(path.entity.name)
+
         for accessor in path.accessors:
             if hasattr(accessor, "index") and accessor.index is not None:
                 accessor.index = int(accessor.index)
@@ -93,8 +71,9 @@ class Repetition:
         Here we use Half Expression
         """
         if condition is not None:
-            # WE INITIALIZE THE CONDITION ARRAY WITH ONE ELEMENT BECAUSE WE WILL USE HALF EXPRESSION
-            condition_array = [""]
+            condition_array = []
+            if hasattr(condition, "left") and condition.op is not None:
+                condition_array.append(self.format_attribute_path(condition.left))
             if hasattr(condition, "op") and condition.op is not None:
                 condition_array.append(condition.op)
             if hasattr(condition, "right") and condition.right is not None:

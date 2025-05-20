@@ -1,0 +1,62 @@
+import "queries.wdsl"
+import "topics.wdsl"
+import "webpage.wdsl"
+
+Entity Products
+    source: allProducts
+    strict: true
+    attributes:
+        - id: list
+        - name: list
+        - category: list
+        - description: list
+        - price: list
+end
+
+Entity Warehouses
+    source: allWarehouses
+    strict: true
+    interval: 2000
+    attributes:
+        - name: str
+        - capacity: int
+        - address: str
+        - isOperational: bool
+end
+
+Entity Revenue
+    source: allRevenue
+    attributes:
+        - date: str
+        - amount: float
+end
+
+Entity SalesByCategory
+    source: salesCategory
+    attributes:
+        - category: str
+        - total_sales: float
+end
+
+Entity YearlyIncomeData
+    source: yearlyIncome
+    attributes:
+        - year: int
+        - income: float
+end
+
+Entity NotificationsData
+    source: Notifications
+    attributes:
+        - info: str
+        - warning: str
+        - error: str
+end
+
+Entity ChartDebugData
+    source: Chart
+    attributes:
+        - x: int
+        - y1: int
+        - y2: int
+end

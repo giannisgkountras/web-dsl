@@ -36,6 +36,5 @@ typing_extensions==4.12.2
 ujson==5.10.0
 urllib3==2.3.0
 uvicorn==0.34.0
-webdsl-cli @ file:///home/ankel/Desktop/Thesis/web-dsl
 websockets==15.0.1
 wheel==0.45.1

@@ -1,7 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import convertTypeValue from "../utils/convertTypeValue";
-import { proxyRestCall } from "../api/proxyRestCall";
-import { queryDB } from "../api/dbQuery";
 import { FaEdit, FaTrash, FaSave } from "react-icons/fa";
 import { getNameFromPath, getValueByPath } from "../utils/getValueByPath";
 import {
@@ -12,8 +10,8 @@ import { modifyDB } from "../api/dbModify";
 import CustomCheckbox from "./CustomCheckbox";
 
 const Table = ({
+    entityData,
     attributes = [],
-    restData = {},
     dbData = {},
     sourceOfContent,
     dbType,
@@ -23,6 +21,7 @@ const Table = ({
     crud = "false"
 }) => {
     const extendedAttributes = [[primaryKey], ...attributes];
+    const [loading, setLoading] = useState(true);
     const [data, setData] = useState([]);
     const [editingPkValue, setEditingPkValue] = useState(null);
     const [newRecord, setNewRecord] = useState({});
@@ -31,11 +30,13 @@ const Table = ({
     const isCrudEnabled = crud === true || crud === "true";
 
     const columns = useMemo(() => {
-        if (!data || data.length === 0) return [];
+        if (!data || data.length === 0 || data?.status === "error") return [];
+        console.log("data", data);
         return Object.keys(data[0]);
     }, [data]);
 
     const emptyRecord = useMemo(() => {
+        if (!data || data.length === 0 || data?.status === "error") return {};
         const rec = {};
         columns.forEach((col) => {
             if (col !== primaryKey) {
@@ -50,15 +51,8 @@ const Table = ({
     }, [emptyRecord]);
 
     const reloadValue = async () => {
-        let response;
-
-        if (sourceOfContent === "rest") {
-            response = await proxyRestCall(restData);
-        } else if (sourceOfContent === "db") {
-            response = await queryDB(dbData);
-        } else {
-            return;
-        }
+        setLoading(true);
+        let response = entityData;
 
         let listData = isObjectOfLists(response)
             ? objectOfListsToListOfObjects(response)
@@ -67,40 +61,33 @@ const Table = ({
         if (extendedAttributes.length <= 1) {
             setData(listData);
         } else {
-            const processedData = listData.map((item) => {
-                const newItem = {};
-                extendedAttributes.forEach((attribute) => {
-                    try {
-                        const value = getValueByPath(item, attribute);
-                        const name = getNameFromPath(attribute);
-                        newItem[name] = value;
-                    } catch (error) {
-                        console.error(
-                            "Error extracting attribute: " + error.message
-                        );
-                    }
-                });
-                return newItem;
-            });
+            const processedData = Array.isArray(listData)
+                ? listData.map((item, index) => {
+                      const newItem = {};
+                      extendedAttributes.forEach((attribute) => {
+                          try {
+                              const value = getValueByPath(item, attribute);
+                              const name = getNameFromPath(attribute);
+                              newItem[name] = value;
+                          } catch (error) {
+                              console.error(
+                                  `Error extracting attribute "${attribute}" at index ${index}: ${error.message}`
+                              );
+                              newItem[attribute] = null; // or undefined, "", or skip it
+                          }
+                      });
+                      return newItem;
+                  })
+                : [];
             setData(processedData);
         }
+        setLoading(false);
     };
 
     useEffect(() => {
+        if (!entityData) return;
         reloadValue();
-        if (sourceOfContent === "rest" && restData?.interval > 0) {
-            const interval = setInterval(() => {
-                reloadValue();
-            }, restData.interval);
-            return () => clearInterval(interval);
-        }
-        if (sourceOfContent === "db" && dbData?.interval > 0) {
-            const interval = setInterval(() => {
-                reloadValue();
-            }, dbData.interval);
-            return () => clearInterval(interval);
-        }
-    }, []);
+    }, [entityData]);
 
     const handleChange = (pkValue, col, rawValue) => {
         if (!isCrudEnabled) return;
@@ -217,6 +204,13 @@ const Table = ({
 
     const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 
+    if (loading || !columns.length) {
+        return (
+            <div className="flex justify-center items-center w-full h-64 text-white">
+                <p className="animate-pulse">Loading table data...</p>
+            </div>
+        );
+    }
     return (
         <div className="flex flex-col text-white justify-start items-center w-full h-fit max-h-96 bg-[#13191E] rounded-2xl">
             {/* Header */}
@@ -230,11 +224,12 @@ const Table = ({
                         }, minmax(100px,1fr))`
                     }}
                 >
-                    {columns.map((col) => (
-                        <div key={col} className="text-left">
-                            {capitalize(col)}
-                        </div>
-                    ))}
+                    {columns.length > 0 &&
+                        columns.map((col) => (
+                            <div key={col} className="text-left">
+                                {capitalize(col)}
+                            </div>
+                        ))}
                     {isCrudEnabled && (
                         <div className="text-center">Actions</div>
                     )}
@@ -243,97 +238,102 @@ const Table = ({
 
             {/* Body */}
             <div className="w-full max-h-80 overflow-y-auto">
-                {data.map((row) => (
-                    <div
-                        key={row[primaryKey]}
-                        className="grid w-full gap-2 p-2 border-b border-[#313641] items-center"
-                        style={{
-                            gridTemplateColumns: `repeat(${
-                                columns.length + (isCrudEnabled ? 1 : 0)
-                            }, minmax(0, 1fr))`
-                        }}
-                    >
-                        {columns.map((col) => {
-                            const value = row[col];
+                {data.length > 0 &&
+                    data.map((row) => (
+                        <div
+                            key={row[primaryKey]}
+                            className="grid w-full gap-2 p-2 border-b border-[#313641] items-center"
+                            style={{
+                                gridTemplateColumns: `repeat(${
+                                    columns.length + (isCrudEnabled ? 1 : 0)
+                                }, minmax(0, 1fr))`
+                            }}
+                        >
+                            {columns.length > 0 &&
+                                columns.map((col) => {
+                                    const value = row[col];
 
-                            return (
-                                <div
-                                    key={col}
-                                    className="overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer"
-                                    title={String(value ?? "-")}
-                                >
-                                    {col === primaryKey ||
-                                    editingPkValue !== row[primaryKey] ? (
-                                        typeof value === "boolean" ? (
-                                            <CustomCheckbox
-                                                checked={value}
-                                                disabled={true}
-                                            />
-                                        ) : (
-                                            <p className="text-left px-2 text-ellipsis whitespace-nowrap overflow-hidden">
-                                                {value ?? "-"}
-                                            </p>
-                                        )
-                                    ) : typeof value === "boolean" ? (
-                                        <CustomCheckbox
-                                            checked={value}
-                                            onChange={(e) =>
-                                                handleChange(
-                                                    row[primaryKey],
-                                                    col,
-                                                    e.target.checked
+                                    return (
+                                        <div
+                                            key={col}
+                                            className="overflow-hidden text-ellipsis whitespace-nowrap cursor-pointer"
+                                            title={String(value ?? "-")}
+                                        >
+                                            {col === primaryKey ||
+                                            editingPkValue !==
+                                                row[primaryKey] ? (
+                                                typeof value === "boolean" ? (
+                                                    <CustomCheckbox
+                                                        checked={value}
+                                                        disabled={true}
+                                                    />
+                                                ) : (
+                                                    <p className="text-left px-2 text-ellipsis whitespace-nowrap overflow-hidden">
+                                                        {value ?? "-"}
+                                                    </p>
                                                 )
+                                            ) : typeof value === "boolean" ? (
+                                                <CustomCheckbox
+                                                    checked={value}
+                                                    onChange={(e) =>
+                                                        handleChange(
+                                                            row[primaryKey],
+                                                            col,
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                />
+                                            ) : (
+                                                <input
+                                                    className="bg-transparent w-full text-white focus:outline-none border-b border-transparent focus:border-white px-2"
+                                                    value={value}
+                                                    onChange={(e) =>
+                                                        handleChange(
+                                                            row[primaryKey],
+                                                            col,
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                />
+                                            )}
+                                        </div>
+                                    );
+                                })}
+                            {isCrudEnabled && (
+                                <div className="flex justify-center space-x-2">
+                                    {editingPkValue === row[primaryKey] ? (
+                                        <button
+                                            onClick={() =>
+                                                handleSave(row[primaryKey])
                                             }
-                                        />
+                                            className="p-2 rounded-full hover:bg-[#03C64C]/20 cursor-pointer"
+                                        >
+                                            <FaSave className="text-[#03C64C]" />
+                                        </button>
                                     ) : (
-                                        <input
-                                            className="bg-transparent w-full text-white focus:outline-none border-b border-transparent focus:border-white px-2"
-                                            value={value}
-                                            onChange={(e) =>
-                                                handleChange(
-                                                    row[primaryKey],
-                                                    col,
-                                                    e.target.value
+                                        <button
+                                            onClick={() =>
+                                                setEditingPkValue(
+                                                    row[primaryKey]
                                                 )
                                             }
-                                        />
+                                            className="p-2 rounded-full hover:bg-[#2D4272]/20 cursor-pointer"
+                                        >
+                                            <FaEdit className="text-white" />
+                                        </button>
                                     )}
+                                    <button
+                                        onClick={() =>
+                                            handleDelete(row[primaryKey])
+                                        }
+                                        className="p-2 rounded-full hover:bg-[#FA2C37]/20 cursor-pointer"
+                                    >
+                                        <FaTrash className="text-[#FA2C37]" />
+                                    </button>
                                 </div>
-                            );
-                        })}
-                        {isCrudEnabled && (
-                            <div className="flex justify-center space-x-2">
-                                {editingPkValue === row[primaryKey] ? (
-                                    <button
-                                        onClick={() =>
-                                            handleSave(row[primaryKey])
-                                        }
-                                        className="p-2 rounded-full hover:bg-[#03C64C]/20 cursor-pointer"
-                                    >
-                                        <FaSave className="text-[#03C64C]" />
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() =>
-                                            setEditingPkValue(row[primaryKey])
-                                        }
-                                        className="p-2 rounded-full hover:bg-[#2D4272]/20 cursor-pointer"
-                                    >
-                                        <FaEdit className="text-white" />
-                                    </button>
-                                )}
-                                <button
-                                    onClick={() =>
-                                        handleDelete(row[primaryKey])
-                                    }
-                                    className="p-2 rounded-full hover:bg-[#FA2C37]/20 cursor-pointer"
-                                >
-                                    <FaTrash className="text-[#FA2C37]" />
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                ))}
+                            )}
+                        </div>
+                    ))}
 
                 {/* New Record Row */}
                 {isCrudEnabled && (
@@ -345,38 +345,40 @@ const Table = ({
                             }, minmax(100px,1fr))`
                         }}
                     >
-                        {columns.map((col) => {
-                            const value = newRecord[col];
+                        {columns.length > 0 &&
+                            columns.map((col) => {
+                                const value = newRecord[col];
 
-                            if (col === primaryKey) return <div key={col} />;
+                                if (col === primaryKey)
+                                    return <div key={col} />;
 
-                            return typeof value === "boolean" ? (
-                                <div
-                                    key={col}
-                                    className="flex justify-center items-center"
-                                >
-                                    <CustomCheckbox
-                                        checked={value}
+                                return typeof value === "boolean" ? (
+                                    <div
+                                        key={col}
+                                        className="flex justify-center items-center"
+                                    >
+                                        <CustomCheckbox
+                                            checked={value}
+                                            onChange={(e) =>
+                                                handleNewChange(
+                                                    col,
+                                                    e.target.checked
+                                                )
+                                            }
+                                        />
+                                    </div>
+                                ) : (
+                                    <input
+                                        key={col}
+                                        className="p-1 bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2 placeholder-gray-400"
+                                        placeholder={capitalize(col)}
+                                        value={value}
                                         onChange={(e) =>
-                                            handleNewChange(
-                                                col,
-                                                e.target.checked
-                                            )
+                                            handleNewChange(col, e.target.value)
                                         }
                                     />
-                                </div>
-                            ) : (
-                                <input
-                                    key={col}
-                                    className="p-1 bg-transparent text-white focus:outline-none border-b border-transparent focus:border-white px-2 placeholder-gray-400"
-                                    placeholder={capitalize(col)}
-                                    value={value}
-                                    onChange={(e) =>
-                                        handleNewChange(col, e.target.value)
-                                    }
-                                />
-                            );
-                        })}
+                                );
+                            })}
                         <button
                             onClick={handleAdd}
                             className="bg-[#2D4272] px-3 py-1 rounded-md font-medium hover:bg-[#253A66] cursor-pointer"

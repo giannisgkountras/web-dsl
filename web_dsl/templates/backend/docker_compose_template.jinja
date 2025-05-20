@@ -21,6 +21,7 @@ services:
       dockerfile: Dockerfile
     networks:
         - app_network  # Connect backend to the same network
+    {% if websocket or api %}
     ports:
       {% if websocket and websocket.port %}
       - "{{websocket.port}}:{{websocket.port}}"
@@ -28,4 +29,5 @@ services:
       {% if api and api.port %}
       - "{{ api.port }}:{{ api.port }}"
       {% endif %}
+    {% endif %}
     restart: always

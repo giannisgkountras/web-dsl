@@ -1,4 +1,4 @@
-webpage WarehouseManagement
+Webpage WarehouseManagement
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A dashboard for managing warehouses"
@@ -103,6 +103,7 @@ webpage WarehouseManagement
     Entity Warehouses
         source: allWarehouses
         strict: true
+        interval: 2000
         attributes:
             - name: str
             - capacity: int
@@ -273,10 +274,10 @@ webpage WarehouseManagement
                 use YearlyIncomeChart
             endcol
             col
-                if this.isOperational[0] == true from entity Warehouses
-                        use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
-                        else use WarehouseNotOperational
-                        every 2000
+                if Warehouses.isOperational[0] == true
+                    use WarehouseNotificationsAlive, WarehouseOperational, CentralWarehouseCapacity
+                else 
+                    use WarehouseNotOperational
             endcol
         endrow
     end

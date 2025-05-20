@@ -19,15 +19,19 @@ Screen:
 
 // Rows and columns, which can contain more structural elements
 StructuralElement:
-    Row | Column | Component | ComponentRef | Condition | Repetition
+    Row | Column | Link | Component | ComponentRef | Condition | Repetition
 ;
 
-// A row contains multiple structural elements
 Row:
     'row' ('height:' height=INT)? elements*=StructuralElement 'endrow'
 ;
 
-// A column contains multiple structural elements
 Column:
     'col' ('width:' width=INT)? elements*=StructuralElement 'endcol'
+;
+
+Link:
+    'link' 
+    'to:' url=STRING
+    ('text:' text=STRING)?
 ;

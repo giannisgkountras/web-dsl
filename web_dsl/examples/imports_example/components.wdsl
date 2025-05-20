@@ -1,0 +1,100 @@
+import "entities.wdsl"
+
+Component ProductsTable
+    entity: Products
+    type: Table
+        description: "All products"
+        primary_key: "id"
+        table: "products"
+        crud: true
+end
+
+Component WarehousesTable
+    entity: Warehouses 
+    type: Table
+        description: "All warehouses"
+        primary_key: "_id"
+        attributes: this.name, this.capacity, this.address, this.isOperational
+        crud: false
+end
+
+Component RevenueBarChart
+    entity: Revenue
+    type: BarChart
+        description: "Revenue over time"
+        xLabel: "Time"
+        yLabel: "Money"
+        xValue: this.date
+        yValues: this.amount
+end
+
+Component CategorySalesPieChart
+    entity: SalesByCategory
+    type: PieChart
+        description: "Sales by Category"
+        value: this.total_sales
+        dataName: this.category
+end
+
+Component YearlyIncomeChart
+    entity: YearlyIncomeData
+    type: LineChart
+        description: "Yearly income"
+        xLabel: "Time"
+        yLabel: "Money"
+        xValue: this.year
+        yValues: this.Electronics, this.Furniture, this.Clothing, this.Toys
+end
+
+Component InfoNotifications
+    entity: NotificationsData
+    type: Notification
+        type: info
+        message: this.info
+end
+
+Component WarningNotifications
+    entity: NotificationsData
+    type: Notification
+        type: warning
+        message: this.warning
+end
+
+Component WarehouseOperational
+    type: Text
+        content: "Warehouse is operational"
+        color: "#8EC07C"
+        size: 20
+end
+
+Component WarehouseNotOperational
+    type: Text
+        content: "Warehouse is not operational"
+        color: "#FA4934"
+        size: 22
+end
+
+Component WarehouseNotificationsAlive
+    entity: NotificationsData
+    type: Alive
+        timeout: 5000
+        description: "Notifications channel"
+end
+
+Component ChartDebug
+    entity: ChartDebugData
+    type: LineChart
+        description: "Debug chart"
+        xLabel: "X Axis"
+        yLabel: "Y axis"
+        xValue: this.x
+        yValues: this.y1, this.y2
+end
+
+Component CentralWarehouseCapacity
+    entity: Warehouses
+    type: Progressbar
+        value: this.capacity[0]
+        max: this.capacity[2]
+        description: "Central warehouse capacity"
+end

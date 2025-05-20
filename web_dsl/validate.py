@@ -1,8 +1,11 @@
 from textx import get_children_of_type, TextXSemanticError
 
 
-def validate_model(model):
+def validate_model(model, main_file):
     """Validates the model."""
+
+    validate_webpage(model, main_file)
+
     all_entities = get_children_of_type("Entity", model)
     strict_entities = strict_entities = [e for e in all_entities if e.strict]
 
@@ -16,38 +19,42 @@ def validate_model(model):
         components_referencing_strict_entities
     )
 
-    # Validate repetitions with strict entities
+    # # Validate repetitions with strict entities
     all_repetitions = get_children_of_type("Repetition", model)
-    repetitions_to_check = [
-        r for r in all_repetitions if r.entity and r.entity in strict_entities
-    ]
-    for repetition in repetitions_to_check:
-        attribute_root = repetition.item[0]
-        strict_entity_attributes = repetition.entity.attributes
-        strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
-        if attribute_root not in strict_entity_attributes_names:
-            errors.append(
-                f"Repetition uses attribute '{attribute_root}' not allowed by strict entity '{repetition.entity.name}'"
-            )
+    for repetition in all_repetitions:
+        for entity in repetition.entities_list:
+            if entity and entity in strict_entities:
+                strict_entity_attributes = entity.attributes
+                strict_entity_attributes_names = [
+                    a.name for a in strict_entity_attributes
+                ]
+                # The first item is the entity name, the second is the attribute name
+                attribute_root = repetition.item[1]
+                if attribute_root not in strict_entity_attributes_names:
+                    errors.append(
+                        f"Repetition uses attribute '{attribute_root}' not allowed by strict entity '{entity.name}'"
+                    )
 
     # Validate conditions with strict entities
     all_conditions = get_children_of_type("Condition", model)
-    conditions_to_check = [
-        c for c in all_conditions if c.entity and c.entity in strict_entities
-    ]
-    for item in conditions_to_check:
-        strict_entity_attributes = item.entity.attributes
-        strict_entity_attributes_names = [a.name for a in strict_entity_attributes]
-        condition = item.condition
-        flat_primitives = find_flat_primitive_lists(condition)
-
-        for primitive in flat_primitives:
-            attribute_root = primitive[0]
-
-            if attribute_root not in strict_entity_attributes_names:
-                errors.append(
-                    f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{item.entity.name}'"
-                )
+    for condition in all_conditions:
+        for entity in condition.entities_list:
+            if entity and entity in strict_entities:
+                strict_entity_attributes = entity.attributes
+                strict_entity_attributes_names = [
+                    a.name for a in strict_entity_attributes
+                ]
+                # Get the condition arrays that contain the name of the entity as the first item
+                condition_arrays = find_flat_primitive_lists(condition.condition)
+                for condition_array in condition_arrays:
+                    if condition_array and condition_array[0] == entity.name:
+                        # The first item is the entity name, the second is the attribute name
+                        attribute_root = condition_array[1]
+                        print(attribute_root)
+                        if attribute_root not in strict_entity_attributes_names:
+                            errors.append(
+                                f"Condition uses attribute '{attribute_root}' not allowed by strict entity '{entity.name}'"
+                            )
 
     # Validate CRUD table
     all_crud_tables = get_children_of_type("CrudTable", model)
@@ -56,7 +63,18 @@ def validate_model(model):
     if errors:
         error_text = "\n".join(f" - {e}" for e in errors)
         raise TextXSemanticError(
-            f"Model validation failed with {len(errors)} errors:\n{error_text}"
+            f"Model validation failed with {len(errors)} errors: {error_text}"
+        )
+
+
+def validate_webpage(model, main_file):
+    """
+    Validate that only the main file contains a webpage definition.
+    """
+    # Check if the main file has exactly one webpage
+    if not model.processed_webpage:
+        raise Exception(
+            f"Main file {main_file} must contain exactly one 'webpage' definition."
         )
 
 

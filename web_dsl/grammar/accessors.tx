@@ -1,3 +1,5 @@
+import entity
+
 AttributeAccessor:
     '.' attribute=ID  
 ;
@@ -17,4 +19,8 @@ NestedAccessPath:
 
 NestedAccessPathItem:
     base='item' accessors+=Accessor*
+;
+
+NestedAccessPathEntity:
+    entity=[Entity] accessors+=Accessor*
 ;

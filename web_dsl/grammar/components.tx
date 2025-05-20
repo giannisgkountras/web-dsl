@@ -3,14 +3,13 @@ import connections
 import types
 import accessors
 import sources
-
+import utils
 
 Component:
     'Component' name=ID
     (
         ('entity:'  entity=[Entity])?
         ('type:' type=ComponentType)
-        ('interval:' interval=INT)?
     )#
     'end'
 ;

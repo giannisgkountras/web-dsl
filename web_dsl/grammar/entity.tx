@@ -1,16 +1,18 @@
 import sources
 import types
 import connections
+import utils
 
 EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 
 Entity:
-    'Entity' name=ID
+    'Entity' name=ID ('overloads' overloads=[Entity])?
     (
         ('description:' description=STRING)?
         'source:' source=[EntitySource]
         ('attributes:' '-' attributes*=Attribute['-'])?
         ('strict:' strict=BOOL)?
+        ('interval:' interval=INT)?
     )#
     'end'
 ;
@@ -25,26 +27,26 @@ Attribute:
 ;
 
 IntAttribute:
-    name=ID ':' 'int' ('=' default=INT)?
+    name=ID ':' 'int'
 ;
 
 FloatAttribute:
-    name=ID ':' 'float' ('=' default=FLOAT)?
+    name=ID ':' 'float'
 ;
 
 StringAttribute:
-    name=ID ':' 'str' ('=' default=STRING)?
+    name=ID ':' 'str'
 ;
 
 BoolAttribute:
-    name=ID ':' 'bool' ('=' default=BOOL)?
+    name=ID ':' 'bool'
 ;
 
 ListAttribute:
-    name=ID ':' 'list' ('=' '[' items*=Attribute[','] ']')?
+    name=ID ':' 'list'
 ;
 
 
 DictAttribute:
-    name=ID ':' 'dict' ('=' '{' items*=Attribute[','] '}')?
+    name=ID ':' 'dict'
 ;

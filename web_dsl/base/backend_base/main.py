@@ -74,7 +74,7 @@ app.add_middleware(
     allow_headers=["*"],  # Allow all headers
 )
 
-db_connector = DBConnector(db_config)
+db_connector = None
 
 
 async def start_fastapi():
@@ -89,6 +89,15 @@ async def start_fastapi():
     await server.serve()
 
 
+def _run_uvicorn():
+    uvicorn.run(
+        app,
+        host=config["api"].get("host", "0.0.0.0"),
+        port=config["api"].get("port", 8000),
+        log_level="info",
+    )
+
+
 def run_broker_client(broker_client, broker_name):
     """Runs the broker client and handles exceptions to prevent crashes."""
     try:
@@ -98,6 +107,10 @@ def run_broker_client(broker_client, broker_name):
 
 
 async def main():
+    global db_connector
+    db_connector = DBConnector(db_config)
+
+    threading.Thread(target=_run_uvicorn, daemon=True).start()
 
     # Extract WebSocket settings
     ws_config = config.get("websocket", {})
@@ -169,9 +182,6 @@ async def main():
 
         except Exception as e:
             logging.error(f"Failed to connect to broker {broker_info.get('name')}: {e}")
-
-    # Run FastAPI in the background
-    asyncio.create_task(start_fastapi())
 
     # Start the WebSocket server in the asyncio event loop
     await ws_server.start_server()
