@@ -1,6 +1,6 @@
 <img src="./web_dsl/assets/web_dsl_logo_4.png" alt="web-dsl" width="800px"/>
 
-WebDSL is an external Domain-Specific Language (DSL) designed for generating full-stack applications. It integrates multiple data sources, including databases, message brokers, and REST APIs, while also supporting static components. At its core, WebDSL revolves around entities, which are linked to data sources, define the data model, and are utilized by components to visualize data.
+[WebDSL](https://giannisgkountras.github.io/web-dsl-page/) is an external Domain-Specific Language (DSL) designed for generating full-stack applications. It integrates multiple data sources, including databases, message brokers, and REST APIs, while also supporting static components. At its core, WebDSL revolves around entities, which are linked to data sources, define the data model, and are utilized by components to visualize data.
 
 The language emphasizes simplicity and ease of use, enabling developers to rapidly build applications without needing to manage low-level implementation details. At the same time, WebDSL is highly extensible, as it generates standard React and FastAPI code, making it easy to incorporate custom logic and advanced features when needed.
 
