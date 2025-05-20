@@ -17,6 +17,9 @@
                     {{ render_element(child, row_parent=False) }}
                 {% endfor %}
             </div>
+
+    {% elif element.__class__.__name__ == 'Link'%}
+            <a href="{{element.url}}">{{element.text}}</a>
     {% elif element.__class__.__name__ == 'ComponentRef'%}
         {{ render_element(element.ref) }}
     

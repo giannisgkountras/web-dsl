@@ -253,10 +253,10 @@ Webpage AgroDashboard
                 use CropForm
             endcol
             col
-                if this.motion == true from entity FieldCameraData
-                        use FieldLiveCamera
+                if FieldCameraData.motion == true
+                    use FieldLiveCamera
                     
-                if this.motion == false from entity FieldCameraData
+                if FieldCameraData.motion == false
                     use FieldLiveCameraAlive
             endcol
         endrow
@@ -276,6 +276,9 @@ Webpage AgroDashboard
                     type: Publish
                     broker: FieldBroker
                 end
+            endcol
+            col
+                link to: "/" text:"Hello world"
             endcol
         endrow
         row
