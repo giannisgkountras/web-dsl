@@ -247,6 +247,8 @@ def inject_traefik_labels_and_network(
         # For this example, we assume it's pure YAML after generation
         compose = yaml.safe_load(compose_content)
 
+    api_full_path_prefix = f"/apps/{uid}/api/"
+
     public_path_for_container = f"/apps/{uid}/"  # This will be used by modify_html.sh
     # 0) Ensure the Traefik network 'proxy' is defined as external
     #    This means the 'proxy' network must already exist (created by Traefik's compose)
@@ -263,12 +265,13 @@ def inject_traefik_labels_and_network(
         ]  # Corrected: was a list of dicts, should be list of strings
 
         if svc_name == "frontend":
-            # 3) Build labels list ONLY for the frontend
+            # 3) Build labels list for the frontend
             labels = [
                 "traefik.enable=true",
                 # Route /apps/<uid>/* to this service
                 f"traefik.http.routers.{uid}-frontend.rule=PathPrefix(`/apps/{uid}`)",
                 f"traefik.http.routers.{uid}-frontend.entrypoints=web",  # Make sure this matches your Traefik entrypoint name
+                f"traefik.http.routers.{uid}-frontend.priority=10",
                 # 4) Tell Traefik which internal port the frontend service listens on
                 #    This must match EXPOSE in your frontend's Dockerfile (which is 80)
                 f"traefik.http.services.{uid}-frontend.loadbalancer.server.port=80",
@@ -278,15 +281,20 @@ def inject_traefik_labels_and_network(
             ]
             svc_config["labels"] = labels
 
-            # ---- Add environment variable for the frontend service ----
-            if "environment" not in svc_config or svc_config["environment"] is None:
-                svc_config["environment"] = {}
-            svc_config["environment"]["PUBLIC_PATH_PREFIX"] = public_path_for_container
+        elif svc_name == "backend":
+            labels = [
+                "traefik.enable=true",
+                f"traefik.http.routers.{uid}-backend.rule=PathPrefix(`{api_full_path_prefix}`)",
+                f"traefik.http.routers.{uid}-backend.priority=20",  # Higher priority
+                f"traefik.http.routers.{uid}-backend.entrypoints=web",
+                f"traefik.http.services.{uid}-backend.loadbalancer.server.port={backend_internal_port}",
+                # Strip the /apps/uid/api prefix for requests going to the backend app
+                f"traefik.http.middlewares.{uid}-backend-stripprefix.stripprefix.prefixes={api_full_path_prefix}",
+                f"traefik.http.routers.{uid}-backend.middlewares={uid}-backend-stripprefix",
+            ]
+            # Traefik labels for Backend API
+            svc_config["labels"] = labels
         else:
-            # For other services (e.g., backend), remove any existing labels
-            # as we don't want to expose them directly via Traefik under the same path.
-            # They will be accessible by the frontend service via their service name
-            # on the 'proxy' network (e.g., http://backend:backend_internal_port)
             svc_config.pop("labels", None)
 
     # Write back out
@@ -457,6 +465,19 @@ async def generate_and_deploy(
         # Generate app
         out_dir = generate(main_model_path, gen_dir)
 
+        # Edit the dockerfile of the backend to expose the 8080 port only
+        dockerfile_path = os.path.join(out_dir, "backend", "Dockerfile")
+        with open(dockerfile_path, "r+", encoding="utf8") as f:
+            content = f.read()
+            updated = re.sub(
+                r"EXPOSE\s+\d+",
+                "EXPOSE 8080",
+                content,
+            )
+            f.seek(0)
+            f.write(updated)
+            f.truncate()
+
         # Edit the modify-html.js with the correct prefix
         modify_html_path = os.path.join(out_dir, "frontend", "modify-html.js")
         with open(modify_html_path, "r+", encoding="utf8") as f:
@@ -464,6 +485,35 @@ async def generate_and_deploy(
             updated = content.replace(
                 'const prefix = ""; // this is updated after generation',
                 f'const prefix = "/apps/{uid}/";',
+            )
+            f.seek(0)
+            f.write(updated)
+            f.truncate()
+
+        # Change the frontend env with the correct ip for the backend
+        env_path = os.path.join(out_dir, "frontend", ".env")
+        with open(env_path, "r+", encoding="utf8") as f:
+            content = f.read()
+            updated = re.sub(
+                r"^VITE_API_BASE_URL\s*=\s*.*$",
+                f"VITE_API_BASE_URL=http://{VM_MACHINE_IP}/apps/{uid}/api/",
+                content,
+                flags=re.MULTILINE,
+            )
+            f.seek(0)
+            f.write(updated)
+            f.truncate()
+
+        # Change the frontend websocket config with the correct ip for the backend
+        ws_path = os.path.join(
+            out_dir, "frontend", "src", "context", "websocketConfig.json"
+        )
+        with open(ws_path, "r+", encoding="utf8") as f:
+            content = f.read()
+            updated = re.sub(
+                r'"host"\s*:\s*".*?"',
+                f'"host": "{VM_MACHINE_IP}/apps/{uid}/api/"',
+                content,
             )
             f.seek(0)
             f.write(updated)
