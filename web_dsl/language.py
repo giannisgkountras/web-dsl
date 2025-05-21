@@ -122,6 +122,7 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
             "RESTEndpoint.connection": FQNImportURI(),
             "BrokerTopic.connection": FQNImportURI(),
             "Entity.overloads": FQNImportURI(),
+            "WebPage.navbar_screens": FQNImportURI(),
         }
     )
 

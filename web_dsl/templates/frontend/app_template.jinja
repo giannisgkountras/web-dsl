@@ -5,7 +5,7 @@ import {{ screen.name }} from './screens/{{ screen.name }}';
 {% endfor %}
 import NotFound from './screens/NotFound';
 
-{% if webpage.navbar %}
+{% if webpage.navbar_screens %}
 import NavBar from "./components/NavBar";
 {% endif %}
 
@@ -18,10 +18,10 @@ const App = () => {
     <WebsocketProvider>
       <div className="app-container">
         <Router basename={basePath}>
-            {% if webpage.navbar %}
+            {% if webpage.navbar_screens %}
               <NavBar
                 screens={[
-                  {% for screen in screens %}
+                  {% for screen in webpage.navbar_screens %}
                   {url: "{{screen.url}}", title: "{{screen.title}}" },
                   {% endfor %}
                 ]}/>

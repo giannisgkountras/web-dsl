@@ -1,7 +1,7 @@
 Webpage Simple_Todos_API
     author: ""
     description: "A simple API to manage todos"
-    navbar: true
+    navbar: Home
 
 // ========== Connections ========== //
 

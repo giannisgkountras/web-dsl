@@ -3,7 +3,7 @@ import "generated.wdsl"
 Webpage GoalTestPage
     author: "Giannis Gkountras"
     version: "1.0"
-    navbar: true
+    navbar: Home
 
     API backendAPI
         host: "0.0.0.0"

@@ -2,7 +2,7 @@ Webpage ConditionsTest
     author: "Giannis Gkountras"
     version: "1.0"
     description: "Conditions Test"
-    navbar: true
+    navbar: Home
 
     //============ Connections =============//
     
