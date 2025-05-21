@@ -1,4 +1,4 @@
-import "entities.wdsl"
+import entities.wdsl
 
 Component ProductsTable
     entity: Products

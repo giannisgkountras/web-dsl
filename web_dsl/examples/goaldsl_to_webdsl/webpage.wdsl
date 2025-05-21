@@ -1,4 +1,4 @@
-import "generated.wdsl"
+import generated.wdsl
 
 Webpage GoalTestPage
     author: "Giannis Gkountras"

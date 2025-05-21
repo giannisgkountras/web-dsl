@@ -17,8 +17,20 @@ class Entity:
         self.strict = strict
         self.source = source
         self.interval = interval
-        self.source_classname = source.connection.__class__.__name__
         self.overloads = overloads
+
+        # Keep properties of old entity if this entity overloads and they were not provided
+        if overloads is not None:
+            if source is None:
+                self.source = overloads.source
+            if attributes is None:
+                self.attributes = overloads.attributes
+            if strict is None:
+                self.strict = overloads.strict
+            if interval is None:
+                self.interval = overloads.interval
+
+        self.source_classname = self.source.connection.__class__.__name__
 
         source_map = {
             "MQTTBroker": "broker",

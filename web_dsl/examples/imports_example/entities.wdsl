@@ -1,6 +1,6 @@
-import "queries.wdsl"
-import "topics.wdsl"
-import "webpage.wdsl"
+import queries.wdsl
+import topics.wdsl
+import webpage.wdsl
 
 Entity Products
     source: allProducts

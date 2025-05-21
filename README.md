@@ -291,6 +291,8 @@ Entity NewEntityName overloads OldEntityName
 end
 ```
 
+When overloading an entity, any property that is not specified will be inherited from the original entity. This includes the `source`, `strict`, `interval` and `attributes` properties.
+
 ## Components
 
 Components are used to define the visual representation of the data. They are defined using the following syntax:
@@ -693,7 +695,7 @@ of models defined in other files.
 ```
 // webpage.wdsl
 
-import "screens.wdsl"
+import screens.wdsl
 
 Webpage MyWebpage
     author: ""
@@ -714,7 +716,7 @@ Webpage MyWebpage
 
 ```
 // screens.wdsl
-import "components.wdsl"
+import components.wdsl
 
 Screen Home
     title: "Home"
@@ -780,8 +782,9 @@ WebDSL allows you to enhance the OpenAPI specification by using a custom header 
 
 ```yaml
 x-webdsl:
-    - this.id -> Gauge @ 1,1
-    - this[0].title -> Text @ 1,2
+    - response.id -> Gauge @ 1,1
+    - response[0].title -> Text @ 1,2
+    - LineChart
 ```
 
 In this example:
@@ -790,19 +793,26 @@ A Gauge component will be generated from the id field of the response.
 
 A Text component will be generated from the title field of the first item in the response array.
 
+A LineChart component will be generated with boilerplate code to fill.
 The @ 1,1 and @ 1,2 specify the row and column positions of the components (1-indexed).
 
 To transform an OpenAPI specification into a WebDSL model, execute:
 
 ```bash
-webdsl openapi <openapi_file> <output_dir>
+webdsl transform openapi <openapi_file> <output_filer>
 ```
 
-If the OpenAPI file is valid, the generated WebDSL model will be placed in the specified output directory. If no output dir is provided, the code will be generated in the current directory.
+If the OpenAPI file is valid, the generated WebDSL model will be placed in the specified output directory with the specified file name. If no output dir is provided, the code will be generated in the current directory.
 
 ## GoalDSL Transformations <a name="goal-dsl"></a>
 
-WebDSL also supports transforming [GoalDSL](https://github.com/robotics-4-all/goal-dsl) into WebDSL models. This is currently only supported on the REST API of WebDSL and not on the CLI.
+WebDSL also supports transforming [GoalDSL](https://github.com/robotics-4-all/goal-dsl) into WebDSL models. To transform a GoalDSL model into a WebDSL model, execute:
+
+```bash
+webdsl transform goaldsl <goal_dsl_file> <output_file>
+```
+
+If the GoalDSL file is valid, the generated WebDSL model will be placed in the specified output directory with the specified file name. If no output dir is provided, the code will be generated in the current directory.
 
 ## Examples <a name="examples"></a>
 

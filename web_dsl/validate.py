@@ -60,6 +60,8 @@ def validate_model(model, main_file):
     all_crud_tables = get_children_of_type("CrudTable", model)
     validate_crud_table(all_crud_tables, errors)
 
+    # Validate entities
+    errors = validate_entities(all_entities, errors)
     if errors:
         error_text = "\n".join(f" - {e}" for e in errors)
         raise TextXSemanticError(
@@ -76,6 +78,24 @@ def validate_webpage(model, main_file):
         raise Exception(
             f"Main file {main_file} must contain exactly one 'webpage' definition."
         )
+
+
+def validate_entities(entities, errors):
+    """
+    Validate that all entities have a source
+    """
+    for entity in entities:
+        if entity.overloads is not None:
+            entity_to_check = entity.overloads
+
+        else:
+            entity_to_check = entity
+
+        if entity_to_check.source is None:
+            errors.append(
+                f"Entity '{entity.name}' must have a source. Please add a source to the entity."
+            )
+    return errors
 
 
 def validate_components_with_strict_entities(components):

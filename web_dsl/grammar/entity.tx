@@ -9,7 +9,7 @@ Entity:
     'Entity' name=ID ('overloads' overloads=[Entity])?
     (
         ('description:' description=STRING)?
-        'source:' source=[EntitySource]
+        ('source:' source=[EntitySource])?
         ('attributes:' '-' attributes*=Attribute['-'])?
         ('strict:' strict=BOOL)?
         ('interval:' interval=INT)?

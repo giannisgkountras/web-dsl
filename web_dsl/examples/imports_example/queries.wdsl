@@ -1,4 +1,4 @@
-import "connections.wdsl"
+import connections.wdsl
 
 MySQLQuery allProducts
     connection: WarehouseSQL

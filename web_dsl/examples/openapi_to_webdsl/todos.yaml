@@ -12,11 +12,11 @@ paths:
         get:
             summary: Get all todos
             x-webdsl:
-                - this[0].title -> Text @ 1,1
-                - this[1].title -> Text @ 1,2
+                - response[0].title -> Text @ 1,1
+                - response[1].title -> Text @ 1,2
                 - LineChart @ 1,3
-                - this[2].title -> Text @ 2,1
-                - this[5].title -> Text
+                - response[2].title -> Text @ 2,1
+                - response[5].title -> Text
             responses:
                 "200":
                     description: A list of todos
@@ -30,9 +30,9 @@ paths:
         get:
             summary: Get a todo by ID
             x-webdsl:
-                - this.id -> Gauge @ 2,2
-                - this.id -> ProgressBar @ 3,1
-                - this.name -> Image @ 3,2
+                - response.id -> Gauge @ 2,2
+                - response.id -> ProgressBar @ 3,1
+                - response.name -> Image @ 3,2
             parameters:
                 - name: userId
                   in: path
