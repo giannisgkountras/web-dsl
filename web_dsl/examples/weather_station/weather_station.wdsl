@@ -2,7 +2,7 @@ Webpage WeatherStation
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A weather station app"
-    navbar: true
+    navbar: Home, Debug
 
      //============ Connections =============//
     

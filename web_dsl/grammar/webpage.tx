@@ -15,7 +15,7 @@ WebPage:
     ('author:' author=STRING)?
     ('version:' version=STRING)?
     ('description:' description=STRING)?
-    ('navbar:'  navbar=BOOL)?
+    ('navbar:'  navbar_screens+=[Screen][','])?
     (
         (brokers*=MessageBroker)*
         (databases*=Database)*
