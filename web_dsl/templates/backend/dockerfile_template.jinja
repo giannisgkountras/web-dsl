@@ -17,9 +17,7 @@ EXPOSE {{websocket.port}}
 {% endif %}
 
 # Expose API port
-{% if api and api.port %}
-EXPOSE {{api.port}}
-{% endif %}
+EXPOSE 8080
 
 # Run the WebSocket server
 CMD ["python", "main.py"]
