@@ -249,7 +249,7 @@ def inject_traefik_labels_and_network(
 
     api_full_path_prefix = f"/apps/{uid}/api/"
 
-    public_path_for_container = f"/apps/{uid}/"  # This will be used by modify_html.sh
+    public_path_for_container = f"/apps/{uid}/"
     # 0) Ensure the Traefik network 'proxy' is defined as external
     #    This means the 'proxy' network must already exist (created by Traefik's compose)
     compose["networks"] = {"traefik-demo": {"external": True}}
@@ -269,15 +269,13 @@ def inject_traefik_labels_and_network(
             labels = [
                 "traefik.enable=true",
                 # Route /apps/<uid>/* to this service
-                f"traefik.http.routers.{uid}-frontend.rule=PathPrefix(`/apps/{uid}`)",
-                f"traefik.http.routers.{uid}-frontend.entrypoints=web",  # Make sure this matches your Traefik entrypoint name
+                f"traefik.http.routers.{uid}-frontend.rule=PathPrefix(`/apps/{uid}/`)",
+                f"traefik.http.routers.{uid}-frontend.entrypoints=web",
                 f"traefik.http.routers.{uid}-frontend.priority=10",
-                # 4) Tell Traefik which internal port the frontend service listens on
-                #    This must match EXPOSE in your frontend's Dockerfile (which is 80)
                 f"traefik.http.services.{uid}-frontend.loadbalancer.server.port=80",
                 # 5) (Optional but recommended) Strip the /apps/<uid> prefix
-                f"traefik.http.middlewares.{uid}-frontend-stripprefix.stripprefix.prefixes=/apps/{uid}",  # Corrected middleware name
-                f"traefik.http.routers.{uid}-frontend.middlewares={uid}-frontend-stripprefix",
+                # f"traefik.http.middlewares.{uid}-frontend-stripprefix.stripprefix.prefixes=/apps/{uid}/",  # Corrected middleware nam
+                # f"traefik.http.routers.{uid}-frontend.middlewares={uid}-frontend-stripprefix",
             ]
             svc_config["labels"] = labels
 
@@ -478,18 +476,6 @@ async def generate_and_deploy(
             f.write(updated)
             f.truncate()
 
-        # Edit the modify-html.js with the correct prefix
-        modify_html_path = os.path.join(out_dir, "frontend", "modify-html.js")
-        with open(modify_html_path, "r+", encoding="utf8") as f:
-            content = f.read()
-            updated = content.replace(
-                'const prefix = ""; // this is updated after generation',
-                f'const prefix = "/apps/{uid}/";',
-            )
-            f.seek(0)
-            f.write(updated)
-            f.truncate()
-
         # Change the frontend env with the correct ip for the backend
         env_path = os.path.join(out_dir, "frontend", ".env")
         with open(env_path, "r+", encoding="utf8") as f:
@@ -539,7 +525,7 @@ async def generate_and_deploy(
             check=True,
         )
 
-        return {"message": "Deployed", "url": f"http://192.168.1.9/apps/{uid}"}
+        return {"message": "Deployed", "url": f"http://{VM_MACHINE_IP}/apps/{uid}/"}
 
     except Exception as e:
         traceback.print_exc()

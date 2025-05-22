@@ -11,9 +11,20 @@ import NavBar from "./components/NavBar";
 
 import { WebsocketProvider } from "./context/WebsocketContext";
 
-const basePath = window.__BASE_PATH__ || "/";
+// Function to determine the base path dynamically
+const getBasePath = () => {
+  const path = window.location.pathname;
+  const segments = path.split('/').filter(Boolean); // Remove empty segments (e.g., leading "/")
+  if (segments.length >= 2 && segments[0] === 'apps') {
+    const uid = segments[1];
+    return `/apps/${uid}/`;
+  }
+  return '/'; // Fallback to root if the path doesn’t match the expected pattern
+}
 
 const App = () => {
+  const basePath = getBasePath();
+  
   return (
     <WebsocketProvider>
       <div className="app-container">

@@ -5,7 +5,6 @@ COPY package.json ./
 RUN npm install
 COPY . .
 RUN npm run build
-RUN node /app/modify-html.js
 
 # Use Nginx to serve the built files
 FROM nginx:latest
