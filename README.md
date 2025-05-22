@@ -30,13 +30,15 @@ In summary, WebDSL is a powerful and flexible tool for rapidly developing full-s
 
 ## Installation <a name="installation"></a>
 
-Download this repository and simply install using `pip` package manager.
+Download this repository and simply install using the `install.sh`.
 
 ```
 git clone https://github.com/giannisgkountras/web-dsl
 cd web-dsl
-pip install .
+./install.sh
 ```
+
+This will install the WebDSL CLI tool and all the necessary dependencies. You can then use the `webdsl` command to validate, generate and transform your WebDSL models.
 
 ## Features
 
@@ -799,7 +801,7 @@ The @ 1,1 and @ 1,2 specify the row and column positions of the components (1-in
 To transform an OpenAPI specification into a WebDSL model, execute:
 
 ```bash
-webdsl transform openapi <openapi_file> <output_filer>
+webdsl transform openapi <openapi_file> <output_file>
 ```
 
 If the OpenAPI file is valid, the generated WebDSL model will be placed in the specified output directory with the specified file name. If no output dir is provided, the code will be generated in the current directory.

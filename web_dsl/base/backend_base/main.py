@@ -333,6 +333,7 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     - For MongoDB: returns documents as-is
     - Caches results for 1 second to reduce database load
     """
+    logging.info(f"Received /queryDB request: {request}")
     # Generate cache key
     cache_key = generate_query_cache_key(request)
     now = time.time()

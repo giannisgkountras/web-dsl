@@ -1,0 +1,157 @@
+Webpage {{ title }}
+    author: "{{ author }}"
+{% if description %}
+    description: "{{ description }}"
+{% endif %}
+{% if version %}
+    version: "{{ version }}"
+{% endif %}
+    navbar: Home
+
+// ========== Broker Connections ========== //
+{% for broker in brokers %}
+Broker<{{ broker.protocol_type }}> {{ broker.name }}
+    host: "{{ broker.host }}"
+{% if broker.port %}
+    port: {{ broker.port }}
+{% endif %}
+{% if broker.description %}
+    description: "{{ broker.description }}"
+{% endif %}
+{% if broker.auth and broker.auth.username and broker.auth.password %}
+    auth:
+        username: "{{ broker.auth.username }}"
+        password: "{{ broker.auth.password }}"
+{% elif broker.auth and broker.auth.type %}
+    // Auth Type: {{ broker.auth.type }} {% if broker.auth.description %}({{ broker.auth.description }}){% endif %}
+    // Manual auth configuration may be needed in the DSL for this type.
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Broker Topics ========== //
+{% for topic in topics %}
+BrokerTopic {{ topic.name }}
+    connection: {{ topic.connection_name }}
+    topic: "{{ topic.topic_address }}"
+{% if topic.description %}
+    description: "{{ topic.description }}"
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Entities ========== //
+{% for entity in entities %}
+Entity {{ entity.name }}
+    source: {{ entity.source_topic_name }}
+{% if entity.description%}
+    description: "{{ entity.description }}"
+{% endif %}
+{% if entity.attribute_list %}
+    attributes:
+    {% for attr_string in entity.attribute_list %}
+        - {{ attr_string }}
+    {% endfor %}
+{% endif %}
+{# Not usually representing 'strict' in this DSL from example, but can be added #}
+{#% if entity.strict is defined %}
+    // strict: {{ entity.strict }} 
+{% endif %#}
+end
+
+{% endfor %}
+
+// ========== Components ========== //
+{% for component in components %}
+Component {{ component.name }}
+{% if component.entity %}
+    entity: {{ component.entity }}
+{% endif %}
+    type: {{ component.type }}
+{# Component specific properties based on attribute_map logic in python #}
+{% if component.type == "Text" and component.content is defined %}
+    content: {{ component.content }}
+{% elif component.type == "Gauge" and component.value is defined %}
+    value: {{ component.value }}
+{% elif component.type == "ProgressBar" and component.value is defined %}
+    value: {{ component.value }}
+    max: 100 // Default max, can be configured if schema provides range
+{% elif component.type == "Image" and component.source is defined %}
+    source: {{ component.source }}
+{% elif component.type == "LineChart" %}
+    xLabel: "X-Axis" // Placeholder
+    yLabel: "Y-Axis" // Placeholder
+    {# Assuming component.data_source_path is set if component is bound to sub-object #}
+    {# Otherwise, path (like 'this.field') is directly in component.xValue etc. #}
+    xValue: {{ component.xValue if component.xValue is defined else (component.data_source_path ~ ".xField" if component.data_source_path else "this.xField") }} // Placeholder
+    yValues: [{{ component.yValues[0] if component.yValues is defined else (component.data_source_path ~ ".yField1" if component.data_source_path else "this.yField1") }}] // Placeholder
+{% elif component.type == "BarChart" %}
+    xLabel: "Category" // Placeholder
+    yLabel: "Value" // Placeholder
+    xValue: {{ component.xValue if component.xValue is defined else (component.data_source_path ~ ".categoryField" if component.data_source_path else "this.categoryField") }} // Placeholder
+    yValues: [{{ component.yValues[0] if component.yValues is defined else (component.data_source_path ~ ".valueField" if component.data_source_path else "this.valueField") }}] // Placeholder
+{% elif component.type == "PieChart" %}
+    dataName: {{ component.dataName if component.dataName is defined else (component.data_source_path ~ ".labelField" if component.data_source_path else "this.labelField") }} // Placeholder
+    value: {{ component.value if component.value is defined else (component.data_source_path ~ ".valueField" if component.data_source_path else "this.valueField") }} // Placeholder
+{% elif component.type == "JsonViewer" %}
+{% if component.data_source_path is defined %}
+    data: {{ component.data_source_path }}
+{% elif attribute_map[component.type] and component[attribute_map[component.type]] is defined %}
+    data: {{ component[attribute_map[component.type]] }} {# If path stored in generic key #}
+{% else %}
+    // data: this (implicitly bound to the whole entity)
+{% endif %}
+{% elif component.type == "Table" %}
+    primary_key: "id" // Placeholder, needs to be inferred or configured
+{% if component.data_source_path is defined %}
+    // data_source: {{ component.data_source_path }} // If table binds to a sub-path of entity
+{% elif attribute_map[component.type] and component[attribute_map[component.type]] is defined %}
+    // data_source: {{ component[attribute_map[component.type]] }}
+{% endif %}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Screens ========== //
+Screen Home
+    title: "Home"
+    url: "/"
+
+    {# Components are sorted by row then col #}
+    {% set components_with_pos = [] %}
+    {% set components_without_pos = [] %}
+    {% for comp_item in components %} {# Changed loop var to avoid conflict with outer 'component' #}
+        {% if comp_item.row is defined and comp_item.row > 0 %} {# Consider row 0 as 'no specific row' #}
+            {% set components_with_pos = components_with_pos + [comp_item] %}
+        {% else %}
+            {% set components_without_pos = components_without_pos + [comp_item] %}
+        {% endif %}
+    {% endfor %}
+
+    {% set by_row = components_with_pos | sort(attribute='col') | sort(attribute='row') 
+                           | groupby('row') %}
+
+    {% for row_num, comps_in_row in by_row %}
+    row // Row {{ row_num }}
+        {% for component_in_col in comps_in_row %} {# Changed loop var #}
+        col // Col {{ component_in_col.col }}
+            use {{ component_in_col.name }}
+        endcol
+        {% endfor %}
+    endrow
+    {% endfor %}
+
+    {# Handle components without explicit row/col or row=0 (default placement) #}
+    {% if components_without_pos %}
+    row // Default placement for components without specific row/col
+        {% for component_default in components_without_pos %} {# Changed loop var #}
+        col
+            use {{ component_default.name }}
+        endcol
+        {% endfor %}
+    endrow
+    {% endif %}
+end

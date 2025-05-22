@@ -8,12 +8,12 @@ Webpage WeatherStation
     
     API backendAPI
         host: "0.0.0.0"
-        port: 8321
+        port: 8080
     end
 
     Websocket backendWebsocket
         host: "192.168.1.6"
-        port: 8080
+        port: 8321
     end
 
     RESTApi OpenMeteo

@@ -1,0 +1,87 @@
+asyncapi: 3.0.0
+info:
+    title: Streetlights Kafka API
+    version: 1.0.0
+    description: The Smartylighting Streetlights API.
+    contact:
+        name: API Support
+        email: support@example.com
+servers:
+    scramKafka:
+        host: test.mykafkacluster.org:18092
+        protocol: kafka-secure
+        description: Test broker secured with scramSha256
+        security:
+            - saslScramRef: [] # Empty array, just a reference
+components:
+    securitySchemes:
+        saslScramRef: # Actual definition of the security scheme
+            type: scramSha256
+            description: Provide your username and password for SASL/SCRAM authentication
+    messages:
+        lightMeasured:
+            name: lightMeasured
+            title: Light measured
+            summary: Light measurement data.
+            payload:
+                $ref: "#/components/schemas/lightMeasuredPayload"
+        turnOnOffCommand:
+            name: turnOnOffCommand
+            title: Turn On/Off Command
+            payload:
+                type: object
+                properties:
+                    targetId:
+                        type: string
+                    command:
+                        type: string
+                        enum: ["on", "off"]
+    schemas:
+        lightMeasuredPayload:
+            type: object
+            title: LightMeasurement
+            description: Payload for light measurement.
+            properties:
+                lumens:
+                    type: integer
+                    minimum: 0
+                    description: Light intensity.
+                sentAt:
+                    type: string
+                    format: date-time
+                    description: Timestamp of measurement.
+                location:
+                    type: object
+                    title: DeviceLocation
+                    properties:
+                        lat:
+                            type: number
+                        lon:
+                            type: number
+channels:
+    streetlightsEvents:
+        address: smartylighting.streetlights.1.0.event.{streetlightId}.lighting.measured
+        description: Topic for measured lighting values.
+    streetlightsCommands:
+        address: smartylighting.streetlights.1.0.action.{streetlightId}.turn
+        description: Topic for turn on/off commands.
+operations:
+    receiveLightMeasurement:
+        action: receive
+        channel:
+            $ref: "#/channels/streetlightsEvents"
+        summary: Receive light measurements.
+        messages:
+            - $ref: "#/components/messages/lightMeasured"
+        x-webdsl: | # Operation specific x-webdsl
+            - response.lumens -> ProgressBar @ 2,1
+            - response.location.lat -> Text @ 2,2
+            - response.location.lon -> Text @ 2,3
+    sendCommandToStreetlight:
+        action: send # Example of a send operation, may not generate UI components typically
+        channel:
+            $ref: "#/channels/streetlightsCommands"
+        summary: Send a command to a streetlight.
+        messages:
+            - $ref: "#/components/messages/turnOnOffCommand"
+        # No x-webdsl for send operations typically, unless visualizing sent data
