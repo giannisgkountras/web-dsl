@@ -6,13 +6,31 @@ import uuid
 import base64
 import tarfile
 import re
+import secrets
+import subprocess
 
+from passlib.hash import md5_crypt
 from fastapi import UploadFile
 
 
 def inject_traefik_labels_and_network(
     compose_path: str, uid: str, backend_internal_port: int = 8080
 ):
+    username = "admin"
+    password = secrets.token_urlsafe(16)
+
+    # Call htpasswd -nb to generate the hash
+    result = subprocess.run(
+        ["htpasswd", "-nb", username, password],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    hashed_result = result.stdout.strip()
+
+    escaped_hashed_result = hashed_result.replace("$", "$$")
+
     with open(compose_path, "r") as f:
         compose_content = f.read()
         compose = yaml.safe_load(compose_content)
@@ -37,6 +55,9 @@ def inject_traefik_labels_and_network(
                 f"traefik.http.routers.{uid}-frontend.entrypoints=web",
                 f"traefik.http.routers.{uid}-frontend.priority=10",
                 f"traefik.http.services.{uid}-frontend.loadbalancer.server.port=80",
+                # add auth to the frontend
+                f"traefik.http.middlewares.{uid}-frontend-auth.basicauth.users={escaped_hashed_result}",
+                f"traefik.http.routers.{uid}-frontend.middlewares={uid}-frontend-auth",
             ]
             svc_config["labels"] = labels
 
@@ -59,6 +80,8 @@ def inject_traefik_labels_and_network(
     # Write back out
     with open(compose_path, "w") as f:
         yaml.dump(compose, f, sort_keys=False)
+
+    return username, password
 
 
 def cleanup_old_generations(TMP_DIR, CLEANUP_THRESHOLD):
@@ -176,4 +199,6 @@ def postprocess_generation_for_deployment(
 
     # Inject traefik labels into docker-compose.yml
     compose_path = os.path.join(generation_dir, "docker-compose.yml")
-    inject_traefik_labels_and_network(compose_path, uid)
+    username, password = inject_traefik_labels_and_network(compose_path, uid)
+
+    return username, password

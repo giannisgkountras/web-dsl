@@ -213,7 +213,7 @@ async def generate_and_deploy(
         # Generate app
         out_dir = generate(main_model_path, gen_dir)
 
-        postprocess_generation_for_deployment(
+        username, password = postprocess_generation_for_deployment(
             generation_dir=out_dir,
             uid=uid,
             VM_MACHINE_IP=VM_MACHINE_IP,
@@ -235,7 +235,12 @@ async def generate_and_deploy(
             check=True,
         )
 
-        return {"message": "Deployed", "url": f"http://{VM_MACHINE_IP}/apps/{uid}/"}
+        return {
+            "message": "Deployed",
+            "url": f"http://{VM_MACHINE_IP}/apps/{uid}/",
+            "username": username,
+            "password": password,
+        }
 
     except Exception as e:
         traceback.print_exc()
