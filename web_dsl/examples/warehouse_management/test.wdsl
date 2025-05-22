@@ -1,0 +1,57 @@
+Webpage WarehouseManagement
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A dashboard for managing warehouses"
+    navbar: Home
+
+    //============ Connections =============//
+
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8080
+    end
+
+    Database<MySQL> WarehouseSQL
+        host: "192.168.1.6"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "thesis"
+    end
+
+    MySQLQuery allProducts
+        connection: WarehouseSQL
+        query: "SELECT * from products"
+    end
+
+        Entity Products
+        source: allProducts
+        strict: true
+        attributes:
+            - id: list
+            - name: list
+            - category: list
+            - description: list
+            - price: list
+    end
+
+    Component ProductsTable
+        entity: Products
+        type: Table
+            description: "All products"
+            primary_key: "id"
+            table: "products"
+            crud: true
+    end
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use ProductsTable
+            endcol
+        endrow
+    end

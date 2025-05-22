@@ -1,33 +1,33 @@
 import os
-import re
-import uuid
-import base64
-import tarfile
-import time
-import shutil
 import traceback
 import subprocess
-import yaml
 
 from dotenv import load_dotenv
 from fastapi import (
     FastAPI,
-    File,
     UploadFile,
     status,
     HTTPException,
+    BackgroundTasks,
+    File,
     Security,
     Body,
-    BackgroundTasks,
     Form,
 )
 from typing import List
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 
+from .utils import (
+    cleanup_old_generations,
+    get_unique_id,
+    make_tarball,
+    save_text_to_file,
+    save_upload_file,
+    postprocess_generation_for_deployment,
+)
 from web_dsl.language import build_model
 from web_dsl.generate import generate
 from web_dsl.m2m.openapi_to_webdsl import transform_openapi_to_webdsl
@@ -56,7 +56,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.mount("/generated", StaticFiles(directory=TMP_DIR, html=True), name="generated")
 
 
 def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
@@ -65,239 +64,6 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API Key"
     )
-
-
-def get_unique_id() -> str:
-    return uuid.uuid4().hex[:8]
-
-
-def make_tarball(output_path: str, source_dir: str) -> None:
-    with tarfile.open(output_path, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
-
-
-def save_text_to_file(text: str, file_path: str, mode: str = "w") -> None:
-    with open(file_path, mode) as f:
-        f.write(text)
-
-
-def save_upload_file(file: UploadFile, file_path: str) -> None:
-    content = file.file.read().decode("utf8")
-    save_text_to_file(content, file_path)
-
-
-def save_base64_to_file(encoded_str: str, file_path: str) -> None:
-    decoded = base64.b64decode(encoded_str)
-    with open(file_path, "wb") as f:
-        f.write(decoded)
-
-
-def inject_base_href(build_dir: str, public_path_prefix: str) -> None:
-    index_path = os.path.join(build_dir, "index.html")
-    if not os.path.exists(index_path):
-        print(f"Warning: index.html not found in {build_dir}. Cannot inject base href.")
-        return
-
-    with open(index_path, "r+", encoding="utf8") as f:
-        content = f.read()
-        original_content = content  # For debugging if needed
-
-        # Ensure public_path_prefix is like /apps/uid/ (starts and ends with /)
-        if not public_path_prefix.startswith("/"):
-            public_path_prefix = "/" + public_path_prefix
-        if not public_path_prefix.endswith("/"):
-            public_path_prefix += "/"
-
-        # --- 1. Inject <base href="..."> ---
-        base_tag = f'<base href="{public_path_prefix}">'
-        # Regex to find <head> and insert <base> as the first child
-        # This handles <head> with attributes or newlines.
-        head_pattern = re.compile(r"(<head[^>]*>)", re.IGNORECASE)
-        match_head = head_pattern.search(content)
-        if match_head:
-            head_tag_full = match_head.group(1)
-            # Check if base tag already exists to prevent duplicates
-            if (
-                f'<base href="{public_path_prefix}">' not in content
-                and "<base " not in head_tag_full
-            ):
-                content = content.replace(
-                    head_tag_full, f"{head_tag_full}\n    {base_tag}", 1
-                )
-        else:
-            print(
-                f"Warning: <head> tag not found in {index_path}. <base> tag not injected."
-            )
-
-        # --- 2. Inject window.__BASE_PATH__ ---
-        js_base_path = public_path_prefix.rstrip("/")  # /apps/uid
-        script_tag_content = f'window.__BASE_PATH__ = "{js_base_path}";'
-        script_tag = f"<script>\n      {script_tag_content}\n    </script>"
-
-        # Try to insert after <base> tag or early in <head>
-        if base_tag in content:
-            content = content.replace(base_tag, f"{base_tag}\n    {script_tag}", 1)
-        elif match_head:  # If base tag wasn't inserted but head exists
-            head_tag_full = match_head.group(1)  # Re-fetch in case content changed
-            if script_tag_content not in content:  # Avoid duplicate script
-                content = content.replace(
-                    head_tag_full, f"{head_tag_full}\n    {script_tag}", 1
-                )
-        else:
-            print(
-                f"Warning: Could not determine where to inject window.__BASE_PATH__ in {index_path}."
-            )
-
-        # --- 3. Explicitly rewrite root-relative asset paths ---
-        # This targets href="/..." or src="/..."
-        # It will change src="/assets/file.js" to src="/apps/uid/assets/file.js"
-        # It will change href="/favicon.ico" to href="/apps/uid/favicon.ico"
-
-        # Path prefix without trailing slash for concatenation: /apps/uid
-        prefix_no_slash = public_path_prefix.rstrip("/")
-
-        def rewrite_path(match_obj):
-            attribute_name = match_obj.group(1)  # src or href
-            quote_char = match_obj.group(2)  # " or '
-            original_path = match_obj.group(3)  # /assets/file.js or /favicon.ico
-
-            # Check if path is root-relative (starts with /) AND
-            # not already prefixed with public_path_prefix AND
-            # not a data URI, mailto, tel, or full http(s) URL
-            if (
-                original_path.startswith("/")
-                and not original_path.startswith(prefix_no_slash + "/")
-                and not original_path.startswith(
-                    ("data:", "mailto:", "tel:", "//", "http:", "https:")
-                )
-            ):
-                # Prepend the prefix. original_path already starts with '/',
-                # so prefix_no_slash + original_path works.
-                # e.g., "/apps/uid" + "/assets/file.js" -> "/apps/uid/assets/file.js"
-                new_path = f"{prefix_no_slash}{original_path}"
-                return f"{attribute_name}={quote_char}{new_path}{quote_char}"
-            else:
-                # Return the original match if no rewrite is needed
-                return match_obj.group(0)
-
-        # Regex for src="..." and href="..." attributes with root-relative paths
-        # It captures: 1=src|href, 2=quote, 3=path starting with /
-        content = re.sub(r'(src|href)=(["\'])(/[^"\'>]+)\2', rewrite_path, content)
-
-        # Also handle url(/...) in style attributes or <style> tags
-        def rewrite_css_url_path(match_obj):
-            quote_char = match_obj.group(1)  # " or ' or empty
-            original_path = match_obj.group(2)  # /assets/image.png
-
-            if (
-                original_path.startswith("/")
-                and not original_path.startswith(prefix_no_slash + "/")
-                and not original_path.startswith(("data:", "//", "http:", "https:"))
-            ):
-                new_path = f"{prefix_no_slash}{original_path}"
-                return f"url({quote_char}{new_path}{quote_char})"
-            else:
-                return match_obj.group(0)
-
-        content = re.sub(
-            r'url\((["\']?)(/[^"\'()]+)\1\)',  # Matches url('/path') or url(/path)
-            rewrite_css_url_path,
-            content,
-        )
-
-        if content == original_content:
-            print(
-                f"Warning: Content of {index_path} did not change after attempting to inject base href and rewrite paths."
-            )
-        else:
-            print(f"Content of {index_path} was modified.")
-
-        f.seek(0)
-        f.write(content)
-        f.truncate()
-
-    print(f"Processed {index_path} with public path prefix '{public_path_prefix}'")
-
-
-def cleanup_old_generations():
-    now = time.time()
-    for entry in os.listdir(TMP_DIR):
-        path = os.path.join(TMP_DIR, entry)
-        # Check if the file/directory is older than our threshold.
-        if os.path.getmtime(path) < now - CLEANUP_THRESHOLD:
-            try:
-                if os.path.isfile(path):
-                    os.remove(path)
-                elif os.path.isdir(path):
-                    shutil.rmtree(path)
-                print(f"Deleted old generation: {path}")
-            except Exception as e:
-                print(f"Error cleaning up {path}: {e}")
-
-
-import yaml
-
-
-def inject_traefik_labels_and_network(
-    compose_path: str, uid: str, backend_internal_port: int = 8080
-):  # Add backend_internal_port if it can vary
-    with open(compose_path, "r") as f:
-        compose_content = f.read()
-        # Handle potential Jinja templating if it hasn't been rendered yet
-        # For this example, we assume it's pure YAML after generation
-        compose = yaml.safe_load(compose_content)
-
-    api_full_path_prefix = f"/apps/{uid}/api/"
-
-    public_path_for_container = f"/apps/{uid}/"
-    # 0) Ensure the Traefik network 'proxy' is defined as external
-    #    This means the 'proxy' network must already exist (created by Traefik's compose)
-    compose["networks"] = {"traefik-demo": {"external": True}}
-
-    for svc_name, svc_config in compose.get("services", {}).items():
-        # 1) Remove any direct port bindings
-        svc_config.pop("ports", None)
-
-        # 2) Attach all services to the 'proxy' network for inter-service communication
-        #    and for Traefik to discover the frontend.
-        svc_config["networks"] = [
-            "traefik-demo"
-        ]  # Corrected: was a list of dicts, should be list of strings
-
-        if svc_name == "frontend":
-            # 3) Build labels list for the frontend
-            labels = [
-                "traefik.enable=true",
-                # Route /apps/<uid>/* to this service
-                f"traefik.http.routers.{uid}-frontend.rule=PathPrefix(`/apps/{uid}/`)",
-                f"traefik.http.routers.{uid}-frontend.entrypoints=web",
-                f"traefik.http.routers.{uid}-frontend.priority=10",
-                f"traefik.http.services.{uid}-frontend.loadbalancer.server.port=80",
-                # 5) (Optional but recommended) Strip the /apps/<uid> prefix
-                # f"traefik.http.middlewares.{uid}-frontend-stripprefix.stripprefix.prefixes=/apps/{uid}/",  # Corrected middleware nam
-                # f"traefik.http.routers.{uid}-frontend.middlewares={uid}-frontend-stripprefix",
-            ]
-            svc_config["labels"] = labels
-
-        elif svc_name == "backend":
-            labels = [
-                "traefik.enable=true",
-                f"traefik.http.routers.{uid}-backend.rule=PathPrefix(`{api_full_path_prefix}`)",
-                f"traefik.http.routers.{uid}-backend.priority=20",  # Higher priority
-                f"traefik.http.routers.{uid}-backend.entrypoints=web",
-                f"traefik.http.services.{uid}-backend.loadbalancer.server.port={backend_internal_port}",
-                # Strip the /apps/uid/api prefix for requests going to the backend app
-                f"traefik.http.middlewares.{uid}-backend-stripprefix.stripprefix.prefixes={api_full_path_prefix}",
-                f"traefik.http.routers.{uid}-backend.middlewares={uid}-backend-stripprefix",
-            ]
-            # Traefik labels for Backend API
-            svc_config["labels"] = labels
-        else:
-            svc_config.pop("labels", None)
-
-    # Write back out
-    with open(compose_path, "w") as f:
-        yaml.dump(compose, f, sort_keys=False)
 
 
 class ValidationModel(BaseModel):
@@ -338,21 +104,6 @@ async def validate_model_file(
     except Exception as e:
         traceback.print_exc()
         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
-
-
-# @app.get("/validate/base64", tags=["Validation"])
-# async def validate_model_base64(fenc: str = "", api_key: str = Security(get_api_key)):
-#     if not fenc:
-#         raise HTTPException(status_code=404, detail="Empty base64 string")
-#     uid = get_unique_id()
-#     file_path = os.path.join(TMP_DIR, f"model_for_validation-{uid}.wdsl")
-#     save_base64_to_file(fenc, file_path)
-#     try:
-#         build_model(file_path)
-#         return {"status": 200, "message": "Model validation success"}
-#     except Exception as e:
-#         traceback.print_exc()
-#         raise HTTPException(status_code=400, detail=f"Validation error: {e}")
 
 
 # ============= Generation Endpoints =============
@@ -439,7 +190,6 @@ async def generate_and_deploy(
     model_dir = os.path.join(TMP_DIR, f"models-{uid}")
     gen_dir = f"./tmp/gen-{uid}"
     remote_dir = f"/tmp/webapp-{uid}"
-    remote_compose_file = f"{remote_dir}/docker-compose.yml"
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(gen_dir, exist_ok=True)
 
@@ -463,53 +213,13 @@ async def generate_and_deploy(
         # Generate app
         out_dir = generate(main_model_path, gen_dir)
 
-        # Edit the dockerfile of the backend to expose the 8080 port only
-        dockerfile_path = os.path.join(out_dir, "backend", "Dockerfile")
-        with open(dockerfile_path, "r+", encoding="utf8") as f:
-            content = f.read()
-            updated = re.sub(
-                r"EXPOSE\s+\d+",
-                "EXPOSE 8080",
-                content,
-            )
-            f.seek(0)
-            f.write(updated)
-            f.truncate()
-
-        # Change the frontend env with the correct ip for the backend
-        env_path = os.path.join(out_dir, "frontend", ".env")
-        with open(env_path, "r+", encoding="utf8") as f:
-            content = f.read()
-            updated = re.sub(
-                r"^VITE_API_BASE_URL\s*=\s*.*$",
-                f"VITE_API_BASE_URL=http://{VM_MACHINE_IP}/apps/{uid}/api/",
-                content,
-                flags=re.MULTILINE,
-            )
-            f.seek(0)
-            f.write(updated)
-            f.truncate()
-
-        # Change the frontend websocket config with the correct ip for the backend
-        ws_path = os.path.join(
-            out_dir, "frontend", "src", "context", "websocketConfig.json"
+        postprocess_generation_for_deployment(
+            generation_dir=out_dir,
+            uid=uid,
+            VM_MACHINE_IP=VM_MACHINE_IP,
         )
-        with open(ws_path, "r+", encoding="utf8") as f:
-            content = f.read()
-            updated = re.sub(
-                r'"host"\s*:\s*".*?"',
-                f'"host": "{VM_MACHINE_IP}/apps/{uid}/api/"',
-                content,
-            )
-            f.seek(0)
-            f.write(updated)
-            f.truncate()
 
-        # Inject traefik labels into docker-compose.yml
-        compose_path = os.path.join(out_dir, "docker-compose.yml")
-        inject_traefik_labels_and_network(compose_path, uid)
-
-        # Copy the generated files to the vm
+        # Copy the postprocessed generated files to the vm
         subprocess.run(
             ["scp", "-r", gen_dir, f"{VM_MACHINE_USER}@{VM_MACHINE_IP}:{remote_dir}"],
             check=True,
