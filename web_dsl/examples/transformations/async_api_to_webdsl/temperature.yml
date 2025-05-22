@@ -1,0 +1,98 @@
+asyncapi: 3.0.0
+info:
+    title: Weather Sensor API
+    version: 1.0.0
+    description: An AsyncAPI specification for weather sensors sending temperature and humidity data to an MQTT broker.
+    license:
+        name: Apache 2.0
+        url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+    development:
+        host: localhost:1883
+        protocol: mqtt
+        description: Local MQTT broker for development and testing.
+defaultContentType: application/json
+channels:
+    weather/data:
+        address: weather/data
+        description: Channel for weather sensor data, including temperature and humidity.
+        messages:
+            weatherData:
+                $ref: "#/components/messages/weatherData"
+operations:
+    receiveWeatherData:
+        action: receive
+        channel:
+            $ref: "#/channels/weather/data"
+        summary: Receive weather sensor data
+        description: The application receives temperature and humidity data from weather sensors on the weather/data channel.
+components:
+    messages:
+        weatherData:
+            name: weatherData
+            title: Weather Sensor Data
+            summary: Data from a weather sensor including temperature, humidity, and timestamp.
+            contentType: application/json
+            payload:
+                type: object
+                required:
+                    - sensorId
+                    - temperature
+                    - humidity
+                    - timestamp
+                properties:
+                    sensorId:
+                        type: string
+                        description: Unique identifier for the sensor.
+                        examples:
+                            - sensor-123
+                    temperature:
+                        type: number
+                        format: float
+                        description: Temperature in Celsius.
+                        minimum: -50
+                        maximum: 100
+                        examples:
+                            - 22.5
+                    humidity:
+                        type: number
+                        format: float
+                        description: Relative humidity as a percentage.
+                        minimum: 0
+                        maximum: 100
+                        examples:
+                            - 65.2
+                    timestamp:
+                        type: string
+                        format: date-time
+                        description: Timestamp of the data measurement in RFC3339 format.
+                        examples:
+                            - 2025-05-22T19:33:00Z
+    schemas:
+        weatherData:
+            type: object
+            required:
+                - sensorId
+                - temperature
+                - humidity
+                - timestamp
+            properties:
+                sensorId:
+                    type: string
+                    description: Unique identifier for the sensor.
+                temperature:
+                    type: number
+                    format: float
+                    description: Temperature in Celsius.
+                    minimum: -50
+                    maximum: 100
+                humidity:
+                    type: number
+                    format: float
+                    description: Relative humidity as a percentage.
+                    minimum: 0
+                    maximum: 100
+                timestamp:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the data measurement in RFC3339 format.

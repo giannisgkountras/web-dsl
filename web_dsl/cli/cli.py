@@ -7,6 +7,7 @@ from web_dsl.language import build_model
 from web_dsl.generate import generate
 from web_dsl.m2m.openapi_to_webdsl import transform_openapi_to_webdsl
 from web_dsl.m2m.goaldsl_to_webdsl import transform_goaldsl_to_webdsl
+from web_dsl.m2m.asyncapi_to_webdsl import transform_asyncapi_to_webdsl
 
 pretty.install()
 console = Console()
@@ -190,6 +191,48 @@ def goaldsl_command(goaldsl_path, output_file):
 
         console.print(f"Transforming GoalDSL: {goaldsl_path}", style="yellow")
         generated_file = transform_goaldsl_to_webdsl(goaldsl_path)
+
+        if generated_file:
+            with open(output, "w") as f:
+                f.write(generated_file)
+            console.print(f"✔ Generated file saved to: {output}", style="green")
+        else:
+            console.print("✖ No file generated.", style="red")
+
+    except Exception as e:
+        console.print(f"✖ Conversion error:\n{e}", style="bold red")
+        raise SystemExit(1)
+
+
+@transform.command("asyncapi", help="Convert AsyncAPI spec to WebDSL model.")
+@click.argument(
+    "asyncapi_path",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+)
+@click.argument(
+    "output_file",
+    required=False,
+    default="generated_model.wdsl",
+    type=click.Path(file_okay=True, writable=True),
+)
+def openapi_command(asyncapi_path, output_file):
+    """
+    Convert AsyncAPI spec to a webdsl model.
+
+    If OUTPUT_FILE is omitted, it defaults to 'generated_model.wdsl'.
+
+    Examples:
+      webdsl asyncapi examples/asyncapi_spec.yaml
+      webdsl asyncapi examples/asyncapi_spec.yaml ./my_model.wdsl
+    """
+    try:
+        output = os.path.abspath(output_file)
+
+        # Ensure the parent directory exists
+        os.makedirs(os.path.dirname(output), exist_ok=True)
+
+        console.print(f"Converting AsyncAPI spec: {asyncapi_path}", style="yellow")
+        generated_file = transform_asyncapi_to_webdsl(asyncapi_path)
 
         if generated_file:
             with open(output, "w") as f:
