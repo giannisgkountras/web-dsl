@@ -29,13 +29,42 @@ Webpage Computed
     Entity allData
         source: allDataTopic
         attributes:
-            - x: int
-            - y: int
-            - total: int computed((x.test * 2) + y + x)
+            - temperatures: list
+            - values: list
+            - maxTemp: float computed(max(temperatures))
+            - minTemp: float computed(min(temperatures))
+            - meanTemp: float computed(mean(temperatures))
+            - sumValues: float computed(sum(values))
+            - complexThing: float computed(mean(max(temperatures) + 5, temperatures[0]))
+    end
+
+    Component TotalText
+        entity: allData
+        type: Text
+            content: this.total
+    end
+
+    Component SubTotalText
+        entity: allData
+        type: Text
+            content: this.subtotal
     end
 
     Screen Home
         title: "Home"
         url: "/"
+
+        row
+            col
+                use TotalText
+                use SubTotalText
+            endcol
+            col
+                Component DataPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+        endrow
 
     end

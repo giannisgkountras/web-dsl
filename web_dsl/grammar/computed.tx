@@ -5,7 +5,7 @@ FunctionName:
     'sum' | 'mean' | 'max' | 'min';
 
 Atom:
-    number=INT | id=RawAccessPathComp | function=FunctionCall | '(' expr=Expr ')';
+    function=FunctionCall | number=INT | id=RawAccessPathComp | '(' expr=Expr ')';
 
 MulExpr:
     left=Atom ((op='*' | op='/') right=Atom)*;

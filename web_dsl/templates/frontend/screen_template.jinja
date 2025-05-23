@@ -34,6 +34,13 @@ const {{screen.name}} = () => {
                 sourceOfContent="{{entity.sourceOfContent}}"
                 interval={ {{entity.interval}} }
                 setEntityData={set{{entity.name | capitalize }}Data}
+                computedAttributes={[
+                {% for attr in entity.attributes %}
+                    {% if attr.__class__.__name__ == "ComputedAttribute" %}
+                        {"name": "{{attr.name}}", "expression": {{attr.javascript_expression}} },
+                    {% endif %}
+                {% endfor %}
+                ]}
                 />
             {% endfor %}
             
