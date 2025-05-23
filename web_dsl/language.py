@@ -28,6 +28,7 @@ from .lib.component import (
 from .lib.condition import Condition
 from .lib.repetition import Repetition
 from .lib.entity import Entity
+from .lib.computed import ComputedAttribute, Atom
 from .validate import validate_model
 
 # Map grammar rules to Python classes
@@ -54,6 +55,8 @@ custom_classes = [
     Repetition,
     ProgressBar,
     Entity,
+    ComputedAttribute,
+    Atom,
     # Add other classes here
 ]
 

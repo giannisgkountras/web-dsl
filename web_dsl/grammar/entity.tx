@@ -2,6 +2,7 @@ import sources
 import types
 import connections
 import utils
+import computed
 
 EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 
@@ -18,12 +19,13 @@ Entity:
 ;
 
 Attribute:
+    ComputedAttribute   |
     IntAttribute        |
     FloatAttribute      |
     BoolAttribute       |
     StringAttribute     |
     ListAttribute       |
-    DictAttribute
+    DictAttribute       
 ;
 
 IntAttribute:

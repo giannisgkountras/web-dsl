@@ -1,0 +1,45 @@
+FunctionCall:
+    name=FunctionName '(' args+=Expr[','] ')';
+
+FunctionName:
+    'sum' | 'mean' | 'max' | 'min';
+
+Atom:
+    number=INT | id=RawAccessPathComp | function=FunctionCall | '(' expr=Expr ')';
+
+MulExpr:
+    left=Atom ((op='*' | op='/') right=Atom)*;
+
+AddExpr:
+    left=MulExpr ((op='+' | op='-') right=MulExpr)*;
+
+Expr:
+    AddExpr;
+
+Computed:
+    'computed(' expr=Expr ')';
+
+ComputedAttributeType:
+    'int' | 'float' | 'str' | 'list';
+
+ComputedAttribute:
+    name=ID ':' type=ComputedAttributeType computed=Computed;
+
+
+
+AttributeAccessorComp:
+    '.' attribute=ID  
+;
+
+IndexAccessorComp:
+    '[' index=INT ']'
+;
+
+AccessorComp:
+    // One step in the access path can be either by attribute or by index
+    AttributeAccessorComp | IndexAccessorComp
+;
+
+RawAccessPathComp:
+    base=ID accessors+=AccessorComp*
+;

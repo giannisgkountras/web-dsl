@@ -1,0 +1,41 @@
+Webpage Computed
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "Computed Test"
+    navbar: Home
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Broker<MQTT> CarBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    BrokerTopic allDataTopic
+        connection: CarBroker
+        topic: "data"
+    end
+
+    Entity allData
+        source: allDataTopic
+        attributes:
+            - x: int
+            - y: int
+            - total: int computed((x.test * 2) + y + x)
+    end
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+    end

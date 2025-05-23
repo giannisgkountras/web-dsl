@@ -16,7 +16,7 @@ class Entity:
         self.attributes = attributes
         self.strict = strict
         self.source = source
-        self.interval = interval
+        self.interval = interval or 0
         self.overloads = overloads
 
         # Keep properties of old entity if this entity overloads and they were not provided

@@ -24,3 +24,4 @@ NestedAccessPathItem:
 NestedAccessPathEntity:
     entity=[Entity] accessors+=Accessor*
 ;
+
