@@ -1,0 +1,102 @@
+Webpage WeatherStation
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A weather station app"
+
+     //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8080
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8321
+    end
+
+    RESTApi OpenMeteo
+        host: "https://api.open-meteo.com"
+    end
+
+    RESTEndpoint WeatherEnpoint
+        connection: OpenMeteo
+        path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
+    end
+
+
+     Entity weatherData
+        source: WeatherEnpoint
+        attributes:
+            - current: dict
+            - daily: dict
+            - hourly: dict
+            - currentDate: str calculate(slice(current.time, 0, 10))
+            - currentTime: str calculate(slice(current.time, 11))
+            - maxTempToday: float calculate(max(hourly.temperature_2m))
+            - minTempToday: float calculate(min(hourly.temperature_2m))
+            - meanMaxTempFiveDays: float calculate(round(mean(daily.temperature_2m_max), 1))
+    end
+
+    Component TempChart
+        entity: weatherData
+        type: LineChart
+            description: "Tempeprature over time"
+            xLabel: "Time"
+            yLabel: "Temperature"
+            xValue: this.hourly.time
+            yValues: this.hourly.temperature_2m
+    end
+
+    Component CurrentDate
+        entity: weatherData
+        type: Text
+            content: this.currentDate
+    end
+
+    Component CurrentTime
+        entity: weatherData
+        type: Text
+            content: this.currentTime
+    end
+
+    Component MaxTemp
+        entity: weatherData
+        type: Text
+            content: this.maxTempToday
+            color: "#C44834"
+    end
+
+    Component MinTemp
+        entity: weatherData
+        type: Text
+            content: this.minTempToday
+            color: "#5EB0EA"
+    end
+
+    Component MeanMaxTemp
+        entity: weatherData
+        type: Text
+            content: this.meanMaxTempFiveDays
+            color: "#4CBA3B"
+    end
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use TempChart
+            endcol
+            col
+                use CurrentTime
+                use CurrentDate
+                row
+                    use MaxTemp
+                    use MinTemp
+                    use MeanMaxTemp
+                endrow
+            endcol
+        endrow
+    end

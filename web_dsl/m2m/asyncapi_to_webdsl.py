@@ -4,15 +4,15 @@ from typing import List, Dict, Any, Optional, Tuple
 from urllib.parse import urlparse
 from jinja2 import Environment, FileSystemLoader
 from fastapi import HTTPException
-from web_dsl.definitions import TEMPLATES_PATH
+from web_dsl.definitions import (
+    TEMPLATES_PATH,
+)  # Assuming this is defined in your project
 import os
 
 
 # ======== Template Setup ========
 env = Environment(
-    loader=FileSystemLoader(
-        os.path.join(TEMPLATES_PATH, "transformations")
-    ),  # Store templates in a 'templates' subdirectory
+    loader=FileSystemLoader(os.path.join(TEMPLATES_PATH, "transformations")),
     trim_blocks=True,
     lstrip_blocks=True,
     extensions=["jinja2.ext.loopcontrols"],
@@ -25,7 +25,7 @@ attribute_map = {
     "Gauge": "value",
     "ProgressBar": "value",
     "Image": "source",
-    "LineChart": "",  # These will just use default placeholders in template
+    "LineChart": "",
     "BarChart": "",
     "PieChart": "",
     "JsonViewer": "",
@@ -73,10 +73,8 @@ class Entity:
     ):
         self.name = name
         self.description = description
-        self.source_topic_name = (
-            source_topic_name  # Name of the BrokerTopic this entity's data comes from
-        )
-        self.attributes = attributes  # Dict of {attr_name: schema_obj}
+        self.source_topic_name = source_topic_name
+        self.attributes = attributes
         self.strict = strict
 
     @property
@@ -89,15 +87,13 @@ class Entity:
 
 # ========== Helper Functions ==============
 def clean_name(name: str) -> str:
-    name = re.sub(
-        r"[^\w.-]+", "_", name
-    )  # Allow dot and hyphen for more readable names from topics
+    name = re.sub(r"[^\w.-]+", "_", name)
     name = name.strip("_")
     if not name:
         return "unnamed_item"
-    if name[0].isdigit():  # Ensure valid identifier
+    if name[0].isdigit():
         name = "_" + name
-    return name.replace("-", "_").replace(".", "_")  # Replace for DSL syntax if needed
+    return name.replace("-", "_").replace(".", "_")
 
 
 def map_asyncapi_type_to_dsl(name: str, schema: dict) -> str:
@@ -110,43 +106,46 @@ def map_asyncapi_type_to_dsl(name: str, schema: dict) -> str:
         "object": "dict",
     }
     format_type_map = {
-        "date-time": "datetime",  # Example, adjust to your DSL's types
-        "uuid": "str",  # Usually represented as string
+        "date-time": "str",
+        "uuid": "str",
     }
 
     openapi_type = schema.get("type", "string")
     openapi_format = schema.get("format")
 
+    dsl_type = "str"  # Default
     if openapi_format and openapi_format in format_type_map:
         dsl_type = format_type_map[openapi_format]
-    else:
-        dsl_type = type_map.get(openapi_type, "str")
+    elif openapi_type in type_map:
+        dsl_type = type_map[openapi_type]
 
-    # Handle arrays with item types
     if openapi_type == "array":
         items_schema = schema.get("items", {})
-        if items_schema:  # Could be empty if not specified
-            item_type = map_asyncapi_type_to_dsl("item", items_schema).split(": ", 1)[
-                -1
-            ]  # Get type part
-            dsl_type = (
-                f"list[{item_type}]"  # Or however your DSL represents typed lists
+        if items_schema:
+            item_type_name = "item"  # placeholder name for recursion
+            item_dsl_type_str = map_asyncapi_type_to_dsl(item_type_name, items_schema)
+            # Extract just the type part, e.g., "str" from "item: str"
+            item_type = (
+                item_dsl_type_str.split(": ", 1)[-1]
+                if ": " in item_dsl_type_str
+                else "any"
             )
+            dsl_type = f"list[{item_type}]"
         else:
-            dsl_type = "list"  # Generic list
+            dsl_type = "list"  # Generic list if items schema is missing
 
     return f"{name}: {dsl_type}"
 
 
 def resolve_asyncapi_ref(ref: str, model: Dict[str, Any]) -> Dict[str, Any]:
     if not ref.startswith("#/"):
-        # External refs not supported in this basic version
         print(f"Warning: External reference not supported: {ref}")
         return {}
 
-    parts = ref.split("/")[1:]  # Skip '#'
+    parts = ref.split("/")[1:]
     current = model
     for part in parts:
+        part = part.replace("~1", "/").replace("~0", "~")  # JSON Pointer unescaping
         if isinstance(current, dict) and part in current:
             current = current[part]
         elif isinstance(current, list) and part.isdigit() and int(part) < len(current):
@@ -158,19 +157,15 @@ def resolve_asyncapi_ref(ref: str, model: Dict[str, Any]) -> Dict[str, Any]:
 
 
 protocol_to_dsl_type_map = {
-    "kafka": "KAFKA",
-    "kafka-secure": "KAFKA",
     "mqtt": "MQTT",
     "mqtts": "MQTT",
     "amqp": "AMQP",
     "amqps": "AMQP",
     "redis": "REDIS",
     "rediss": "REDIS",
-    # Add other protocols your DSL supports: "ws", "http" (for WebSockets/WebHooks)
 }
 
 default_ports = {
-    "KAFKA": 9092,
     "MQTT": 1883,
     "AMQP": 5672,
     "REDIS": 6379,
@@ -180,12 +175,8 @@ default_ports = {
 def parse_host_string(
     host_str: str, protocol_dsl_type: Optional[str]
 ) -> Tuple[str, Optional[int]]:
-    parsed_url = urlparse(
-        f"//{host_str}"
-    )  # Add scheme for proper parsing if host is hostname:port
-    hostname = (
-        parsed_url.hostname or host_str.split(":")[0]
-    )  # Fallback for simple "host:port"
+    parsed_url = urlparse(f"//{host_str}")
+    hostname = parsed_url.hostname or host_str.split(":")[0]
     port = parsed_url.port
     if port is None and protocol_dsl_type:
         port = default_ports.get(protocol_dsl_type)
@@ -210,8 +201,7 @@ def extract_schema_props_asyncapi(
     schema_type = schema.get("type")
 
     if schema_type == "object":
-        # Use title from schema if available, otherwise generate from base_name
-        entity_name_candidate = schema.get("title", base_name)
+        entity_name_candidate = schema.get("title", base_name)  # Prefer schema title
         entity_name = clean_name(entity_name_candidate)
 
         if entity_name not in entities:
@@ -220,15 +210,11 @@ def extract_schema_props_asyncapi(
                 description=schema.get("description"),
                 source_topic_name=source_topic_dsl_name,
                 attributes=schema.get("properties", {}),
-                strict=not schema.get(
-                    "additionalProperties", True
-                ),  # common default for additionalProperties is true
+                strict=not schema.get("additionalProperties", True),
             )
             generated_entity_names.append(entity_name)
 
-            # Recursively process properties if they are objects or arrays of objects
             for prop_name, prop_schema in schema.get("properties", {}).items():
-                # Pass a modified base_name to avoid clashes if nested anonymous objects exist
                 generated_entity_names.extend(
                     extract_schema_props_asyncapi(
                         prop_schema,
@@ -242,7 +228,6 @@ def extract_schema_props_asyncapi(
     elif schema_type == "array":
         items_schema = schema.get("items", {})
         if items_schema:
-            # If array of objects, process the item schema
             generated_entity_names.extend(
                 extract_schema_props_asyncapi(
                     items_schema,
@@ -252,27 +237,24 @@ def extract_schema_props_asyncapi(
                     model,
                 )
             )
-
     return generated_entity_names
 
 
-# Re-use from OpenAPI transformer, ensure it's available or copy it here
 def parse_component_annotations(
     x_webdsl_content: str, ep_name: str, entity_name: str
 ) -> List[Dict[str, Any]]:
     if isinstance(x_webdsl_content, list):
         content = "\n".join(x_webdsl_content)
     elif not isinstance(x_webdsl_content, str):
-        content = ""  # Ignore if not string or list
+        content = ""
     else:
         content = x_webdsl_content
 
     result = []
-    # Regex from your OpenAPI example
     new_rx = re.compile(
         r"(?:-\s*)?"
         r"(?:"
-        r"(?P<path>\w+(?:\[\d+\])?(?:\.\w+)*)"  # Path like response.foo or response.items[0].bar
+        r"(?P<path>\w+(?:\[\d+\])?(?:\.\w+)*)"
         r"\s*->\s*"
         r")?"
         r"(?P<ctype>\w+)"
@@ -286,10 +268,10 @@ def parse_component_annotations(
         col = int(m.group("col")) if m.group("col") else 0
 
         if path and path.startswith("response"):
-            path = path.replace("response", "this", 1)  # Replace first occurrence
-        elif path and not path.startswith("this"):  # Allow 'this' directly
+            path = path.replace("response", "this", 1)
+        elif path and not path.startswith("this"):
             print(
-                f"Warning: Component path '{path}' in x-webdsl for {ep_name} should ideally start with 'response.' or 'this.' Using as is."
+                f"Warning: Component path '{path}' in x-webdsl for {ep_name} should start with 'response.' or 'this.' Using as is."
             )
 
         if ctype not in attribute_map:
@@ -301,14 +283,9 @@ def parse_component_annotations(
         suffix = (
             path.replace(".", "_").replace("[", "_").replace("]", "_")
             if path
-            else (
-                f"_r{row}_c{col}" if row or col else ""
-            )  # ensure suffix is non-empty if no path
+            else (f"_r{row}_c{col}" if row or col else "")
         )
-        # Ensure suffix is not empty to avoid name collisions for components without path/pos
-        if (
-            not suffix and len(result) > 0
-        ):  # if multiple components without path/pos for same ep/entity
+        if not suffix and len(result) > 0:
             suffix = f"_comp{len(result)}"
 
         name_safe = clean_name(f"{ep_name}_{ctype}{'_' if suffix else ''}{suffix}")
@@ -320,18 +297,10 @@ def parse_component_annotations(
             "row": row,
             "col": col,
         }
-        # Add the specific data binding attribute for the component type
-        if attribute_map[
-            ctype
-        ]:  # If there's a specific field to bind (e.g., "content" for Text)
+        if attribute_map[ctype]:
             comp[attribute_map[ctype]] = path
-        elif (
-            path
-        ):  # For components like Table, JsonViewer where path might be the root object
-            comp["data_source_path"] = (
-                path  # Generic path if no specific attribute_map key
-            )
-
+        elif path:
+            comp["data_source_path"] = path
         result.append(comp)
     return result
 
@@ -354,23 +323,23 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
             status_code=500, detail=f"Error loading AsyncAPI file: {str(e)}"
         )
 
+    if model.get("asyncapi", "").split(".")[0] != "3":
+        raise HTTPException(
+            status_code=400, detail="This transformer only supports AsyncAPI 3.x.x"
+        )
+
     brokers: List[Broker] = []
     broker_topics: List[BrokerTopic] = []
-    entities: Dict[str, Entity] = {}  # Store by entity name
+    entities: Dict[str, Entity] = {}
     components: List[Dict[str, Any]] = []
 
-    # --- 1. Process Servers -> Broker objects ---
-    # Store by their AsyncAPI name for lookup
     processed_brokers_by_asyncapi_name: Dict[str, Broker] = {}
     asyncapi_servers = model.get("servers", {})
-    if (
-        not asyncapi_servers and "error" not in model
-    ):  # AsyncAPI < 2.5.0 might have servers under `components` (unlikely but check spec version if issues)
+    if not asyncapi_servers and "error" not in model:
         print("Warning: No 'servers' found at the root of the AsyncAPI document.")
 
     for server_key, server_data in asyncapi_servers.items():
         protocol = server_data.get("protocol")
-        protocol_version = server_data.get("protocolVersion")  # unused for now
         host_str = server_data.get("host")
 
         if not protocol or not host_str:
@@ -386,29 +355,37 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
             )
             continue
 
-        # Resolve variables in host_str (basic substitution)
         for var_name, var_data in server_data.get("variables", {}).items():
             default_val = var_data.get("default", "")
             host_str = host_str.replace(f"{{{var_name}}}", default_val)
 
         hostname, port = parse_host_string(host_str, protocol_dsl_type)
-        if port is None:  # If still None after default lookup
+        if port is None:
             print(
                 f"Warning: Could not determine port for server '{server_key}' ({host_str}). DSL might require it."
             )
 
         auth_details = None
-        # Basic security scheme handling (can be expanded)
         security_reqs = server_data.get("security", [])
         if security_reqs:
-            # For simplicity, take the first security requirement and its first scheme
-            # In real AsyncAPI, security is complex (OAuth flows, multiple options)
             first_req = security_reqs[0] if security_reqs else {}
             first_scheme_name = next(iter(first_req.keys()), None)
             if first_scheme_name:
-                scheme_def = resolve_asyncapi_ref(
-                    f"#/components/securitySchemes/{first_scheme_name}", model
+                scheme_def_ref = (
+                    model.get("components", {})
+                    .get("securitySchemes", {})
+                    .get(first_scheme_name, {})
                 )
+                # For AsyncAPI 3.0, securitySchemes are directly under components
+                # No need for resolve_asyncapi_ref if it's directly under components.securitySchemes
+                # If it were a $ref like "#/components/securitySchemes/myScheme", resolve_asyncapi_ref would be used by schema parser.
+                # Here we assume it's defined directly or we'd need to handle $ref to scheme.
+
+                # For simplicity, assuming security schemes are defined directly in components
+                scheme_def = scheme_def_ref  # If it was a $ref, it should have been resolved before or handled here
+                if isinstance(scheme_def_ref, dict) and "$ref" in scheme_def_ref:
+                    scheme_def = resolve_asyncapi_ref(scheme_def_ref["$ref"], model)
+
                 if scheme_def.get("type") == "userPassword":
                     auth_details = {
                         "username": "YOUR_USERNAME",
@@ -428,7 +405,6 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
                             "description", "X.509 certificate authentication"
                         ),
                     }
-                # Add more security types as needed (apiKey, http, oauth2 etc.)
 
         broker_name = clean_name(server_key)
         broker_obj = Broker(
@@ -441,26 +417,21 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
         brokers.append(broker_obj)
         processed_brokers_by_asyncapi_name[server_key] = broker_obj
 
-    if (
-        not brokers and "operations" in model
-    ):  # If there are operations but no servers, it's problematic
-        print(
-            "Warning: Operations exist but no valid brokers could be defined. DSL generation might be incomplete."
-        )
+    if not brokers and "operations" in model:
+        print("Warning: Operations exist but no valid brokers could be defined.")
 
-    # --- 2. Process Operations (links Channels, Messages, Servers) ---
-    # Store created BrokerTopic DSL objects by a unique key (broker_name + channel_address) to avoid duplicates
     created_broker_topics: Dict[str, BrokerTopic] = {}
 
     for op_id, op_data in model.get("operations", {}).items():
-        channel_ref = op_data.get("channel", {}).get("$ref")
-        if not channel_ref:
-            print(f"Warning: Operation '{op_id}' has no channel reference. Skipping.")
+        # In AsyncAPI 3.0, operation.channel is a Reference Object
+        channel_ref_obj = op_data.get("channel")
+        if not channel_ref_obj or "$ref" not in channel_ref_obj:
+            print(
+                f"Warning: Operation '{op_id}' has no valid channel reference. Skipping."
+            )
             continue
+        channel_ref = channel_ref_obj["$ref"]
 
-        channel_key = channel_ref.split("/")[
-            -1
-        ]  # Get the key from #/channels/channelKey
         channel_data = resolve_asyncapi_ref(channel_ref, model)
         if not channel_data:
             print(
@@ -470,20 +441,64 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
 
         channel_address = channel_data.get("address")
         if not channel_address:
+            # AsyncAPI 3.0 spec: "If the channel name is a SCIM filter, or a specific protocol requires a different format,
+            # the address field SHOULD be used to provide the actual channel name."
+            # Fallback to channel key if address is missing but might not always be correct.
+            channel_key = channel_ref.split("/")[-1]
             print(
-                f"Warning: Channel for operation '{op_id}' (key: {channel_key}) has no address. Skipping."
+                f"Warning: Channel for operation '{op_id}' (key: {channel_key}) has no 'address' field. Using key '{channel_key}' as address. This might be incorrect."
+            )
+            channel_address = channel_key  # Fallback
+
+        if not channel_address:
+            print(
+                f"Warning: Channel for operation '{op_id}' has no address and key could not be determined. Skipping."
             )
             continue
 
-        # Determine server for this operation
-        # Priority: Operation.servers -> Channel.servers -> Root.servers
-        # We'll pick the *first* applicable server for simplicity for the DSL.
         target_server_api_name = None
-        if "servers" in op_data and op_data["servers"]:
-            target_server_api_name = op_data["servers"][0]
-        elif "servers" in channel_data and channel_data["servers"]:
-            target_server_api_name = channel_data["servers"][0]
-        elif processed_brokers_by_asyncapi_name:  # Fallback to first defined server
+        # AsyncAPI 3.0: operation.servers is an array of Server Objects, not references
+        # channel.servers is also an array of Server Objects
+        op_servers = op_data.get("servers")
+        channel_servers = channel_data.get("servers")
+
+        # Simple selection: first server from operation, then channel, then root
+        if op_servers and isinstance(op_servers, list) and op_servers:
+            # We need the *key* of the server from the root `servers` object.
+            # The server object itself doesn't contain its original key.
+            # This requires matching the server object, which is complex.
+            # For simplicity, we assume if servers are specified at op/channel,
+            # they must have been processed from the root `servers` dict.
+            # This part needs careful implementation if strict server matching is required.
+            # Let's assume for now that if specified, it matches one of the processed_brokers_by_asyncapi_name keys.
+            # This is a simplification: AsyncAPI 3 allows inline server definitions which are not handled here.
+            # We will try to match by `host` and `protocol` if direct key is not available.
+            # A better approach would be to pre-process all server definitions (root, channel, op)
+            # and uniquely identify them.
+
+            # Simplified: try to find a server by matching host and protocol if it was defined inline.
+            # This section is a placeholder for a more robust server resolution strategy for AsyncAPI 3.0 inline servers.
+            # For now, we rely on the operation/channel server *being one of the root-defined servers*
+            # or we fall back to the first root server.
+            # To truly support AsyncAPI 3 server overrides, we'd need to process these inline server definitions
+            # and create Broker objects for them if they are new/different.
+            # The current code primarily processes `model.servers`.
+
+            # For now, let's assume `op_data.servers` or `channel_data.servers` refers to one of the
+            # keys from the global `servers:` definition if it's not an inline definition.
+            # If AsyncAPI 3.0 allows `servers: [{host: "...", protocol: "..."}]` directly in operation,
+            # then this logic needs to create a broker on the fly or match it.
+            # The current logic expects `servers: [ { $ref: "#/servers/myServerKey" } ]` or `servers: [ "myServerKey" ]` effectively.
+            # AsyncAPI 3.0: "An array of Server Objects. [...] This field is OPTIONAL.
+            # If provided, it SHOULD override the server definitions on the parent Channel Object."
+
+            # Sticking to the previous logic of server name from root, or fallback.
+            # This means we don't fully support overriding with completely new server definitions at op/channel level yet.
+            # We'd need to find a server from `processed_brokers_by_asyncapi_name` that matches characteristics.
+            # This part is complex. Fallback to first available broker if specific server cannot be easily matched.
+            pass  # Placeholder for improved server matching
+
+        if not target_server_api_name and processed_brokers_by_asyncapi_name:
             target_server_api_name = next(
                 iter(processed_brokers_by_asyncapi_name.keys()), None
             )
@@ -492,31 +507,22 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
             not target_server_api_name
             or target_server_api_name not in processed_brokers_by_asyncapi_name
         ):
-            if not brokers:  # No servers defined at all
+            if not brokers:
                 print(
-                    f"Error: No servers defined in AsyncAPI spec, but operation '{op_id}' requires one. Skipping topic/entity generation for this op."
+                    f"Error: No servers defined in AsyncAPI spec, but operation '{op_id}' requires one. Skipping topic/entity generation."
                 )
-                continue  # Cannot create a topic without a broker
-            else:  # Server specified but not found or no server specified and using default
-                print(
-                    f"Warning: Server '{target_server_api_name}' for operation '{op_id}' not found or not specified. Assigning to first available broker: {brokers[0].name}."
-                )
+                continue
+            else:
+                # print(f"Warning: Server for operation '{op_id}' not explicitly found. Assigning to first available broker: {brokers[0].name}.")
                 assigned_broker = brokers[0]
-
         else:
             assigned_broker = processed_brokers_by_asyncapi_name[target_server_api_name]
 
-        # Create BrokerTopic if it doesn't exist for this broker + address
-        # Use a cleaned version of channel_address for the DSL topic name part
         topic_dsl_name_part = clean_name(channel_address)
-        # For AsyncAPI, op_id is more unique for "what is happening on the topic"
         broker_topic_dsl_name = clean_name(
             f"{op_id}_{assigned_broker.name}_{topic_dsl_name_part}_topic"
         )
-
-        topic_unique_key = (
-            f"{assigned_broker.name}::{channel_address}"  # Key for global uniqueness
-        )
+        topic_unique_key = f"{assigned_broker.name}::{channel_address}"
 
         if topic_unique_key not in created_broker_topics:
             current_broker_topic = BrokerTopic(
@@ -528,35 +534,57 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
             created_broker_topics[topic_unique_key] = current_broker_topic
         else:
             current_broker_topic = created_broker_topics[topic_unique_key]
-            # If the same topic is used by multiple operations, we might want to ensure entity names are distinct
-            # or that x-webdsl is aggregated. For now, entities are tied to message names.
 
-        # Process Messages and Create Entities
-        # An operation can have multiple messages (e.g. oneOf)
         all_generated_entity_names_for_op = set()
-        for msg_item_ref_obj in op_data.get("messages", []):
-            msg_ref = msg_item_ref_obj.get("$ref")
-            if not msg_ref:
-                continue
+        messages_to_process_refs_or_objs = []
 
-            message_data = resolve_asyncapi_ref(msg_ref, model)
+        # AsyncAPI 3.0: operation.messages is an array of Reference Objects to Message Objects
+        # AsyncAPI 3.0: channel.messages is a map of Message Objects (or Reference Objects)
+        operation_messages_refs = op_data.get("messages")  # Array of Reference Objects
+        channel_messages_map = channel_data.get(
+            "messages"
+        )  # Map {msgId: Message Object | Reference Object}
+
+        if operation_messages_refs:
+            for ref_obj in operation_messages_refs:
+                if isinstance(ref_obj, dict) and "$ref" in ref_obj:
+                    messages_to_process_refs_or_objs.append(ref_obj)
+        elif channel_messages_map:
+            for msg_id, msg_obj_or_ref in channel_messages_map.items():
+                messages_to_process_refs_or_objs.append(
+                    msg_obj_or_ref
+                )  # Can be Message or Reference
+
+        for item_ref_or_obj in messages_to_process_refs_or_objs:
+            message_data = None
+            msg_ref_for_error = "inline message"
+
+            if (
+                isinstance(item_ref_or_obj, dict) and "$ref" in item_ref_or_obj
+            ):  # It's a Reference Object
+                msg_ref = item_ref_or_obj["$ref"]
+                msg_ref_for_error = msg_ref
+                message_data = resolve_asyncapi_ref(msg_ref, model)
+            elif isinstance(item_ref_or_obj, dict):  # It's an inline Message Object
+                message_data = item_ref_or_obj
+
             if not message_data:
                 print(
-                    f"Warning: Could not resolve message '{msg_ref}' for operation '{op_id}'."
+                    f"Warning: Could not resolve or use message for operation '{op_id}' (item: {msg_ref_for_error})."
                 )
                 continue
 
-            payload_schema = message_data.get(
-                "payload", {}
-            )  # Payload itself can be the schema or contain $ref
+            payload_schema = message_data.get("payload", {})
             if "$ref" in payload_schema:
                 payload_schema = resolve_asyncapi_ref(payload_schema["$ref"], model)
 
-            # Base name for entity: message name, or operation ID + "payload"
-            entity_base_name = message_data.get("name", f"{op_id}_payload")
+            entity_base_name_candidate = (
+                message_data.get("title")
+                or message_data.get("name")
+                or f"{op_id}_payload"
+            )
+            entity_base_name = clean_name(entity_base_name_candidate)
 
-            # Extract schema properties into Entity objects
-            # source_topic_dsl_name is the name of the BrokerTopic instance
             generated_entity_names = extract_schema_props_asyncapi(
                 payload_schema,
                 entity_base_name,
@@ -566,13 +594,9 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
             )
             all_generated_entity_names_for_op.update(generated_entity_names)
 
-        # Process x-webdsl for Components, associate with this operation and its entities
-        x_webdsl_content = op_data.get(
-            "x-webdsl", model.get("x-webdsl", "")
-        )  # Check op, then root
+        x_webdsl_content = op_data.get("x-webdsl", model.get("x-webdsl", ""))
         if x_webdsl_content:
             if not all_generated_entity_names_for_op:
-                # Create a default entity if no schema but x-webdsl is present
                 default_entity_name = clean_name(f"{op_id}_DefaultEntity")
                 if default_entity_name not in entities:
                     entities[default_entity_name] = Entity(
@@ -588,20 +612,18 @@ def transform_asyncapi_to_webdsl(asyncapi_path: str):
                 )
 
             for entity_n in all_generated_entity_names_for_op:
-                # Use op_id as the 'endpoint name' for component naming context
                 op_components = parse_component_annotations(
                     x_webdsl_content, clean_name(op_id), entity_n
                 )
                 components.extend(op_components)
 
-    # --- 3. Prepare data for template ---
     info = model.get("info", {})
     return template.render(
         title=clean_name(info.get("title", "AsyncAPI_Generated_App")),
         description=info.get("description"),
         version=info.get("version"),
         brokers=brokers,
-        topics=broker_topics,  # Renamed from broker_topics for consistency with template
+        topics=broker_topics,
         entities=list(entities.values()),
         components=components,
     )

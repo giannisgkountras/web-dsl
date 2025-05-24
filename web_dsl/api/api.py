@@ -244,7 +244,7 @@ async def generate_and_deploy(
 
     except Exception as e:
         traceback.print_exc()
-        raise HTTPException(status_code=500, detail=f"Deployment failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Deployment failed")
 
 
 # ============= Transformations Endpoint =============

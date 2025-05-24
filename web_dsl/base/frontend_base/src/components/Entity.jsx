@@ -20,14 +20,24 @@ const Entity = ({
     const ws = useContext(WebsocketContext);
 
     const reloadData = async () => {
+        let data = {};
         if (sourceOfContent === "rest") {
-            const data = await fetchValueFromRestWithoutAccessor(restData);
-            setEntityData(data);
+            data = await fetchValueFromRestWithoutAccessor(restData);
         }
         if (sourceOfContent === "db") {
-            const data = await fetchValueFromDBWithoutAccessor(dbData);
-            setEntityData(data);
+            data = await fetchValueFromDBWithoutAccessor(dbData);
         }
+
+        const computedResults = computedAttributes.map((attribute) => {
+            const { name, expression } = attribute;
+            const evaluatedValue = evaluateExpression(expression, data);
+            return { name, value: evaluatedValue };
+        });
+        // Append computed results to data
+        computedResults.forEach((result) => {
+            data[result.name] = result.value;
+        });
+        setEntityData(data);
     };
 
     useEffect(() => {
@@ -61,7 +71,6 @@ const Entity = ({
             computedResults.forEach((result) => {
                 currentData[result.name] = result.value;
             });
-            console.log("Final data after evaluation:", computedResults);
 
             setEntityData(currentData);
         } catch (error) {

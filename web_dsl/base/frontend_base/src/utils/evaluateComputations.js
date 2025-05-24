@@ -14,7 +14,8 @@ const ARITHMETIC_OPERATORS_AND_FUNCTIONS = [
     "sortasc",
     "sortdesc",
     "reverse",
-    "length"
+    "length",
+    "slice"
 ];
 
 const customMathForEval = {
@@ -32,7 +33,7 @@ const customMathForEval = {
 };
 
 function resolveOperandInternal(operand, data, evaluateFunc) {
-    if (typeof operand === "number") {
+    if (typeof operand === "number" || typeof operand === "string") {
         return operand;
     }
 
@@ -73,8 +74,8 @@ function resolveOperandInternal(operand, data, evaluateFunc) {
 }
 
 export function evaluateExpression(expression, data) {
-    // Case 1: Expression is a literal number
-    if (typeof expression === "number") {
+    // Case 1: Expression is a literal number or string
+    if (typeof expression === "number" || typeof expression === "string") {
         return expression;
     }
 
@@ -242,8 +243,43 @@ export function evaluateExpression(expression, data) {
                         const factor = Math.pow(10, numDecimals);
                         return Math.round(numberToRound * factor) / factor;
                 }
+            } else if (["slice"].includes(operator)) {
+                const targetString = resolvedOperands[0];
+                if (typeof targetString !== "string") {
+                    toast.error(
+                        `Operator '${operator}' expects a string as its first argument.`
+                    );
+                    return NaN; // Or an empty string, or the original non-string value
+                }
+
+                switch (operator) {
+                    case "slice": // slice(string, startIndex, endIndex?)
+                        const startIndex = resolvedOperands[1];
+                        const endIndex = resolvedOperands[2]; // endIndex is optional for String.prototype.slice
+
+                        if (
+                            typeof startIndex !== "number" ||
+                            isNaN(startIndex)
+                        ) {
+                            // toast.error("Slice 'startIndex' must be a number.");
+                            // console.warn("Slice 'startIndex' must be a number.");
+                            return targetString; // Or NaN, or empty string
+                        }
+
+                        if (
+                            endIndex !== undefined &&
+                            (typeof endIndex !== "number" || isNaN(endIndex))
+                        ) {
+                            // toast.error("Slice 'endIndex', if provided, must be a number.");
+                            // console.warn("Slice 'endIndex', if provided, must be a number.");
+                            return targetString.slice(startIndex); // Or NaN, or empty string
+                        }
+                        // String.prototype.slice handles undefined endIndex correctly
+                        return targetString.slice(startIndex, endIndex);
+                }
             }
             // Fallback for unhandled
+            // console.warn(`Operator '${operatorCandidate}' is listed but not explicitly handled in a category.`);
             return NaN;
         } else {
             // Subcase 2b: Array is not an operation array, so treat it as a path.
