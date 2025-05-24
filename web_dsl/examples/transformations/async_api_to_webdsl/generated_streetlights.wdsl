@@ -1,0 +1,77 @@
+Webpage Streetlights_MQTT_API
+    author: ""
+    description: "The Smartylighting Streetlights API allows you to remotely manage the city
+lights."
+    version: "1.0.0"
+    navbar: Home
+
+// ========== Broker Connections ========== //
+Broker<MQTT> mqtt_broker
+    host: "mqtt.mystreetlightbroker.org"
+    port: 1883
+end
+
+
+// ========== Broker Topics ========== //
+BrokerTopic receiveLightMeasurement
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/event/{streetlightId}/lighting/measured"
+end
+
+BrokerTopic turnOn
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/action/{streetlightId}/turn/on"
+end
+
+BrokerTopic turnOff
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/action/{streetlightId}/turn/off"
+end
+
+BrokerTopic dimLight
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/action/{streetlightId}/dim"
+end
+
+
+// ========== Entities ========== //
+Entity lightMeasured_receiveLightMeasurement
+    source: receiveLightMeasurement
+    attributes:
+        - lumens: int
+        - sentAt: str
+end
+
+Entity turnOnOff_turnOn
+    source: turnOn
+    attributes:
+        - command: str
+        - sentAt: str
+end
+
+Entity turnOnOff_turnOff
+    source: turnOff
+    attributes:
+        - command: str
+        - sentAt: str
+end
+
+Entity dimLight_dimLight
+    source: dimLight
+    attributes:
+        - percentage: int
+        - sentAt: str
+end
+
+
+// ========== Components ========== //
+
+// ========== Screens ========== //
+Screen Home
+    title: "Home"
+    url: "/"
+
+
+
+
+end

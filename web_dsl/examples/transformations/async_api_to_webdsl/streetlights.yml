@@ -1,0 +1,158 @@
+asyncapi: 3.0.0
+info:
+    title: Streetlights MQTT API
+    version: 1.0.0
+    description: |-
+        The Smartylighting Streetlights API allows you to remotely manage the city
+        lights.
+defaultContentType: application/json
+servers:
+    mqtt-broker:
+        host: mqtt.mystreetlightbroker.org
+        protocol: mqtt
+        description: MQTT Broker for managing streetlights
+        security:
+            - $ref: "#/components/securitySchemes/mqttCreds"
+        tags:
+            - name: env:production
+            - name: kind:remote
+            - name: visibility:public
+
+channels:
+    lightingMeasured:
+        address: smartylighting/streetlights/1.0/event/{streetlightId}/lighting/measured
+        messages:
+            lightMeasured:
+                $ref: "#/components/messages/lightMeasured"
+        description: Topic for reporting measured light levels.
+        parameters:
+            streetlightId:
+                $ref: "#/components/parameters/streetlightId"
+
+    lightTurnOn:
+        address: smartylighting/streetlights/1.0/action/{streetlightId}/turn/on
+        messages:
+            turnOn:
+                $ref: "#/components/messages/turnOnOff"
+        parameters:
+            streetlightId:
+                $ref: "#/components/parameters/streetlightId"
+
+    lightTurnOff:
+        address: smartylighting/streetlights/1.0/action/{streetlightId}/turn/off
+        messages:
+            turnOff:
+                $ref: "#/components/messages/turnOnOff"
+        parameters:
+            streetlightId:
+                $ref: "#/components/parameters/streetlightId"
+
+    lightsDim:
+        address: smartylighting/streetlights/1.0/action/{streetlightId}/dim
+        messages:
+            dimLight:
+                $ref: "#/components/messages/dimLight"
+        parameters:
+            streetlightId:
+                $ref: "#/components/parameters/streetlightId"
+
+operations:
+    receiveLightMeasurement:
+        action: receive
+        channel:
+            $ref: "#/channels/lightingMeasured"
+        summary: Receive light measurements.
+        messages:
+            - $ref: "#/channels/lightingMeasured/messages/lightMeasured"
+
+    turnOn:
+        action: send
+        channel:
+            $ref: "#/channels/lightTurnOn"
+        summary: Command to turn on light.
+        messages:
+            - $ref: "#/channels/lightTurnOn/messages/turnOn"
+
+    turnOff:
+        action: send
+        channel:
+            $ref: "#/channels/lightTurnOff"
+        summary: Command to turn off light.
+        messages:
+            - $ref: "#/channels/lightTurnOff/messages/turnOff"
+
+    dimLight:
+        action: send
+        channel:
+            $ref: "#/channels/lightsDim"
+        summary: Command to dim light.
+        messages:
+            - $ref: "#/channels/lightsDim/messages/dimLight"
+
+components:
+    messages:
+        lightMeasured:
+            name: lightMeasured
+            title: Light Measured
+            summary: Environmental lighting conditions.
+            contentType: application/json
+            payload:
+                $ref: "#/components/schemas/lightMeasuredPayload"
+
+        turnOnOff:
+            name: turnOnOff
+            title: Turn on/off
+            summary: Command to toggle light.
+            payload:
+                $ref: "#/components/schemas/turnOnOffPayload"
+
+        dimLight:
+            name: dimLight
+            title: Dim Light
+            summary: Command to dim light.
+            payload:
+                $ref: "#/components/schemas/dimLightPayload"
+
+    schemas:
+        lightMeasuredPayload:
+            type: object
+            properties:
+                lumens:
+                    type: integer
+                    minimum: 0
+                sentAt:
+                    $ref: "#/components/schemas/sentAt"
+
+        turnOnOffPayload:
+            type: object
+            properties:
+                command:
+                    type: string
+                    enum: [on, off]
+                sentAt:
+                    $ref: "#/components/schemas/sentAt"
+
+        dimLightPayload:
+            type: object
+            properties:
+                percentage:
+                    type: integer
+                    minimum: 0
+                    maximum: 100
+                sentAt:
+                    $ref: "#/components/schemas/sentAt"
+
+        sentAt:
+            type: string
+            format: date-time
+
+    securitySchemes:
+        mqttCreds:
+            type: userPassword
+            description: Basic MQTT credentials (username/password)
+
+    parameters:
+        streetlightId:
+            description: ID of the streetlight.
+            schema:
+                type: string
