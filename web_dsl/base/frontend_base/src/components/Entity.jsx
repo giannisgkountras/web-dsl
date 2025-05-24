@@ -6,6 +6,7 @@ import {
     fetchValueFromRestWithoutAccessor,
     fetchValueFromDBWithoutAccessor
 } from "../utils/fetchValues";
+import { evaluateExpression } from "../utils/evaluateComputations";
 
 const Entity = ({
     topic,
@@ -13,7 +14,8 @@ const Entity = ({
     dbData,
     sourceOfContent,
     interval,
-    setEntityData
+    setEntityData,
+    computedAttributes
 }) => {
     const ws = useContext(WebsocketContext);
 
@@ -44,7 +46,24 @@ const Entity = ({
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setEntityData(msg);
+            let currentData = msg; // Data from WebSocket
+
+            // Calcualte all results of computed attributes
+            const computedResults = computedAttributes.map((attribute) => {
+                const { name, expression } = attribute;
+                const evaluatedValue = evaluateExpression(
+                    expression,
+                    currentData
+                );
+                return { name, value: evaluatedValue };
+            });
+            // Append computed results to currentData
+            computedResults.forEach((result) => {
+                currentData[result.name] = result.value;
+            });
+            console.log("Final data after evaluation:", computedResults);
+
+            setEntityData(currentData);
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message

@@ -1,0 +1,83 @@
+Webpage Computed
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "Computed Test"
+    navbar: Home
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.6"
+        port: 8080
+    end
+
+    Broker<MQTT> CarBroker
+        host: "192.168.1.6"
+        port: 1883
+    end
+
+    BrokerTopic allDataTopic
+        connection: CarBroker
+        topic: "data"
+    end
+
+    Entity allData
+        source: allDataTopic
+        attributes:
+            - temperatures: list
+            - values: list
+            - maxTemp: float calculate(max(temperatures))
+            - minTemp: float calculate(min(temperatures))
+            - meanTemp: float calculate(mean(temperatures))
+            - sumValues: float calculate(sum(values))
+            - complexThing: float calculate(mean(max(temperatures) + 5, temperatures[0]))
+            - roundedTemp: int calculate(round(temperatures[0]))
+            - sortedAscTemp: list calculate(sortasc(temperatures))
+            - sortedDescTemp: list calculate(sortdesc(temperatures))
+            - reverseTemp: list calculate(reverse(temperatures))
+            - temperatureLength: int calculate(length(temperatures))
+            - crazyThing: float calculate((length(temperatures))/ 20 + 50 - round(max(values)))
+    end
+
+    Component SumText
+        entity: allData
+        type: Text
+            content: this.sumValues
+    end
+
+    Component JsonData
+        entity: allData
+        type: JsonViewer
+    end
+
+    Component SubTotalText
+        entity: allData
+        type: Text
+            content: this.subtotal
+    end
+
+    Screen Home
+        title: "Home"
+        url: "/"
+
+        row
+            col
+                use JsonData
+            endcol
+            col
+                Component DataPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+
+                if allData.maxTemp > 21
+                    use SumText
+            endcol
+        endrow
+
+    end

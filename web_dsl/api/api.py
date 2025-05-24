@@ -142,7 +142,7 @@ async def generate_from_files(
     gen_dir = os.path.join(TMP_DIR, f"gen-{uid}")
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(gen_dir, exist_ok=True)
-    background_tasks.add_task(cleanup_old_generations)
+    background_tasks.add_task(cleanup_old_generations, TMP_DIR, CLEANUP_THRESHOLD)
 
     model_paths = {}
 

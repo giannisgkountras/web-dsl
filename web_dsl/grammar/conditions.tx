@@ -2,6 +2,9 @@ import accessors
 import components
 import entity
 
+NestedAccessPathEntity:
+    entity=[Entity] accessors+=Accessor*
+;
 
 Condition:
     'if' expr=Expression

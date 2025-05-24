@@ -6,4 +6,5 @@ Import:
   'import' importURI=FQN
 ;
 
-FQN: ID('.'ID)*;
+FQN: ID('.'ID)*
+;

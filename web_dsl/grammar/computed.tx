@@ -1,0 +1,39 @@
+import accessors
+
+FunctionCall:
+    name=FunctionName '(' args+=Expr[','] ')'
+;
+
+FunctionName:
+    'sum' | 'mean' | 'max' | 'min' | 'round' | 'sortasc' | 'sortdesc' | 'reverse' | 'length' 
+;
+
+Atom:
+    function=FunctionCall | number=INT | id=RawAccessPath | '(' expr=Expr ')'
+;
+
+MulExpr:
+    left=Atom ((op='*' | op='/') right=Atom)*
+;
+
+AddExpr:
+    left=MulExpr ((op='+' | op='-') right=MulExpr)*
+;
+
+Expr:
+    AddExpr
+;
+
+Computed:
+    'calculate(' expr=Expr ')'
+;
+
+ComputedAttributeType:
+    'int' | 'float' | 'str' | 'list'
+;
+
+ComputedAttribute:
+    name=ID ':' type=ComputedAttributeType computed=Computed
+;
+
+
