@@ -66,7 +66,7 @@ class ComputedAttribute:
             # e.g., ['sum', 'arg1_formatted', 'arg2_formatted']
             return [function_name, *formatted_args]
 
-        elif node_class_name == "RawAccessPathComp":
+        elif node_class_name == "RawAccessPath":
             # This is a raw access path, e.g., data[0].value
             # We need to format it into a list of indices and attributes
             path = self.format_attribute_path(node.path)

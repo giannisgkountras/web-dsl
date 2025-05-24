@@ -1,3 +1,5 @@
+import accessors
+
 FunctionCall:
     name=FunctionName '(' args+=Expr[','] ')'
 ;
@@ -7,7 +9,7 @@ FunctionName:
 ;
 
 Atom:
-    function=FunctionCall | number=INT | id=RawAccessPathComp | '(' expr=Expr ')'
+    function=FunctionCall | number=INT | id=RawAccessPath | '(' expr=Expr ')'
 ;
 
 MulExpr:
@@ -35,19 +37,3 @@ ComputedAttribute:
 ;
 
 
-AttributeAccessorComp:
-    '.' attribute=ID  
-;
-
-IndexAccessorComp:
-    '[' index=INT ']'
-;
-
-AccessorComp:
-    // One step in the access path can be either by attribute or by index
-    AttributeAccessorComp | IndexAccessorComp
-;
-
-RawAccessPathComp:
-    base=ID accessors+=AccessorComp*
-;

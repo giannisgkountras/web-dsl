@@ -8,6 +8,7 @@ import utils
 import accessors
 import conditions
 import repetition
+import computed
 
 
 WebPage:
