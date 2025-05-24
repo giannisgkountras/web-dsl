@@ -44,10 +44,10 @@ Webpage Computed
             - crazyThing: float calculate((length(temperatures))/ 20 + 50 - round(max(values)))
     end
 
-    Component TotalText
+    Component SumText
         entity: allData
         type: Text
-            content: this.total
+            content: this.sumValues
     end
 
     Component JsonData
@@ -74,6 +74,9 @@ Webpage Computed
                     type: Publish
                         broker: CarBroker
                 end
+
+                if allData.maxTemp > 21
+                    use SumText
             endcol
         endrow
 
