@@ -31,17 +31,28 @@ Webpage Computed
         attributes:
             - temperatures: list
             - values: list
-            - maxTemp: float computed(max(temperatures))
-            - minTemp: float computed(min(temperatures))
-            - meanTemp: float computed(mean(temperatures))
-            - sumValues: float computed(sum(values))
-            - complexThing: float computed(mean(max(temperatures) + 5, temperatures[0]))
+            - maxTemp: float calculate(max(temperatures))
+            - minTemp: float calculate(min(temperatures))
+            - meanTemp: float calculate(mean(temperatures))
+            - sumValues: float calculate(sum(values))
+            - complexThing: float calculate(mean(max(temperatures) + 5, temperatures[0]))
+            - roundedTemp: int calculate(round(temperatures[0]))
+            - sortedAscTemp: list calculate(sortasc(temperatures))
+            - sortedDescTemp: list calculate(sortdesc(temperatures))
+            - reverseTemp: list calculate(reverse(temperatures))
+            - temperatureLength: int calculate(length(temperatures))
+            - crazyThing: float calculate((length(temperatures))/ 20 + 50 - round(max(values)))
     end
 
     Component TotalText
         entity: allData
         type: Text
             content: this.total
+    end
+
+    Component JsonData
+        entity: allData
+        type: JsonViewer
     end
 
     Component SubTotalText
@@ -56,8 +67,7 @@ Webpage Computed
 
         row
             col
-                use TotalText
-                use SubTotalText
+                use JsonData
             endcol
             col
                 Component DataPublisher

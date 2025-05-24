@@ -6,7 +6,7 @@ import {
     fetchValueFromRestWithoutAccessor,
     fetchValueFromDBWithoutAccessor
 } from "../utils/fetchValues";
-import { evaluateArithmeticArray } from "../utils/evaluateComputations";
+import { evaluateExpression } from "../utils/evaluateComputations";
 
 const Entity = ({
     topic,
@@ -51,7 +51,7 @@ const Entity = ({
             // Calcualte all results of computed attributes
             const computedResults = computedAttributes.map((attribute) => {
                 const { name, expression } = attribute;
-                const evaluatedValue = evaluateArithmeticArray(
+                const evaluatedValue = evaluateExpression(
                     expression,
                     currentData
                 );
