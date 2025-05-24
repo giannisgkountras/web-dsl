@@ -1,4 +1,5 @@
-import { getValueByPath } from "./getValueByPath"; // Assuming this is your actual import
+import { getValueByPath } from "./getValueByPath";
+import { toast } from "react-toastify";
 
 const ARITHMETIC_OPERATORS_AND_FUNCTIONS = [
     "+",
@@ -32,14 +33,13 @@ const customMathForEval = {
 
 function resolveOperandInternal(operand, data, evaluateFunc) {
     if (typeof operand === "number") {
-        // Literals
         return operand;
     }
 
     if (Array.isArray(operand)) {
         if (operand.length === 0) {
-            // console.error("Empty array encountered as operand.");
-            return NaN; // Or handle as an empty array [] if an operation might expect it
+            toast.error("Empty array encountered as operand.");
+            return [];
         }
         const head = operand[0];
         // Check if it's a nested expression (e.g., ['*', ['x'], 2])
@@ -53,18 +53,22 @@ function resolveOperandInternal(operand, data, evaluateFunc) {
             const value = getValueByPath(data, operand);
 
             if (value === undefined) {
-                // console.error(`Path ${JSON.stringify(operand)} resolved to undefined.`);
-                return NaN; // Or a specific marker for "path not found"
+                toast.error(
+                    `Path ${JSON.stringify(operand)} resolved to undefined.`
+                );
+                return NaN;
             }
-            // Return the value as is (could be number, array, string etc.)
-            // Operations like 'sort' will expect 'value' to be an array.
-            // Operations like '+' will expect 'value' to be a number.
+
             return value;
         }
     }
 
     // Unsupported operand types (e.g., direct strings not from paths, booleans, plain objects)
-    // console.error(`Unsupported operand type: ${typeof operand} (${JSON.stringify(operand)})`);
+    toast.error(
+        `Unsupported operand type: ${typeof operand} (${JSON.stringify(
+            operand
+        )})`
+    );
     return NaN;
 }
 
@@ -77,7 +81,7 @@ export function evaluateExpression(expression, data) {
     // Case 2: Expression is an Array (operation or path)
     if (Array.isArray(expression)) {
         if (expression.length === 0) {
-            // console.error("Cannot evaluate empty array expression.");
+            toast.error("Cannot evaluate empty array expression.");
             return NaN;
         }
 
@@ -99,9 +103,8 @@ export function evaluateExpression(expression, data) {
 
             // --- Handle operation categories ---
 
-            // A. Aggregate (sum, mean, max, min) - REMAINS THE SAME
+            // A. Aggregate (sum, mean, max, min)
             if (["sum", "mean", "max", "min"].includes(operator)) {
-                // ... (logic for sum, mean, max, min as before) ...
                 const numbersToProcess = [];
                 resolvedOperands.forEach((op) => {
                     if (typeof op === "number" && !isNaN(op)) {
@@ -131,9 +134,8 @@ export function evaluateExpression(expression, data) {
                 }
             }
 
-            // B. Basic Arithmetic (+, -, *, /) - REMAINS THE SAME
+            // B. Basic Arithmetic (+, -, *, /)
             else if (["+", "-", "*", "/"].includes(operator)) {
-                // ... (logic for +, -, *, / as before) ...
                 const numericOperands = resolvedOperands.map((op) => {
                     if (typeof op !== "number" || isNaN(op)) return NaN;
                     return op;
@@ -172,7 +174,9 @@ export function evaluateExpression(expression, data) {
                     case "sortdesc": // Expects: sortasc(array) or sortdesc(array)
                         const arrayToSort = resolvedOperands[0];
                         if (!Array.isArray(arrayToSort)) {
-                            // console.error(`'${operator}' expects an array as its argument.`);
+                            console.error(
+                                `'${operator}' expects an array as its argument.`
+                            );
                             return NaN;
                         }
                         const copyToSort = [...arrayToSort]; // Make a copy
@@ -194,18 +198,18 @@ export function evaluateExpression(expression, data) {
                                     : b.localeCompare(a)
                             );
                         } else {
-                            // console.error(`'${operator}' currently supports arrays of all numbers or all strings.`);
+                            console.error(
+                                `'${operator}' currently supports arrays of all numbers or all strings.`
+                            );
                             return NaN;
                         }
 
-                    case "reverse": // Expects: reverse(array) - REMAINS THE SAME
-                        // ... (logic for reverse as before) ...
+                    case "reverse": // Expects: reverse(array)
                         const arrayToReverse = resolvedOperands[0];
                         if (!Array.isArray(arrayToReverse)) return NaN;
                         return [...arrayToReverse].reverse();
 
-                    case "length": // Expects: length(arrayOrString) or length(item1, item2, ...) - REMAINS THE SAME
-                        // ... (logic for length as before) ...
+                    case "length": // Expects: length(arrayOrString) or length(item1, item2, ...)
                         const firstOpForLength = resolvedOperands[0];
                         if (
                             resolvedOperands.length === 1 &&
@@ -219,7 +223,7 @@ export function evaluateExpression(expression, data) {
                             ).length;
                         }
 
-                    case "round": // Expects: round(number, decimals?) - REMAINS THE SAME
+                    case "round": // Expects: round(number, decimals?)
                         // ... (logic for round as before) ...
                         const numberToRound = resolvedOperands[0];
                         const decimals = resolvedOperands[1];
@@ -242,12 +246,17 @@ export function evaluateExpression(expression, data) {
             // Fallback for unhandled
             return NaN;
         } else {
-            // Subcase 2b: Array is not an operation array, so treat it as a path. - REMAINS THE SAME
+            // Subcase 2b: Array is not an operation array, so treat it as a path.
             const value = getValueByPath(data, expression);
             if (value === undefined) return NaN;
             return value;
         }
     }
     // Case 3: Expression is of an unsupported type - REMAINS THE SAME
+    toast.error(
+        `Unsupported expression type: ${typeof expression} (${JSON.stringify(
+            expression
+        )})`
+    );
     return NaN;
 }
