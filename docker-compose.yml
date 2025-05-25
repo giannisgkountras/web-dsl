@@ -8,3 +8,4 @@ services:
             - API_KEY=${API_KEY:-mykey}
             - WORKERS=${WORKERS:-1}
             - ROOT_PATH=${ROOT_PATH:-/}
+        restart: always

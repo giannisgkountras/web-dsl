@@ -17,8 +17,9 @@ from fastapi import UploadFile
 def inject_traefik_labels_and_network(
     compose_path: str,
     uid: str,
-    backend_internal_port: int = 8080,
-    free_port: int = None,
+    backend_api_internal_port: int = 7070,
+    backend_ws_internal_port: int = 8765,
+    frontend_internal_port: int = 80,
 ):
     username = "admin"
     password = secrets.token_urlsafe(16)
@@ -39,24 +40,27 @@ def inject_traefik_labels_and_network(
         compose_content = f.read()
         compose = yaml.safe_load(compose_content)
 
+    auth_middleware_name = f"{uid}-auth"
+    ws_strip_prefix_middleware_name = f"{uid}-ws-stripprefix"
+    # --- Define Router and Service Names ---
+    frontend_router_name = f"{uid}-frontend"
+    frontend_service_name = f"{uid}-frontend-svc"
+
+    api_router_name = f"{uid}-backend-api"
+    api_service_name = f"{uid}-backend-api-svc"
+
+    ws_router_name = f"{uid}-backend-ws"
+    ws_service_name = f"{uid}-backend-ws-svc"
+
     api_full_path_prefix = f"/apps/{uid}/api/"
+    ws_full_path_prefix = f"/apps/{uid}/ws/"
+    app_base_path_prefix = f"/apps/{uid}/"
 
     compose["networks"] = {"traefik-demo": {"external": True}}
 
     for svc_name, svc_config in compose.get("services", {}).items():
         # Remove any direct port bindings
         svc_config.pop("ports", None)
-
-        # Expose the free port for the websocket connection
-        if svc_name == "backend":
-            svc_config["ports"] = (
-                [
-                    # I will always make 9999 to be used for the websocket connection internally
-                    f"{free_port}:9999"
-                ]
-                if free_port
-                else []
-            )
 
         # Attach all services to the 'proxy' network for inter-service communication
         #    and for Traefik to discover the frontend.
@@ -65,27 +69,47 @@ def inject_traefik_labels_and_network(
         if svc_name == "frontend":
             labels = [
                 "traefik.enable=true",
-                # Route /apps/<uid>/* to this service
-                f"traefik.http.routers.{uid}-frontend.rule=PathPrefix(`/apps/{uid}/`)",
-                f"traefik.http.routers.{uid}-frontend.entrypoints=web",
-                f"traefik.http.routers.{uid}-frontend.priority=10",
-                f"traefik.http.services.{uid}-frontend.loadbalancer.server.port=80",
-                # add auth to the frontend
-                f"traefik.http.middlewares.{uid}-frontend-auth.basicauth.users={escaped_hashed_result}",
-                f"traefik.http.routers.{uid}-frontend.middlewares={uid}-frontend-auth",
+                # --- Frontend Router ---
+                # Rule: Matches /apps/{uid}/ but NOT /apps/{uid}/api/ AND NOT /apps/{uid}/ws/
+                f"traefik.http.routers.{frontend_router_name}.rule=PathPrefix(`{app_base_path_prefix}`) && !PathPrefix(`{api_full_path_prefix}`) && !PathPrefix(`{ws_full_path_prefix}`)",
+                f"traefik.http.routers.{frontend_router_name}.entrypoints=web",
+                f"traefik.http.routers.{frontend_router_name}.priority=10",  # Lower priority for general path
+                f"traefik.http.routers.{frontend_router_name}.service={frontend_service_name}",
+                # --- Frontend Service ---
+                f"traefik.http.services.{frontend_service_name}.loadbalancer.server.port={frontend_internal_port}",
+                # --- Authentication Middleware Definition (defined here, reused elsewhere) ---
+                f"traefik.http.middlewares.{auth_middleware_name}.basicauth.users={escaped_hashed_result}",
+                # Apply auth middleware to the frontend router
+                f"traefik.http.routers.{frontend_router_name}.middlewares={auth_middleware_name}",
             ]
             svc_config["labels"] = labels
 
         elif svc_name == "backend":
             labels = [
                 "traefik.enable=true",
-                f"traefik.http.routers.{uid}-backend.rule=PathPrefix(`{api_full_path_prefix}`)",
-                f"traefik.http.routers.{uid}-backend.priority=20",  # Higher priority
-                f"traefik.http.routers.{uid}-backend.entrypoints=web",
-                f"traefik.http.services.{uid}-backend.loadbalancer.server.port={backend_internal_port}",
-                # # Strip the /apps/uid/api prefix for requests going to the backend app
-                # f"traefik.http.middlewares.{uid}-backend-stripprefix.stripprefix.prefixes={api_full_path_prefix}",
-                # f"traefik.http.routers.{uid}-backend.middlewares={uid}-backend-stripprefix",
+                # --- API Router ---
+                f"traefik.http.routers.{api_router_name}.rule=PathPrefix(`{api_full_path_prefix}`)",
+                f"traefik.http.routers.{api_router_name}.priority=20",
+                f"traefik.http.routers.{api_router_name}.entrypoints=web",
+                f"traefik.http.routers.{api_router_name}.service={api_service_name}",
+                # Apply auth to API (optional, but often desired if frontend is auth'd)
+                f"traefik.http.routers.{api_router_name}.middlewares={auth_middleware_name}",
+                # No StripPrefix for API if FastAPI's root_path handles it
+                # --- API Service ---
+                f"traefik.http.services.{api_service_name}.loadbalancer.server.port={backend_api_internal_port}",
+                # --- WebSocket Router ---
+                f"traefik.http.routers.{ws_router_name}.rule=PathPrefix(`{ws_full_path_prefix}`)",
+                f"traefik.http.routers.{ws_router_name}.priority=25",  # Highest priority
+                f"traefik.http.routers.{ws_router_name}.entrypoints=web",
+                f"traefik.http.routers.{ws_router_name}.service={ws_service_name}",
+                # --- WebSocket Service ---
+                f"traefik.http.services.{ws_service_name}.loadbalancer.server.port={backend_ws_internal_port}",
+                # --- WebSocket Middlewares Definition & Application ---
+                # 1. Define StripPrefix middleware for WS
+                f"traefik.http.middlewares.{ws_strip_prefix_middleware_name}.stripprefix.prefixes={ws_full_path_prefix}",
+                # 2. Apply auth (defined with frontend) AND then StripPrefix to the WS router
+                #    Order of middlewares: auth_middleware_name runs, then ws_strip_prefix_middleware_name
+                f"traefik.http.routers.{ws_router_name}.middlewares={auth_middleware_name},{ws_strip_prefix_middleware_name}",
             ]
             # Traefik labels for Backend API
             svc_config["labels"] = labels
@@ -97,23 +121,6 @@ def inject_traefik_labels_and_network(
         yaml.dump(compose, f, sort_keys=False)
 
     return username, password
-
-
-def find_free_port_on_vm(VM_MACHINE_IP: str, VM_MACHINE_USER: str) -> int:
-    result = subprocess.run(
-        [
-            "ssh",
-            f"{VM_MACHINE_USER}@{VM_MACHINE_IP}",
-            "python3 -c \"import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()\"",
-        ],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-
-    # Strip and convert output to int
-    free_port = int(result.stdout.strip())
-    return free_port
 
 
 def cleanup_old_generations(TMP_DIR, CLEANUP_THRESHOLD):
@@ -163,22 +170,24 @@ def postprocess_generation_for_deployment(
     VM_MACHINE_IP: str,
     VM_MACHINE_USER: str,
 ):
+    backend_api_internal_port = 7070
+    backend_ws_internal_port = 8765
 
-    # Change the backend config to use only the 8080 port
+    # Change the backend config to use only the 7070 port
     config_path = os.path.join(generation_dir, "backend", "config.yaml")
     with open(config_path, "r", encoding="utf8") as f:
         config = yaml.safe_load(f)
 
     # Modify the port under 'api'
     if "api" in config and isinstance(config["api"], dict):
-        config["api"]["port"] = 8080
+        config["api"]["port"] = backend_api_internal_port
 
     # Modify the port under 'websocket'
     if "websocket" in config and isinstance(config["websocket"], dict):
         config["websocket"][
             "host"
         ] = "0.0.0.0"  # Ensure it listens on all interfaces since it has auth
-        config["websocket"]["port"] = 9999
+        config["websocket"]["port"] = backend_ws_internal_port
 
     with open(config_path, "w", encoding="utf8") as f:
         yaml.dump(config, f, default_flow_style=False)
@@ -197,21 +206,20 @@ def postprocess_generation_for_deployment(
         f.write(updated)
         f.truncate()
 
-    free_port = find_free_port_on_vm(VM_MACHINE_IP, VM_MACHINE_USER)
+    traefik_port = 80
 
     # Change the frontend websocket config with the correct ip for the backend
     ws_path = os.path.join(
         generation_dir, "frontend", "src", "context", "websocketConfig.json"
     )
     with open(ws_path, "r+", encoding="utf8") as f:
-        updated_data = {"host": VM_MACHINE_IP, "port": free_port}
+        updated_data = {"host": VM_MACHINE_IP, "port": f"{traefik_port}/apps/{uid}/ws/"}
         updated = json.dumps(updated_data, indent=4)
         # Write the new content
         f.seek(0)
         f.write(updated)
         f.truncate()
 
-    # Find a random open port on the VM machine
     # Change the backend app initialization with the correct path
     main_backend_path = os.path.join(generation_dir, "backend", "main.py")
     with open(main_backend_path, "r+", encoding="utf8") as f:
@@ -227,8 +235,6 @@ def postprocess_generation_for_deployment(
 
     # Inject traefik labels into docker-compose.yml
     compose_path = os.path.join(generation_dir, "docker-compose.yml")
-    username, password = inject_traefik_labels_and_network(
-        compose_path, uid, free_port=free_port
-    )
+    username, password = inject_traefik_labels_and_network(compose_path, uid)
 
     return username, password

@@ -25,6 +25,7 @@ export const WebsocketProvider = ({ children }) => {
                 retryCountRef.current + 1
             })`
         );
+
         const websocket = new WebSocket(`ws://${config.host}:${config.port}`);
 
         websocket.onopen = () => {
