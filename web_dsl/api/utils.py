@@ -8,13 +8,17 @@ import tarfile
 import re
 import secrets
 import subprocess
+import json
 
 from passlib.hash import md5_crypt
 from fastapi import UploadFile
 
 
 def inject_traefik_labels_and_network(
-    compose_path: str, uid: str, backend_internal_port: int = 8080
+    compose_path: str,
+    uid: str,
+    backend_internal_port: int = 8080,
+    free_port: int = None,
 ):
     username = "admin"
     password = secrets.token_urlsafe(16)
@@ -42,6 +46,17 @@ def inject_traefik_labels_and_network(
     for svc_name, svc_config in compose.get("services", {}).items():
         # Remove any direct port bindings
         svc_config.pop("ports", None)
+
+        # Expose the free port for the websocket connection
+        if svc_name == "backend":
+            svc_config["ports"] = (
+                [
+                    # I will always make 9999 to be used for the websocket connection internally
+                    f"{free_port}:9999"
+                ]
+                if free_port
+                else []
+            )
 
         # Attach all services to the 'proxy' network for inter-service communication
         #    and for Traefik to discover the frontend.
@@ -82,6 +97,23 @@ def inject_traefik_labels_and_network(
         yaml.dump(compose, f, sort_keys=False)
 
     return username, password
+
+
+def find_free_port_on_vm(VM_MACHINE_IP: str, VM_MACHINE_USER: str) -> int:
+    result = subprocess.run(
+        [
+            "ssh",
+            f"{VM_MACHINE_USER}@{VM_MACHINE_IP}",
+            "python3 -c \"import socket; s=socket.socket(); s.bind(('', 0)); print(s.getsockname()[1]); s.close()\"",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    # Strip and convert output to int
+    free_port = int(result.stdout.strip())
+    return free_port
 
 
 def cleanup_old_generations(TMP_DIR, CLEANUP_THRESHOLD):
@@ -129,19 +161,8 @@ def postprocess_generation_for_deployment(
     generation_dir: str,
     uid: str,
     VM_MACHINE_IP: str,
+    VM_MACHINE_USER: str,
 ):
-    # Edit the dockerfile of the backend to expose the 8080 port only
-    dockerfile_path = os.path.join(generation_dir, "backend", "Dockerfile")
-    with open(dockerfile_path, "r+", encoding="utf8") as f:
-        content = f.read()
-        updated = re.sub(
-            r"EXPOSE\s+\d+",
-            "EXPOSE 8080",
-            content,
-        )
-        f.seek(0)
-        f.write(updated)
-        f.truncate()
 
     # Change the backend config to use only the 8080 port
     config_path = os.path.join(generation_dir, "backend", "config.yaml")
@@ -151,6 +172,13 @@ def postprocess_generation_for_deployment(
     # Modify the port under 'api'
     if "api" in config and isinstance(config["api"], dict):
         config["api"]["port"] = 8080
+
+    # Modify the port under 'websocket'
+    if "websocket" in config and isinstance(config["websocket"], dict):
+        config["websocket"][
+            "host"
+        ] = "0.0.0.0"  # Ensure it listens on all interfaces since it has auth
+        config["websocket"]["port"] = 9999
 
     with open(config_path, "w", encoding="utf8") as f:
         yaml.dump(config, f, default_flow_style=False)
@@ -169,21 +197,21 @@ def postprocess_generation_for_deployment(
         f.write(updated)
         f.truncate()
 
+    free_port = find_free_port_on_vm(VM_MACHINE_IP, VM_MACHINE_USER)
+
     # Change the frontend websocket config with the correct ip for the backend
     ws_path = os.path.join(
         generation_dir, "frontend", "src", "context", "websocketConfig.json"
     )
     with open(ws_path, "r+", encoding="utf8") as f:
-        content = f.read()
-        updated = re.sub(
-            r'"host"\s*:\s*".*?"',
-            f'"host": "{VM_MACHINE_IP}/apps/{uid}/api/"',
-            content,
-        )
+        updated_data = {"host": VM_MACHINE_IP, "port": free_port}
+        updated = json.dumps(updated_data, indent=4)
+        # Write the new content
         f.seek(0)
         f.write(updated)
         f.truncate()
 
+    # Find a random open port on the VM machine
     # Change the backend app initialization with the correct path
     main_backend_path = os.path.join(generation_dir, "backend", "main.py")
     with open(main_backend_path, "r+", encoding="utf8") as f:
@@ -199,6 +227,8 @@ def postprocess_generation_for_deployment(
 
     # Inject traefik labels into docker-compose.yml
     compose_path = os.path.join(generation_dir, "docker-compose.yml")
-    username, password = inject_traefik_labels_and_network(compose_path, uid)
+    username, password = inject_traefik_labels_and_network(
+        compose_path, uid, free_port=free_port
+    )
 
     return username, password

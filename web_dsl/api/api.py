@@ -217,6 +217,7 @@ async def generate_and_deploy(
             generation_dir=out_dir,
             uid=uid,
             VM_MACHINE_IP=VM_MACHINE_IP,
+            VM_MACHINE_USER=VM_MACHINE_USER,
         )
 
         # Copy the postprocessed generated files to the vm
