@@ -63,6 +63,11 @@ attribute_map = {
     "PieChart": "",
     "JsonViewer": "",
     "Table": "",
+    "Notification": "message",
+    "Alive": "",
+    "LiveTable": "",
+    "Logs": "",
+    "Publish": "",
 }
 
 

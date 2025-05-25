@@ -58,6 +58,9 @@ channels:
 
 operations:
     receiveLightMeasurement:
+        x-webdsl:
+            - response.lumens -> Text @ 1,1
+            - response.sentAt -> Text @ 1,2
         action: receive
         channel:
             $ref: "#/channels/lightingMeasured"
@@ -74,6 +77,8 @@ operations:
             - $ref: "#/channels/lightTurnOn/messages/turnOn"
 
     turnOff:
+        x-webdsl:
+            - Publish @2,1
         action: send
         channel:
             $ref: "#/channels/lightTurnOff"

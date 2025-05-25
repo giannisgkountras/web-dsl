@@ -2,8 +2,7 @@ import re
 import yaml
 import os
 
-from typing import List, Dict, Any, Optional, Tuple
-from urllib.parse import urlparse
+from typing import Dict, Any, Optional, Tuple
 from jinja2 import Environment, FileSystemLoader
 from fastapi import HTTPException
 
@@ -19,19 +18,6 @@ env = Environment(
     extensions=["jinja2.ext.loopcontrols"],
 )
 template = env.get_template("asyncapi_to_webdsl.jinja")
-
-# ====== Component mapping (reused from OpenAPI)===========
-attribute_map = {
-    "Text": "content",
-    "Gauge": "value",
-    "ProgressBar": "value",
-    "Image": "source",
-    "LineChart": "",
-    "BarChart": "",
-    "PieChart": "",
-    "JsonViewer": "",
-    "Table": "",
-}
 
 protocol_to_dsl_type_map = {
     "mqtt": "MQTT",
@@ -86,11 +72,13 @@ class BrokerTopic:
         connection_name: str,
         topic_address: str,
         channel_messages: Optional[Dict[str, Any]] = None,
+        components: Optional[Dict[str, Any]] = None,
     ):
         self.name = name
         self.connection_name = connection_name
         self.topic_address = topic_address
         self.channel_messages = channel_messages or []
+        self.components = components or []
 
 
 class Entity:
@@ -219,6 +207,7 @@ def transform_asyncapi_to_webdsl(asyncapi_path):
                 connection_name=broker_name,
                 topic_address=topic,
                 channel_messages=channel_messages,
+                components=topic_info.get("x-webdsl", []),
             )
             broker_topics.append(newBrokerTopicInstance)
 
@@ -253,6 +242,13 @@ def transform_asyncapi_to_webdsl(asyncapi_path):
             )
 
             entities.append(newEntity)
+
+            components_for_this_topic = broker_topic.components
+            if components_for_this_topic:
+                parsed_components = parse_component_annotations(
+                    components_for_this_topic, broker_topic_name, newEntity.name
+                )
+                components += parsed_components
 
     return template.render(
         title=clean_name(info.get("title", "AsyncAPI_Generated_App")),

@@ -9,7 +9,6 @@ lights."
 Broker<MQTT> mqtt_broker
     host: "mqtt.mystreetlightbroker.org"
     port: 1883
-end
 
 
 // ========== Broker Topics ========== //
@@ -66,12 +65,45 @@ end
 
 // ========== Components ========== //
 
+Component receiveLightMeasurement__Text_this_lumens
+    entity: lightMeasured_receiveLightMeasurement
+    type: Text
+        content: this.lumens
+end
+
+Component receiveLightMeasurement__Text_this_sentAt
+    entity: lightMeasured_receiveLightMeasurement
+    type: Text
+        content: this.sentAt
+end
+
+Component turnOff__Publish__r2_c1
+    entity: turnOnOff_turnOff
+    type: Publish
+        broker:
+        topic: optional
+        json: optional
+end
+
+
 // ========== Screens ========== //
+
 Screen Home
     title: "Home"
     url: "/"
 
 
-
-
+    row
+        col
+            use receiveLightMeasurement__Text_this_lumens
+        endcol
+        col
+            use receiveLightMeasurement__Text_this_sentAt
+        endcol
+    endrow
+    row
+        col
+            use turnOff__Publish__r2_c1
+        endcol
+    endrow
 end
