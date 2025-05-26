@@ -17,8 +17,8 @@ remote_ssh_port = os.getenv("VM_MACHINE_SSH_PORT", "22")
 
 # SSH key paths
 ssh_dir = Path("/root/.ssh")
-ssh_key = ssh_dir / "id_rsa"
-ssh_pub_key = ssh_dir / "id_rsa.pub"
+ssh_key = ssh_dir / "id_ed25519"
+ssh_pub_key = ssh_dir / "id_ed25519.pub"
 
 # Create .ssh directory if needed
 ssh_dir.mkdir(parents=True, exist_ok=True)
@@ -28,7 +28,7 @@ if not ssh_key.exists():
     print("SSH key not found. Generating new SSH key...")
     try:
         subprocess.run(
-            ["ssh-keygen", "-t", "rsa", "-b", "4096", "-N", "", "-f", str(ssh_key)],
+            ["ssh-keygen", "-t", "ed25519", "-N", "", "-f", str(ssh_key)],
             check=True,
             capture_output=True,
             text=True,
