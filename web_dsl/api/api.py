@@ -40,8 +40,10 @@ load_dotenv()
 API_KEY = os.getenv("API_KEY", "API_KEY")
 VM_MACHINE_IP = os.getenv("VM_MACHINE_IP", "")
 VM_MACHINE_USER = os.getenv("VM_MACHINE_USER", "")
+VM_MACHINE_SSH_PORT = os.getenv("VM_MACHINE_SSH_PORT", "22")
 TMP_DIR = "./tmp/"
 CLEANUP_THRESHOLD = 60 * 15  # 15m in seconds
+SSH_KEY_PATH = "/root/.ssh/id_rsa"  # Path to the private key in the container
 
 os.makedirs(TMP_DIR, exist_ok=True)
 
@@ -220,22 +222,66 @@ async def generate_and_deploy(
             VM_MACHINE_USER=VM_MACHINE_USER,
         )
 
+        print(f"Generated app with username: {username}, password: {password}")
+
         # Copy the postprocessed generated files to the vm
-        subprocess.run(
-            ["scp", "-r", gen_dir, f"{VM_MACHINE_USER}@{VM_MACHINE_IP}:{remote_dir}"],
-            check=True,
+        scp_command = [
+            "scp",
+            "-P",
+            str(VM_MACHINE_SSH_PORT),
+            "-o",
+            "StrictHostKeyChecking=no",  # Skip host key check
+            "-o",
+            "UserKnownHostsFile=/dev/null",  # Don't update known_hosts
+            "-o",
+            "BatchMode=yes",  # Never ask for passwords, fail if keys don't work
+            "-i",
+            SSH_KEY_PATH,  # Explicitly use the private key
+            "-r",  # Recursive for directory
+            gen_dir,  # Source
+            f"{VM_MACHINE_USER}@{VM_MACHINE_IP}:{remote_dir}",  # Destination
+        ]
+        scp_result = subprocess.run(
+            scp_command, check=False, capture_output=True, text=True, timeout=120
         )
+        if scp_result.returncode != 0:
+            print(f"[{uid}] SCP failed! Exit code: {scp_result.returncode}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Deployment failed: SCP error.",
+            )
+        print(f"[{uid}] SCP successful.")
 
+        remote_command = f"cd {remote_dir} && docker compose up --build -d"
+        ssh_command = [
+            "ssh",
+            "-p",
+            str(VM_MACHINE_SSH_PORT),
+            "-o",
+            "StrictHostKeyChecking=no",
+            "-o",
+            "UserKnownHostsFile=/dev/null",
+            "-o",
+            "BatchMode=yes",
+            "-i",
+            SSH_KEY_PATH,
+            f"{VM_MACHINE_USER}@{VM_MACHINE_IP}",  # Target host
+            remote_command,  # Command to execute
+        ]
         # Deploy the app using docker-compose
-        subprocess.run(
-            [
-                "ssh",
-                f"{VM_MACHINE_USER}@{VM_MACHINE_IP}",
-                f"cd /tmp/webapp-{uid} && docker compose up -d",
-            ],
-            check=True,
+        ssh_result = subprocess.run(
+            ssh_command, check=False, capture_output=True, text=True, timeout=300
         )
 
+        if ssh_result.returncode != 0:
+            print(
+                f"[{uid}] Remote SSH command failed! Exit code: {ssh_result.returncode}"
+            )
+
+            raise HTTPException(
+                status_code=500, detail=f"Deployment failed: Remote execution error."
+            )
+        print(f"[{uid}] Remote SSH command successful.")
         return {
             "message": "Deployed",
             "url": f"http://{VM_MACHINE_IP}/apps/{uid}/",
