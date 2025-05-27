@@ -9,9 +9,10 @@ import re
 import secrets
 import subprocess
 import json
-
-from passlib.hash import md5_crypt
 from fastapi import UploadFile
+from .config import VM_MACHINE_IP, VM_MACHINE_USER, VM_MACHINE_SSH_PORT, SSH_KEY_PATH
+from .models import CapturedSSHResult
+from typing import List
 
 
 def inject_traefik_labels_and_network(
@@ -20,21 +21,25 @@ def inject_traefik_labels_and_network(
     backend_api_internal_port: int = 7070,
     backend_ws_internal_port: int = 8765,
     frontend_internal_port: int = 80,
+    public: bool = False,
 ):
+
     username = "admin"
-    password = secrets.token_urlsafe(16)
+    password = None
+    if not public:
+        password = secrets.token_urlsafe(16)
+        # Call htpasswd -nb to generate the hash
+        result = subprocess.run(
+            ["htpasswd", "-nb", username, password],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        hashed_result = result.stdout.strip()
 
-    # Call htpasswd -nb to generate the hash
-    result = subprocess.run(
-        ["htpasswd", "-nb", username, password],
-        capture_output=True,
-        text=True,
-        check=True,
-    )
-
-    hashed_result = result.stdout.strip()
-
-    escaped_hashed_result = hashed_result.replace("$", "$$")
+        escaped_hashed_result = hashed_result.replace("$", "$$")
+    else:
+        escaped_hashed_result = None
 
     with open(compose_path, "r") as f:
         compose_content = f.read()
@@ -77,11 +82,19 @@ def inject_traefik_labels_and_network(
                 f"traefik.http.routers.{frontend_router_name}.service={frontend_service_name}",
                 # --- Frontend Service ---
                 f"traefik.http.services.{frontend_service_name}.loadbalancer.server.port={frontend_internal_port}",
-                # --- Authentication Middleware Definition (defined here, reused elsewhere) ---
-                f"traefik.http.middlewares.{auth_middleware_name}.basicauth.users={escaped_hashed_result}",
-                # Apply auth middleware to the frontend router
-                f"traefik.http.routers.{frontend_router_name}.middlewares={auth_middleware_name}",
             ]
+
+            if not public:
+
+                # If not public add auth middleware
+                labels.extend(
+                    [
+                        # --- Authentication Middleware Definition ---
+                        f"traefik.http.middlewares.{auth_middleware_name}.basicauth.users={escaped_hashed_result}",
+                        # Apply auth middleware to the frontend router
+                        f"traefik.http.routers.{frontend_router_name}.middlewares={auth_middleware_name}",
+                    ]
+                )
             svc_config["labels"] = labels
 
         elif svc_name == "backend":
@@ -92,9 +105,6 @@ def inject_traefik_labels_and_network(
                 f"traefik.http.routers.{api_router_name}.priority=20",
                 f"traefik.http.routers.{api_router_name}.entrypoints=web",
                 f"traefik.http.routers.{api_router_name}.service={api_service_name}",
-                # Apply auth to API (optional, but often desired if frontend is auth'd)
-                f"traefik.http.routers.{api_router_name}.middlewares={auth_middleware_name}",
-                # No StripPrefix for API if FastAPI's root_path handles it
                 # --- API Service ---
                 f"traefik.http.services.{api_service_name}.loadbalancer.server.port={backend_api_internal_port}",
                 # --- WebSocket Router ---
@@ -107,10 +117,15 @@ def inject_traefik_labels_and_network(
                 # --- WebSocket Middlewares Definition & Application ---
                 # 1. Define StripPrefix middleware for WS
                 f"traefik.http.middlewares.{ws_strip_prefix_middleware_name}.stripprefix.prefixes={ws_full_path_prefix}",
-                # 2. Apply auth (defined with frontend) AND then StripPrefix to the WS router
-                #    Order of middlewares: auth_middleware_name runs, then ws_strip_prefix_middleware_name
-                f"traefik.http.routers.{ws_router_name}.middlewares={auth_middleware_name},{ws_strip_prefix_middleware_name}",
             ]
+            if not public:
+                # Add auth for not public deployments
+                labels.extend(
+                    [
+                        f"traefik.http.routers.{api_router_name}.middlewares={auth_middleware_name}",
+                        f"traefik.http.routers.{ws_router_name}.middlewares={auth_middleware_name},{ws_strip_prefix_middleware_name}",
+                    ]
+                )
             # Traefik labels for Backend API
             svc_config["labels"] = labels
         else:
@@ -164,11 +179,121 @@ def save_base64_to_file(encoded_str: str, file_path: str) -> None:
         f.write(decoded)
 
 
+def _run_ssh_command_base(command_parts, timeout):
+    base_ssh_args = [
+        "-p",
+        str(VM_MACHINE_SSH_PORT),
+        "-o",
+        "StrictHostKeyChecking=no",
+        "-o",
+        "UserKnownHostsFile=/dev/null",
+        "-o",
+        "BatchMode=yes",
+        "-i",
+        SSH_KEY_PATH,
+    ]
+    full_command = command_parts[:1] + base_ssh_args + command_parts[1:]
+    print(f"Executing: {' '.join(full_command)}")
+
+    process = subprocess.Popen(
+        full_command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,  # Line-buffered
+    )
+
+    try:
+        for line in process.stdout:
+            print(line, end="")  # Already includes newline
+        process.wait(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        print("[ERROR] Command timed out.")
+    return process.returncode
+
+
+def run_remote_ssh_command(command_to_execute, timeout=60):
+    ssh_command = ["ssh", f"{VM_MACHINE_USER}@{VM_MACHINE_IP}", command_to_execute]
+    return _run_ssh_command_base(ssh_command, timeout)
+
+
+def _run_ssh_command_base_capture(
+    command_parts: List[str], timeout: int
+) -> CapturedSSHResult:
+    base_ssh_args = [
+        "-p",
+        str(VM_MACHINE_SSH_PORT),
+        "-o",
+        "StrictHostKeyChecking=no",
+        "-o",
+        "UserKnownHostsFile=/dev/null",
+        "-o",
+        "BatchMode=yes",
+        "-i",
+        SSH_KEY_PATH,
+    ]
+
+    full_command = command_parts[:1] + base_ssh_args + command_parts[1:]
+    # print(f"Preparing to execute (Capture): {' '.join(full_command)}") # Optional: for debugging this func
+
+    try:
+        result = subprocess.run(
+            full_command,
+            capture_output=True,  # Key change for capturing
+            text=True,
+            check=False,  # We'll check returncode manually
+            timeout=timeout,
+        )
+        return CapturedSSHResult(
+            returncode=result.returncode,
+            stdout=result.stdout.strip(),  # Strip whitespace
+            stderr=result.stderr.strip(),  # Strip whitespace
+            args=full_command,
+        )
+    except subprocess.TimeoutExpired:
+        # print(f"[ERROR CAPTURE] Command timed out: {' '.join(full_command)}")
+        return CapturedSSHResult(
+            returncode=-1,  # Or a specific timeout code like signal.SIGALRM
+            stdout="",
+            stderr=f"Command timed out after {timeout} seconds.",
+            args=full_command,
+        )
+    except FileNotFoundError:
+        # print(f"[ERROR CAPTURE] SSH command not found: {full_command[0]}")
+        return CapturedSSHResult(
+            returncode=-2,
+            stdout="",
+            stderr=f"Command not found: {full_command[0]}",
+            args=full_command,
+        )
+    except Exception as e:
+        # print(f"[ERROR CAPTURE] Exception during SSH command: {e}")
+        return CapturedSSHResult(
+            returncode=-3,
+            stdout="",
+            stderr=f"Exception during command execution: {str(e)}",
+            args=full_command,
+        )
+
+
+def run_remote_ssh_command_capture(
+    command_to_execute: str, timeout: int = 60
+) -> CapturedSSHResult:
+    ssh_command_parts = [
+        "ssh",
+        f"{VM_MACHINE_USER}@{VM_MACHINE_IP}",
+        command_to_execute,
+    ]
+    return _run_ssh_command_base_capture(ssh_command_parts, timeout)
+
+
 def postprocess_generation_for_deployment(
     generation_dir: str,
     uid: str,
     VM_MACHINE_IP: str,
     VM_MACHINE_USER: str,
+    public_deployment: bool = False,
 ):
     backend_api_internal_port = 7070
     backend_ws_internal_port = 8765
@@ -235,6 +360,8 @@ def postprocess_generation_for_deployment(
 
     # Inject traefik labels into docker-compose.yml
     compose_path = os.path.join(generation_dir, "docker-compose.yml")
-    username, password = inject_traefik_labels_and_network(compose_path, uid)
+    username, password = inject_traefik_labels_and_network(
+        compose_path, uid, public=public_deployment
+    )
 
     return username, password
