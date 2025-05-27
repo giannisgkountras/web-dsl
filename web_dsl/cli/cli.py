@@ -1,12 +1,13 @@
 import os
 import click
 from rich.console import Console
-from rich.panel import Panel
 from rich import pretty
 
 from web_dsl.language import build_model
 from web_dsl.generate import generate
 from web_dsl.m2m.openapi_to_webdsl import transform_openapi_to_webdsl
+from web_dsl.m2m.goaldsl_to_webdsl import transform_goaldsl_to_webdsl
+from web_dsl.m2m.asyncapi_to_webdsl import transform_asyncapi_to_webdsl
 
 pretty.install()
 console = Console()
@@ -114,11 +115,12 @@ def generate_command(model_path, output_dir):
         raise SystemExit(1)
 
 
-@cli.command(
-    "openapi",
-    help="Convert OpenAPI spec to webdsl model.",
-    short_help="Convert OpenAPI to webdsl",
-)
+@cli.group(help="Transform specifications into WebDSL models.")
+def transform():
+    pass
+
+
+@transform.command("openapi", help="Convert OpenAPI spec to WebDSL model.")
 @click.argument(
     "openapi_path",
     type=click.Path(exists=True, dir_okay=False, readable=True),
@@ -160,52 +162,88 @@ def openapi_command(openapi_path, output_file):
         raise SystemExit(1)
 
 
-# @cli.command(
-#     "goaldsl",
-#     help="Convert GoalDSL spec to webdsl model.",
-#     short_help="Convert GoalDSL to webdsl",
-# )
-# @click.argument(
-#     "goaldsl_path",
-#     type=click.Path(exists=True, dir_okay=False, readable=True),
-# )
-# @click.argument(
-#     "output_path",
-#     required=False,
-#     default="generated",
-#     type=click.Path(file_okay=False, writable=True),
-# )
-# def goaldsl_command(goaldsl_path, output_path):
-#     """
-#     Convert GoalDSL spec to webdsl model.
+@transform.command("goaldsl", help="Convert GoalDSL spec to WebDSL model.")
+@click.argument(
+    "goaldsl_path",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+)
+@click.argument(
+    "output_file",
+    required=False,
+    default="generated",
+    type=click.Path(file_okay=False, writable=True),
+)
+def goaldsl_command(goaldsl_path, output_file):
+    """
+    Convert GoalDSL spec to webdsl model.
 
-#     If OUTPUT_PATH is omitted, it defaults to a directory named 'generated'.
+    If OUTPUT_PATH is omitted, it defaults to a directory named 'generated'.
 
-#     Examples:
-#       webdsl goaldsl examples/goaldsl_spec.gdsl
-#       webdsl goaldsl examples/goaldsl_spec.gdsl ./my_output_folder
-#     """
-#     try:
-#         output = os.path.abspath(output_path)
+    Examples:
+      webdsl goaldsl examples/goaldsl_spec.gdsl
+      webdsl goaldsl examples/goaldsl_spec.gdsl ./my_output_folder
+    """
+    try:
+        output = os.path.abspath(output_file)
 
-#         if os.path.exists(output) and not os.path.isdir(output):
-#             raise click.ClickException(
-#                 f"Output path '{output}' exists and is not a directory."
-#             )
+        # Ensure the parent directory exists
+        os.makedirs(os.path.dirname(output), exist_ok=True)
 
-#         console.print(f"Creating output directory: {output}", style="cyan")
-#         os.makedirs(output, exist_ok=True)
+        console.print(f"Transforming GoalDSL: {goaldsl_path}", style="yellow")
+        generated_file = transform_goaldsl_to_webdsl(goaldsl_path)
 
-#         console.print(f"Converting GoalDSL spec: {goaldsl_path}", style="yellow")
-#         goaldsl_to_webdsl(goaldsl_path, output)
+        if generated_file:
+            with open(output, "w") as f:
+                f.write(generated_file)
+            console.print(f"✔ Generated file saved to: {output}", style="green")
+        else:
+            console.print("✖ No file generated.", style="red")
 
-#         console.print(
-#             f"✔ Conversion complete. Files created at: {output}", style="green"
-#         )
+    except Exception as e:
+        console.print(f"✖ Conversion error:\n{e}", style="bold red")
+        raise SystemExit(1)
 
-#     except Exception as e:
-#         console.print(f"✖ Conversion error:\n{e}", style="bold red")
-#         raise SystemExit(1)
+
+@transform.command("asyncapi", help="Convert AsyncAPI spec to WebDSL model.")
+@click.argument(
+    "asyncapi_path",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+)
+@click.argument(
+    "output_file",
+    required=False,
+    default="generated_model.wdsl",
+    type=click.Path(file_okay=True, writable=True),
+)
+def openapi_command(asyncapi_path, output_file):
+    """
+    Convert AsyncAPI spec to a webdsl model.
+
+    If OUTPUT_FILE is omitted, it defaults to 'generated_model.wdsl'.
+
+    Examples:
+      webdsl asyncapi examples/asyncapi_spec.yaml
+      webdsl asyncapi examples/asyncapi_spec.yaml ./my_model.wdsl
+    """
+    try:
+        output = os.path.abspath(output_file)
+
+        # Ensure the parent directory exists
+        os.makedirs(os.path.dirname(output), exist_ok=True)
+
+        console.print(f"Converting AsyncAPI spec: {asyncapi_path}", style="yellow")
+        generated_file = transform_asyncapi_to_webdsl(asyncapi_path)
+
+        if generated_file:
+            with open(output, "w") as f:
+                f.write(generated_file)
+            console.print(f"✔ Generated file saved to: {output}", style="green")
+        else:
+            console.print("✖ No file generated.", style="red")
+
+    except Exception as e:
+        console.print(f"✖ Conversion error:\n{e}", style="bold red")
+        raise SystemExit(1)
 
 
 def main():

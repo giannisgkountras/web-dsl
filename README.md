@@ -1,4 +1,4 @@
-<img src="./web_dsl/assets/web_dsl_logo_4.png" alt="web-dsl" width="800px"/>
+<img src="./web_dsl/assets/web_dsl_logo_4.png" alt="web-dsl" width="700px"/>
 
 [WebDSL](https://giannisgkountras.github.io/web-dsl-page/) is an external Domain-Specific Language (DSL) designed for generating full-stack applications. It integrates multiple data sources, including databases, message brokers, and REST APIs, while also supporting static components. At its core, WebDSL revolves around entities, which are linked to data sources, define the data model, and are utilized by components to visualize data.
 
@@ -26,17 +26,20 @@ In summary, WebDSL is a powerful and flexible tool for rapidly developing full-s
 -   [Code Generation ](#generation)
 -   [OpenAPI Transformation](#open-api)
 -   [GoalDSL Transformation](#goal-dsl)
+-   [AsyncAPI Transformation](#async-api)
 -   [Examples ](#examples)
 
 ## Installation <a name="installation"></a>
 
-Download this repository and simply install using `pip` package manager.
+Download this repository and simply install using the `install.sh`.
 
 ```
 git clone https://github.com/giannisgkountras/web-dsl
 cd web-dsl
-pip install .
+./install.sh
 ```
+
+This will install the WebDSL CLI tool and all the necessary dependencies. You can then use the `webdsl` command to validate, generate and transform your WebDSL models.
 
 ## Features
 
@@ -276,6 +279,58 @@ end
 -   **attribute_name**: The name of the attribute
 -   **attribute_type**: The type of the attribute. The supported types are int, float, string, bool, list and dict.
 
+### Dynamically Calculated Attributes
+
+You can also define attributes that are dynamically calculated based on other attributes of the entity. This is done using the following syntax:
+
+```
+- attribute_name: attribute_type calculate(<function>(<arguments>))
+```
+
+The supported functions for calculating attributes are:
+
+-   **max**: Returns the maximum value of a list
+-   **min**: Returns the minimum value of a list
+-   **mean**: Returns the mean value of a list
+-   **sum**: Returns the sum of a list
+-   **round**: Rounds a number to the specified number of decimal places, usage like `round(value, 2)` for 2 decimal places
+-   **sortasc**: Sorts a list in ascending order
+-   **sortdesc**: Sorts a list in descending order
+-   **reverse**: Reverses a list
+-   **length**: Returns the length of a list
+-   **slice**: Returns a slice of a list or string, usage like `slice(list, start, end)` for slicing from start to end index. If end is not specified, it will slice to the end of the list.
+
+The supported math functions for calculating attributes are:
+
+-   **+**: Addition
+-   **-**: Subtraction
+-   **\***: Multiplication
+-   **/**: Division
+
+**Don't forget to use parenthesis to group operations and avoid ambiguity.**
+
+An example of dynamically calculated attributes is:
+
+```
+Entity allData
+    source: allDataTopic
+    attributes:
+        - temperatures: list
+        - values: list
+        - maxTemp: float calculate(max(temperatures))
+        - minTemp: float calculate(min(temperatures))
+        - meanTemp: float calculate(mean(temperatures))
+        - sumValues: float calculate(sum(values))
+        - complexThing: float calculate(mean(max(temperatures) + 5, temperatures[0]))
+        - roundedTemp: int calculate(round(temperatures[0]))
+        - sortedAscTemp: list calculate(sortasc(temperatures))
+        - sortedDescTemp: list calculate(sortdesc(temperatures))
+        - reverseTemp: list calculate(reverse(temperatures))
+        - temperatureLength: int calculate(length(temperatures))
+        - crazyThing: float calculate((length(temperatures))/ 20 + 50 - round(max(values)))
+end
+```
+
 ### Entity Overloading
 
 Entity overloading is a feature that allows you to a new entity that will replace an existing entity everywhere in the model. This is useful when you want to change the behavior of an entity without having to change all the references to it.
@@ -286,16 +341,18 @@ Entity NewEntityName overloads OldEntityName
     source: <DataSourceName>
     strict: true
     interval: 5000
-    attributes:
-        - attribute_name: attribute_type
+    attributes: - attribute_name: attribute_type
 end
 ```
+
+When overloading an entity, any property that is not specified will be inherited from the original entity. This includes the `source`, `strict`, `interval` and `attributes` properties.
 
 ## Components
 
 Components are used to define the visual representation of the data. They are defined using the following syntax:
 
 ```
+
 Component ComponentName
     type: <ComponentType>
     entity: <EntityName>
@@ -329,6 +386,7 @@ Currently the DSL supports the following component types:
 #### Text
 
 ```
+
 Text
     content: <accessor> | "static text"
     size: 24
@@ -439,12 +497,12 @@ LiveTable
 Form
     description: "Form description"
     elements:
-        Label "Your name"
-        Input
-            type: text
-            placeholder: "Enter name"
-            datakey: "username"
-            required: true
+    Label "Your name"
+    Input
+    type: text
+    placeholder: "Enter name"
+    datakey: "username"
+    required: true
 ```
 
 -   **description**: The description of the form.
@@ -517,7 +575,6 @@ Publish
 ```
 Logs
     attributes: <accessor>, <accessor>, ...
-
 ```
 
 -   **attributes**: The keys to display. It can be a list of accessors. Optional, if not specified, all attributes of the entity will be displayed.
@@ -598,7 +655,7 @@ You can use the following syntax to define a loop:
 ```
 for item in <entity_name>.<attribute_name>
     use Text with item.value
-    orientation: column
+orientation: column
 ```
 
 -   **orientation**: The orientation of the loop. It can be column or row.
@@ -609,8 +666,8 @@ There can also be if statements inside the loop to show only a part of the data 
 ```
 for item in CarData.metrics
     use Gauge with item.value if item.value > 30
-    else use Text content:"Low Value"
-    orientation: column
+else use Text content:"Low Value"
+orientation: column
 ```
 
 ## Screens
@@ -622,7 +679,6 @@ Screen ScreenName
     description: "Description of the screen"
     title: "Title of the screen"
     url: "/home"
-
 
 end
 ```
@@ -637,7 +693,6 @@ The syntax for defining a row is:
 ```
 row
 endrow
-
 ```
 
 The syntax for defining a column is:
@@ -653,7 +708,6 @@ The syntax for defining a link is:
 link
     url: "/home"
     text: "Home"
-end
 ```
 
 The syntax for using a component is:
@@ -671,6 +725,7 @@ Screen Home
     description: "Home screen"
     title: "Home"
     url: "/home"
+
     row
         col
             use MyComponent1
@@ -693,13 +748,13 @@ of models defined in other files.
 ```
 // webpage.wdsl
 
-import "screens.wdsl"
+import screens.wdsl
 
 Webpage MyWebpage
-    author: ""
-    version: "1.0"
-    description: ""
-    navbar: true
+author: ""
+version: "1.0"
+description: ""
+navbar: true
 
     API backendAPI
         host: "0.0.0.0"
@@ -714,11 +769,11 @@ Webpage MyWebpage
 
 ```
 // screens.wdsl
-import "components.wdsl"
+import components.wdsl
 
 Screen Home
-    title: "Home"
-    url: "/"
+title: "Home"
+url: "/"
 
     use InfoNotifications
 
@@ -730,6 +785,7 @@ Screen Home
             use WarehousesTable
         endcol
     endrow
+
 end
 ```
 
@@ -776,12 +832,13 @@ By default, the transformation extracts the API connection details and creates a
 
 ### Augmenting OpenAPI with WebDSL
 
-WebDSL allows you to enhance the OpenAPI specification by using a custom header on specific endpoints. You can add the following annotation to generate UI components:
+WebDSL allows you to enhance the [OpenAPI](https://swagger.io/specification/) specification by using a custom header on specific endpoints. You can add the following annotation to generate UI components:
 
 ```yaml
 x-webdsl:
-    - this.id -> Gauge @ 1,1
-    - this[0].title -> Text @ 1,2
+    - response.id -> Gauge @ 1,1
+    - response[0].title -> Text @ 1,2
+    - LineChart
 ```
 
 In this example:
@@ -790,19 +847,40 @@ A Gauge component will be generated from the id field of the response.
 
 A Text component will be generated from the title field of the first item in the response array.
 
+A LineChart component will be generated with boilerplate code to fill.
 The @ 1,1 and @ 1,2 specify the row and column positions of the components (1-indexed).
 
 To transform an OpenAPI specification into a WebDSL model, execute:
 
 ```bash
-webdsl openapi <openapi_file> <output_dir>
+webdsl transform openapi <openapi_file> <output_file>
 ```
 
-If the OpenAPI file is valid, the generated WebDSL model will be placed in the specified output directory. If no output dir is provided, the code will be generated in the current directory.
+If the OpenAPI file is valid, the generated WebDSL model will be placed in the specified output directory with the specified file name. If no output dir is provided, the code will be generated in the current directory.
 
 ## GoalDSL Transformations <a name="goal-dsl"></a>
 
-WebDSL also supports transforming [GoalDSL](https://github.com/robotics-4-all/goal-dsl) into WebDSL models. This is currently only supported on the REST API of WebDSL and not on the CLI.
+WebDSL also supports transforming [GoalDSL](https://github.com/robotics-4-all/goal-dsl) into WebDSL models. To transform a GoalDSL model into a WebDSL model, execute:
+
+```bash
+webdsl transform goaldsl <goal_dsl_file> <output_file>
+```
+
+If the GoalDSL file is valid, the generated WebDSL model will be placed in the specified output directory with the specified file name. If no output dir is provided, the code will be generated in the current directory.
+
+## AsyncAPI Transformations <a name="async-api"></a>
+
+WebDSL also supports transforming [AsyncAPI](https://www.asyncapi.com/) specifications into WebDSL models using the asyncapi subcommand of the webdsl CLI tool. This transformation automatically generates the necessary components, entities, and data sources based on the provided AsyncAPI specification. The resulting model can then be used to generate the full application source code.
+
+To transform an AsyncAPI specification into a WebDSL model, execute:
+
+```bash
+webdsl transform asyncapi <asyncapi_file> <output_file>
+```
+
+### Augmenting AsyncAPI with WebDSL
+
+The AsyncAPI specification can be augmented with WebDSL annotations to generate UI components. The way to do it is exactly the same as with OpenAPI.
 
 ## Examples <a name="examples"></a>
 

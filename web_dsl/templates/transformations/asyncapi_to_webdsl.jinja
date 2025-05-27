@@ -1,0 +1,134 @@
+Webpage {{ title }}
+    author: "{{ author }}"
+{% if description %}
+    description: "{{ description }}"
+{% endif %}
+{% if version %}
+    version: "{{ version }}"
+{% endif %}
+    navbar: Home
+
+// ========== Broker Connections ========== //
+{% for broker in brokers %}
+Broker<{{ broker.protocol_type }}> {{ broker.name }}
+    host: "{{ broker.host }}"
+{% if broker.port %}
+    port: {{ broker.port }}
+{% endif %}
+{% if broker.description %}
+    description: "{{ broker.description }}"
+{% endif %}
+{% if broker.auth and broker.auth.username and broker.auth.password %}
+    auth:
+        username: "{{ broker.auth.username }}"
+        password: "{{ broker.auth.password }}"
+end
+{%endif%}
+
+{% endfor %}
+
+// ========== Broker Topics ========== //
+{% for topic in topics %}
+BrokerTopic {{ topic.name }}
+    connection: {{ topic.connection_name }}
+    topic: "{{ topic.topic_address }}"
+{% if topic.description %}
+    description: "{{ topic.description }}"
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Entities ========== //
+{% for entity in entities %}
+Entity {{ entity.name }}
+    source: {{ entity.source_topic_name }}
+{% if entity.description%}
+    description: "{{ entity.description }}"
+{% endif %}
+{% if entity.attribute_list %}
+    attributes:
+    {% for attr_string in entity.attribute_list %}
+        - {{ attr_string }}
+    {% endfor %}
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Components ========== //
+
+{% for component in components %}
+Component {{ component.name }}
+{% if component.entity %}
+    entity: {{ component.entity }}
+{% endif %}
+    type: {{ component.type }}
+{% if component.type == "Text" and component.content %}
+        content: {{ component.content }}
+{% elif component.type == "Gauge" and component.value %}
+        value: {{ component.value }}
+{% elif component.type == "ProgressBar" and component.value %}
+        value: {{ component.value }}
+        max: 100
+{% elif component.type == "Image" and component.source %}
+        source: {{ component.source }}
+{% elif component.type == "LineChart"%}
+        xLabel:
+        yLabel:
+        xValue:
+        yValues:
+        description: optional
+{% elif component.type == "BarChart"%}
+        xLabel:
+        yLabel:
+        xValue:
+        yValues:
+        description: optional
+{% elif component.type == "PieChart"%}
+        dataName:
+        value:
+        description: optional
+{% elif component.type == "JsonViewer"%}
+        attributes: optional
+{% elif component.type == "Table"%}
+        primary_key:
+{% elif component.type == "Notification"%}
+        type: info
+        message: {{component.message }}
+{% elif component.type == "LiveTable"%}
+{% elif component.type == "Alive"%}
+        timeout:
+        description: optional
+{% elif component.type == "Logs"%}
+{% elif component.type == "Publish"%}
+        broker:
+        topic: optional
+        json: optional
+{% endif %}
+end
+
+{% endfor %}
+
+// ========== Screens ========== //
+
+Screen Home
+    title: "Home"
+    url: "/"
+
+    {# Components are sorted by row then col #}
+    {% set by_row = components | sort(attribute='col') | sort(attribute='row') 
+                           | groupby('row') %}
+
+    {# Loop one group per distinct row number #}
+    {% for row_num, comps in by_row %}
+    row
+        {# Within that row, you already sorted by col, so just emit each component #}
+        {% for component in comps %}
+        col
+            use {{ component.name }}
+        endcol
+        {% endfor %}
+    endrow
+    {% endfor %}
+end

@@ -63,6 +63,11 @@ attribute_map = {
     "PieChart": "",
     "JsonViewer": "",
     "Table": "",
+    "Notification": "message",
+    "Alive": "",
+    "LiveTable": "",
+    "Logs": "",
+    "Publish": "",
 }
 
 
@@ -179,7 +184,13 @@ def parse_component_annotations(
         ctype = m.group("ctype")
         row = int(m.group("row")) if m.group("row") else 0
         col = int(m.group("col")) if m.group("col") else 0
-
+        # Replace repsponse with 'this' in path
+        if path and path.startswith("response"):
+            path = path.replace("response", "this")
+        elif path is not None:
+            print(
+                f"Invalid path in component annotation: {path}. Expected to start with 'response'."
+            )
         if ctype not in attribute_map:
             print(f"Unsupported component type: {ctype}")
             continue

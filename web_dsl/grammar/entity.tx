@@ -2,6 +2,7 @@ import sources
 import types
 import connections
 import utils
+import computed
 
 EntitySource: (MySQLQuery | MongoDBQuery | RESTEndpoint | BrokerTopic);
 
@@ -9,7 +10,7 @@ Entity:
     'Entity' name=ID ('overloads' overloads=[Entity])?
     (
         ('description:' description=STRING)?
-        'source:' source=[EntitySource]
+        ('source:' source=[EntitySource])?
         ('attributes:' '-' attributes*=Attribute['-'])?
         ('strict:' strict=BOOL)?
         ('interval:' interval=INT)?
@@ -18,12 +19,13 @@ Entity:
 ;
 
 Attribute:
+    ComputedAttribute   |
     IntAttribute        |
     FloatAttribute      |
     BoolAttribute       |
     StringAttribute     |
     ListAttribute       |
-    DictAttribute
+    DictAttribute       
 ;
 
 IntAttribute:

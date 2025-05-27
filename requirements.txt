@@ -13,7 +13,7 @@ hiredis==3.1.0
 httpcore==1.0.7
 httpx==0.28.1
 idna==3.10
-Jinja2==3.1.6
+Jinja2>=3.1.5
 markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
@@ -38,3 +38,5 @@ urllib3==2.3.0
 uvicorn==0.34.0
 websockets==15.0.1
 wheel==0.45.1
+passlib
+git+https://github.com/robotics-4-all/goal-dsl.git@v0.2.0#egg=goaldsl

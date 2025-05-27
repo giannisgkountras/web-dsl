@@ -17,7 +17,11 @@ if not VERSION:
 
 
 with open("requirements.txt") as f:
-    required = f.read().splitlines()
+    required = [
+        line.strip()
+        for line in f.readlines()
+        if line.strip() and not line.startswith("git+")
+    ]
 
 
 if sys.argv[-1].startswith("publish"):

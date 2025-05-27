@@ -3,7 +3,8 @@ Comment:
 ;
 
 Import: 
-  'import' importURI=STRING
+  'import' importURI=FQN
 ;
 
-FQN: ID('.'ID)*;
+FQN: ID('.'ID)*
+;

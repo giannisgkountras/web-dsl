@@ -13,7 +13,7 @@ services:
       - "3000:80"
     depends_on:
       - backend
-    restart: always
+    restart: unless-stopped
 
   backend:
     build:
@@ -30,4 +30,4 @@ services:
       - "{{ api.port }}:{{ api.port }}"
       {% endif %}
     {% endif %}
-    restart: always
+    restart: unless-stopped

@@ -38,12 +38,16 @@ Webpage WeatherStation
             - hourly: dict
     end
 
-    Entity newWeatherData overloads weatherData
-        source: NewWeatherEnpoint
-        attributes:
-            - current: dict
-            - daily: dict
-            - hourly: dict
+    // Entity newWeatherData overloads weatherData
+    //     source: NewWeatherEnpoint
+    //     attributes:
+    //         - current: dict
+    //         - daily: dict
+    //         - hourly: dict
+    // end
+
+    Entity NewWeatherDataReload overloads weatherData
+        interval: 2000
     end
 
     Component TemperatureLabel

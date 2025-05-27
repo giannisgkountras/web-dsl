@@ -1,0 +1,109 @@
+Webpage Streetlights_MQTT_API
+    author: ""
+    description: "The Smartylighting Streetlights API allows you to remotely manage the city
+lights."
+    version: "1.0.0"
+    navbar: Home
+
+// ========== Broker Connections ========== //
+Broker<MQTT> mqtt_broker
+    host: "mqtt.mystreetlightbroker.org"
+    port: 1883
+
+
+// ========== Broker Topics ========== //
+BrokerTopic receiveLightMeasurement
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/event/{streetlightId}/lighting/measured"
+end
+
+BrokerTopic turnOn
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/action/{streetlightId}/turn/on"
+end
+
+BrokerTopic turnOff
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/action/{streetlightId}/turn/off"
+end
+
+BrokerTopic dimLight
+    connection: mqtt_broker
+    topic: "smartylighting/streetlights/1.0/action/{streetlightId}/dim"
+end
+
+
+// ========== Entities ========== //
+Entity lightMeasured_receiveLightMeasurement
+    source: receiveLightMeasurement
+    attributes:
+        - lumens: int
+        - sentAt: str
+end
+
+Entity turnOnOff_turnOn
+    source: turnOn
+    attributes:
+        - command: str
+        - sentAt: str
+end
+
+Entity turnOnOff_turnOff
+    source: turnOff
+    attributes:
+        - command: str
+        - sentAt: str
+end
+
+Entity dimLight_dimLight
+    source: dimLight
+    attributes:
+        - percentage: int
+        - sentAt: str
+end
+
+
+// ========== Components ========== //
+
+Component receiveLightMeasurement__Text_this_lumens
+    entity: lightMeasured_receiveLightMeasurement
+    type: Text
+        content: this.lumens
+end
+
+Component receiveLightMeasurement__Text_this_sentAt
+    entity: lightMeasured_receiveLightMeasurement
+    type: Text
+        content: this.sentAt
+end
+
+Component turnOff__Publish__r2_c1
+    entity: turnOnOff_turnOff
+    type: Publish
+        broker:
+        topic: optional
+        json: optional
+end
+
+
+// ========== Screens ========== //
+
+Screen Home
+    title: "Home"
+    url: "/"
+
+
+    row
+        col
+            use receiveLightMeasurement__Text_this_lumens
+        endcol
+        col
+            use receiveLightMeasurement__Text_this_sentAt
+        endcol
+    endrow
+    row
+        col
+            use turnOff__Publish__r2_c1
+        endcol
+    endrow
+end

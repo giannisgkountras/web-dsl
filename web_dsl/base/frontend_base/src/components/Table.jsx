@@ -31,7 +31,6 @@ const Table = ({
 
     const columns = useMemo(() => {
         if (!data || data.length === 0 || data?.status === "error") return [];
-        console.log("data", data);
         return Object.keys(data[0]);
     }, [data]);
 

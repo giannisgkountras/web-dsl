@@ -6,6 +6,7 @@ import {
     fetchValueFromRestWithoutAccessor,
     fetchValueFromDBWithoutAccessor
 } from "../utils/fetchValues";
+import { evaluateExpression } from "../utils/evaluateComputations";
 
 const Entity = ({
     topic,
@@ -13,19 +14,30 @@ const Entity = ({
     dbData,
     sourceOfContent,
     interval,
-    setEntityData
+    setEntityData,
+    computedAttributes
 }) => {
     const ws = useContext(WebsocketContext);
 
     const reloadData = async () => {
+        let data = {};
         if (sourceOfContent === "rest") {
-            const data = await fetchValueFromRestWithoutAccessor(restData);
-            setEntityData(data);
+            data = await fetchValueFromRestWithoutAccessor(restData);
         }
         if (sourceOfContent === "db") {
-            const data = await fetchValueFromDBWithoutAccessor(dbData);
-            setEntityData(data);
+            data = await fetchValueFromDBWithoutAccessor(dbData);
         }
+
+        const computedResults = computedAttributes.map((attribute) => {
+            const { name, expression } = attribute;
+            const evaluatedValue = evaluateExpression(expression, data);
+            return { name, value: evaluatedValue };
+        });
+        // Append computed results to data
+        computedResults.forEach((result) => {
+            data[result.name] = result.value;
+        });
+        setEntityData(data);
     };
 
     useEffect(() => {
@@ -44,7 +56,23 @@ const Entity = ({
 
     useWebsocket(sourceOfContent === "broker" ? ws : null, topic, (msg) => {
         try {
-            setEntityData(msg);
+            let currentData = msg; // Data from WebSocket
+
+            // Calcualte all results of computed attributes
+            const computedResults = computedAttributes.map((attribute) => {
+                const { name, expression } = attribute;
+                const evaluatedValue = evaluateExpression(
+                    expression,
+                    currentData
+                );
+                return { name, value: evaluatedValue };
+            });
+            // Append computed results to currentData
+            computedResults.forEach((result) => {
+                currentData[result.name] = result.value;
+            });
+
+            setEntityData(currentData);
         } catch (error) {
             toast.error(
                 "An error occurred while updating value: " + error.message

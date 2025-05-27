@@ -1,4 +1,4 @@
-import "screens.wdsl"
+import screens.wdsl
 
 Webpage WarehouseManagement
     author: "Giannis Gkountras"
