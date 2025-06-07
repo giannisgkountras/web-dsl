@@ -74,7 +74,7 @@ else:
 print("Starting Uvicorn...")
 host = "0.0.0.0"
 port = os.getenv("PORT", "8080")
-root_path = os.getenv("ROOT_PATH", "/")
+root_path = os.getenv("ROOT_PATH", "")
 workers = os.getenv("WORKERS", "1")
 
 uvicorn_command = [

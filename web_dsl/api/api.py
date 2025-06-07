@@ -8,16 +8,6 @@ from .config import TMP_DIR
 from .routers import validation, generation, deployment, transformations
 
 
-app = FastAPI()
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Code to run on startup
@@ -28,6 +18,16 @@ async def lifespan(app: FastAPI):
     yield
     # Code to run on shutdown (e.g., close a global connection pool if you had one)
     print("Application shutdown: Cleaning up...")
+
+
+app = FastAPI(lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 app.include_router(validation.router)

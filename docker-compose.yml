@@ -7,5 +7,4 @@ services:
             - .env
         environment:
             - WORKERS=1
-            - ROOT_PATH=/
         restart: always
