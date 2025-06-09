@@ -39,4 +39,5 @@ uvicorn==0.34.0
 websockets==15.0.1
 wheel==0.45.1
 passlib
+aiosqlite
 git+https://github.com/robotics-4-all/goal-dsl.git@v0.2.0#egg=goaldsl

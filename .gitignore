@@ -35,3 +35,4 @@ dist-ssr
 
 webdsl.egg-info
 build
+*.db
