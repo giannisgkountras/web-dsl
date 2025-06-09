@@ -75,11 +75,6 @@ async def db_create_deployment_record(
     docker_project_name: str,
 ) -> int:  # Returns lastrowid
     now = datetime.now()
-    # Timestamps are tricky with aiosqlite default converters.
-    # It's often safer to pass them as ISO format strings or handle conversion explicitly.
-    # For simplicity here, we're relying on SQLite's CURRENT_TIMESTAMP for created_at/updated_at on insert.
-    # If you pass `now` directly, ensure your SQLite version and aiosqlite handle it.
-    # Alternatively, format `now` to string: now.isoformat()
     async with conn.cursor() as cursor:
         await cursor.execute(
             """
