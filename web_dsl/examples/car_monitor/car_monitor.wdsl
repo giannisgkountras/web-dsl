@@ -2,7 +2,7 @@ Webpage CarMonitor
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A car monitoring dashboard"
-    navbar: Home, Debug
+    navbar: Home
 
     //============ Connections =============//
     
@@ -12,7 +12,7 @@ Webpage CarMonitor
     end
 
     Websocket backendWebsocket
-        host: "192.168.1.6"
+        host: "192.168.1.3"
         port: 8080
     end
 
@@ -22,12 +22,12 @@ Webpage CarMonitor
     end
 
     Broker<MQTT> CarBroker
-        host: "192.168.1.6"
+        host: "192.168.1.3"
         port: 1883
     end
 
     Broker<Redis> TLServer
-        host: "192.168.1.6"
+        host: "192.168.1.3"
         port: 6379
     end
 
@@ -65,7 +65,7 @@ Webpage CarMonitor
         source: telemetryTopic
         strict: true
         attributes:
-            - fps: list
+            - fps: dict
             - carInfo: dict
             - hardware: list
             - notifications: list
@@ -233,7 +233,7 @@ Webpage CarMonitor
                 end
             endcol
             col
-                if this.hardware[0] > 10 from entity telemetry
+                if telemetry.hardware[0] > 10
                     use StartButton
             endcol
         endrow

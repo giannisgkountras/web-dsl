@@ -82,12 +82,6 @@ Webpage WarehouseManagement
         topic: "notifications"
     end
 
-    BrokerTopic Chart
-        connection: NotificationsBroker
-        topic: "chart"
-    end
-
-
      //============ Entities ============//
     Entity Products
         source: allProducts
@@ -140,13 +134,6 @@ Webpage WarehouseManagement
             - error: str
     end
 
-    Entity ChartDebugData
-        source: Chart
-        attributes:
-            - x: int
-            - y1: int
-            - y2: int
-    end
     //============ Components ============//
     Component ProductsTable
         entity: Products
@@ -227,16 +214,6 @@ Webpage WarehouseManagement
         type: Alive
             timeout: 5000
             description: "Notifications channel"
-    end
-
-    Component ChartDebug
-        entity: ChartDebugData
-        type: LineChart
-            description: "Debug chart"
-            xLabel: "X Axis"
-            yLabel: "Y axis"
-            xValue: this.x
-            yValues: this.y1, this.y2
     end
 
     Component CentralWarehouseCapacity
