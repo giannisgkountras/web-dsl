@@ -2,9 +2,7 @@ services:
     webdsl:
         build: ./
         ports:
-            - "8082:8080"
+            - ${PORT:-8082}:8080
         env_file:
             - .env
-        environment:
-            - WORKERS=1
         restart: always
