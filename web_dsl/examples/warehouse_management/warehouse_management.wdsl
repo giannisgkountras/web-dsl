@@ -2,9 +2,7 @@ Webpage WarehouseManagement
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A dashboard for managing warehouses"
-    navbar: Home, Debug
-
-    //============ Connections =============//
+    navbar: Home
 
     API backendAPI
         host: "0.0.0.0"
@@ -38,8 +36,6 @@ Webpage WarehouseManagement
         host: "192.168.1.6"
         port: 1883
     end
-
-    //============ Specific endpoints/queries/ topics =============//
 
     MySQLQuery allProducts
         connection: WarehouseSQL
@@ -82,13 +78,6 @@ Webpage WarehouseManagement
         topic: "notifications"
     end
 
-    BrokerTopic Chart
-        connection: NotificationsBroker
-        topic: "chart"
-    end
-
-
-     //============ Entities ============//
     Entity Products
         source: allProducts
         strict: true
@@ -140,14 +129,6 @@ Webpage WarehouseManagement
             - error: str
     end
 
-    Entity ChartDebugData
-        source: Chart
-        attributes:
-            - x: int
-            - y1: int
-            - y2: int
-    end
-    //============ Components ============//
     Component ProductsTable
         entity: Products
         type: Table
@@ -229,16 +210,6 @@ Webpage WarehouseManagement
             description: "Notifications channel"
     end
 
-    Component ChartDebug
-        entity: ChartDebugData
-        type: LineChart
-            description: "Debug chart"
-            xLabel: "X Axis"
-            yLabel: "Y axis"
-            xValue: this.x
-            yValues: this.y1, this.y2
-    end
-
     Component CentralWarehouseCapacity
         entity: Warehouses
         type: Progressbar
@@ -246,7 +217,6 @@ Webpage WarehouseManagement
             max: this.capacity[2]
             description: "Central warehouse capacity"
     end
-    //============ Screens ============//
 
     Screen Home
         title: "Home"
@@ -279,22 +249,5 @@ Webpage WarehouseManagement
                 else 
                     use WarehouseNotOperational
             endcol
-        endrow
-    end
-
-    Screen Debug
-        title: "Debug"
-        url: "/debug"
-
-        row
-            col
-                Component NotificationsPublisher
-                    type: Publish
-                        broker: NotificationsBroker
-                end
-            endcol
-        endrow
-        row
-            use ChartDebug
         endrow
     end
