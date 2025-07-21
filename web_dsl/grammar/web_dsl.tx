@@ -10,6 +10,7 @@ import accessors
 import conditions
 import repetition
 import computed
+import roles
 
 Model:
     (imports+=Import)?

@@ -1,0 +1,11 @@
+Role:
+    'Role' name=ID
+    (
+        ('description:' description=STRING)?
+    )#
+;
+
+User:
+    'User' name=ID
+    'role:' role=[Role]
+;
