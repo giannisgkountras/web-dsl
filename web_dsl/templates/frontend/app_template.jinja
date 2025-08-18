@@ -4,6 +4,7 @@ import {ToastContainer, Flip} from 'react-toastify';
 import {{ screen.name }} from './screens/{{ screen.name }}';
 {% endfor %}
 import NotFound from './screens/NotFound';
+import Login from './screens/Login'
 
 {% if webpage.navbar_screens %}
 import NavBar from "./components/NavBar";
@@ -45,6 +46,7 @@ const App = () => {
               
               {/* Catch-all 404 route */}
               <Route path="*" element={<NotFound />} />
+              <Route path="/login" element={<Login />} />
             </Routes>
         </Router>
       </div> 
