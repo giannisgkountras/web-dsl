@@ -1,8 +1,6 @@
 Role:
     'Role' name=ID
-    (
-        ('description:' description=STRING)?
-    )#
+    ('description:' description=STRING)?
 ;
 
 User:

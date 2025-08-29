@@ -27,6 +27,8 @@ Model:
         (components+=Component)*
         (entities+=Entity)*
         (screens+=Screen)*
+        (users*=User)*
+        (roles*=Role)*
         (webpage=WebPage)?
     )#
 ;

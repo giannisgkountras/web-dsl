@@ -1,0 +1,175 @@
+Webpage CarMonitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A car monitoring dashboard"
+    navbar: Home, Debug
+
+    //============ Roles / Users ============//
+
+    Role admin
+    Role simplerole
+
+    User giannis role: admin
+
+    User simpleuser role: simplerole
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "192.168.1.3"
+        port: 8080
+    end
+    
+    Broker<MQTT> CarBroker
+        host: "192.168.1.3"
+        port: 1883
+    end
+
+    //============ Specific endpoints / topics / queries =============//
+
+    BrokerTopic cameraTopic
+        connection: CarBroker
+        topic: "camera"
+    end
+
+    BrokerTopic telemetryTopic
+        connection: CarBroker
+        topic: "telemetry"
+    end
+
+    //============ Entities ============//
+    
+    Entity camera
+        source: cameraTopic
+        attributes:
+            - frames: dict
+    end
+
+    Entity telemetry
+        source: telemetryTopic
+        strict: true
+        attributes:
+            - fps: dict
+            - carInfo: dict
+            - hardware: list
+            - notifications: list
+    end
+
+    //============ Components ============//
+
+    Component CameraFront
+        entity: camera
+        type: Image
+            source: this.frames.front
+    end
+
+    Component CameraBack
+        entity: camera
+        type: Image
+            source: this.frames.back
+    end
+
+    Component CameraAlive
+        entity: camera
+        type: Alive
+            timeout: 5000
+            description: "Camera Topic"
+    end
+
+    Component TelemetryAlive
+        entity: telemetry
+        type: Alive
+            timeout: 5000
+            description: "Telemetry Topic"
+    end
+
+    Component LiveFPS
+        entity: telemetry
+        type: LineChart
+            xLabel: "Time"
+            yLabel: "FPS"
+            xValue: this.fps.time
+            yValues: this.fps.ped, this.fps.veh, this.fps.lane
+    end
+
+    Component CarInfoTable
+        entity: telemetry
+        type: LiveTable
+            columns: this.carInfo.speed, this.carInfo.steer, this.carInfo.yaw
+    end
+
+    Component CPUUsage
+        entity: telemetry
+        type: Gauge
+            value: this.hardware[0]
+            description: "CPU Usage"
+    end
+
+    Component GPUUsage
+        entity: telemetry
+        type: Gauge
+            value: this.hardware[1]
+            description: "GPU Usage"
+    end
+
+    //============ Screens ============//
+    Screen Home
+        title: "Home"
+        url: "/"
+        
+        row
+            col
+                use CameraAlive
+                use TelemetryAlive
+            endcol
+            col
+                use CameraFront
+            endcol
+            col
+                use CameraBack
+            endcol
+        endrow
+
+        row
+            col
+                use LiveFPS
+            endcol
+            col
+                use CarInfoTable
+            endcol
+            col
+                use CPUUsage
+                use GPUUsage
+            endcol
+        endrow
+
+
+    end
+
+    //============ For Debugging ============//
+
+    Screen Debug
+        title: "Debug"
+        url: "/debug"
+        allowed_roles: admin, simplerole
+
+        row
+            col
+                Component cameraPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+            col 
+                Component telemetryPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+        endrow
+    end
