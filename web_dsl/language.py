@@ -191,6 +191,9 @@ def get_model_screens(model):
             screens += get_children_of_type("Screen", m)
     else:
         screens = get_children_of_type("Screen", model)
+    for screen in screens:
+        for role in screen.allowed_roles:
+            print(role.name)
     return screens
 
 
