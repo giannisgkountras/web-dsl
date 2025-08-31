@@ -17,6 +17,7 @@ brokers:
         {% for attribute in topic_config.attributes %}
           - "{{ attribute }}"
         {% endfor %}
+        allowed_roles: {{ topic_config.allowed_roles }} 
     {% endfor %}
   {% endfor %}
 

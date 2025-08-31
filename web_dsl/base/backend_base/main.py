@@ -245,6 +245,9 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
             status_code=404, detail=f"Endpoint '{request.name}' not found"
         )
 
+    allowed_roles_for_this_request = current_endpoint.get("related_endpoints", []).get(
+        request.path
+    )
     # Construct URL
     host = current_endpoint.get("host")
     port = current_endpoint.get("port")

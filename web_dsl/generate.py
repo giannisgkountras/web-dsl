@@ -210,6 +210,10 @@ def generate(model_path, gen_path):
                             if hasattr(entity_obj, "strict")
                             else False
                         ),  # Default if strict not present
+                        # gather all roles as strings
+                        "allowed_roles": [
+                            role.name for role in entity_obj.source.allowed_roles
+                        ],
                     }
                 )
 
@@ -218,7 +222,6 @@ def generate(model_path, gen_path):
     for broker in model.aggregated_brokers:
         all_brokers.add(broker)
     all_brokers = list(all_brokers)
-
     config_dir = os.path.join(gen_path, "backend")
     config_output_file = os.path.join(config_dir, "config.yaml")
     config_content = config_template.render(
@@ -233,12 +236,15 @@ def generate(model_path, gen_path):
 
     # Generate rest api config file
     # all_rest_apis = get_children_of_type("RESTApi", model)
+    for item in model.aggregated_endpoints:
+        print(item.__dict__)
     endpoint_config_dir = os.path.join(gen_path, "backend")
     endpoint_config_output_file = os.path.join(
         endpoint_config_dir, "endpoint_config.yaml"
     )
     endpoint_config_content = endpoint_config_template.render(
         all_rest_apis=model.aggregated_restapis,
+        all_rest_endpoints=model.aggregated_endpoints,
     )
     with open(endpoint_config_output_file, "w", encoding="utf-8") as f:
         f.write(endpoint_config_content)
