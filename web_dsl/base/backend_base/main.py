@@ -22,6 +22,7 @@ from utils import (
     load_endpoint_config,
     load_db_config,
     convert_object_ids,
+    load_user_config,
     transform_list_of_dicts_to_dict_of_lists,
 )
 
@@ -57,11 +58,14 @@ logging.basicConfig(level=logging.INFO)
 config = load_config() or {}
 endpoint_config = load_endpoint_config()
 db_config = load_db_config()
+user_roles = load_user_config()
+
 
 # Global variable to hold the main event loop
 global_event_loop = None
 
 broker_clients = []  # Store broker clients for access in FastAPI
+
 
 app = FastAPI()
 
@@ -245,9 +249,29 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
             status_code=404, detail=f"Endpoint '{request.name}' not found"
         )
 
-    allowed_roles_for_this_request = current_endpoint.get("related_endpoints", []).get(
-        request.path
-    )
+    allowed_roles_for_this_request = current_endpoint.get(
+        "related_endpoints_roles", {}
+    ).get(request.path, None)
+    if allowed_roles_for_this_request is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access to path '{request.path}' is not allowed for endpoint '{request.name}'",
+        )
+
+    # Find user email from oAuth0 token
+
+    # Use email to check local ruleset of emails and their roles
+
+    # Check if user's role allows them access to the endpoint
+
+    # (if allowed_roles_for_this_request is [] then every role is allowed)
+
+    # if allowed_roles_for_this_request and current_user_role not in allowed_roles_for_this_request:
+    #     raise HTTPException(
+    #         status_code=403,
+    #         detail="User does not have the required role for this endpoint",
+    #     )
+
     # Construct URL
     host = current_endpoint.get("host")
     port = current_endpoint.get("port")

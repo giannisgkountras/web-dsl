@@ -4,18 +4,16 @@
     port: {{api.port}}
     headers: {{api.headers}}
     auth: {{api.auth}}
-    related_endpoints_roles: [
+    related_endpoints_roles: {
         {% for endpoint in all_rest_endpoints %}
         {% if endpoint.connection.name == api.name %}
-            {
-                "{{endpoint.path}}": [
-                {% for role in endpoint.allowed_roles %}
-                  "{{role.name}}",
-                {% endfor %}
-                ]
-            }
+            "{{endpoint.path}}": [
+            {% for role in endpoint.allowed_roles %}
+                "{{role.name}}",
+            {% endfor %}
+            ]
         {% endif%}
         {% endfor%}
-    ]
+    }
 {% endfor %}
 

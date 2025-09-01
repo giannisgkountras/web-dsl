@@ -45,6 +45,7 @@ config_template = backend_env.get_template("config_template.jinja")
 endpoint_config_template = backend_env.get_template("endpoint_config.jinja")
 db_config_template = backend_env.get_template("db_config.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
+user_roles_template = backend_env.get_template("user_roles_template.jinja")
 
 docker_compose_template = backend_env.get_template("docker_compose_template.jinja")
 
@@ -172,6 +173,14 @@ def generate(model_path, gen_path):
     with open(env_backend_output_file, "w", encoding="utf-8") as f:
         f.write(env_backend_content)
     print(f"Generated {env_backend_output_file}")
+
+    # Generate users roles config file
+    users = model.aggregated_users
+    user_roles_config_file = os.path.join(gen_path, "backend", "user_roles.yaml")
+    user_roles_config_content = user_roles_template.render(users=users)
+    with open(user_roles_config_file, "w", encoding="utf-8") as f:
+        f.write(user_roles_config_content)
+    print(f"Generated: {user_roles_config_file}")
 
     # # Collect all components from the model to get what attributes of entities are actually used
     # components = get_children_of_type("Component", model)

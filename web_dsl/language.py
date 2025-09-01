@@ -126,6 +126,7 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
             "BrokerTopic.connection": FQNImportURI(),
             "Entity.overloads": FQNImportURI(),
             "WebPage.navbar_screens": FQNImportURI(),
+            "User.role": FQNImportURI(),
         }
     )
 
@@ -313,6 +314,16 @@ def get_model_conditions(model):
     return conditions
 
 
+def get_model_users(model):
+    users = []
+    if model._tx_model_repository is not None and model._tx_model_repository.all_models:
+        for m in model._tx_model_repository.all_models:
+            users += get_children_of_type("User", m)
+    else:
+        users = get_children_of_type("User", model)
+    return users
+
+
 def model_proc(model, metamodel):
     """
     Processes the main model and augments it with aggregated elements
@@ -336,6 +347,7 @@ def model_proc(model, metamodel):
     model.processed_webpage = get_model_webpage(model)
     model.processed_api = get_model_api(model)
     model.processed_websocket = get_model_websocket(model)
+    model.aggregated_users = get_model_users(model)
 
     # Resolve overloads
     resolve_entity_overloads(model)
