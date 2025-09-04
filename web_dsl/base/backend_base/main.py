@@ -63,6 +63,9 @@ AUTH0_API_AUDIENCE = os.environ.get("AUTH0_API_AUDIENCE")  # Your API Audience
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
 BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8321")
 jwks_client = PyJWKClient(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
+ACTION_NAMESPACE = os.environ.get(
+    "ACTION_NAMESPACE", "https://example.com"
+)  # Custom namespace for Auth0 Action
 
 
 async def get_token_from_cookie(request: Request) -> Optional[str]:
@@ -87,7 +90,7 @@ async def get_current_user(token: Optional[str] = Depends(get_token_from_cookie)
 
         # Look for the custom claim we created in the Auth0 Action.
         # The namespace must match exactly what you put in the JavaScript code.
-        email = payload.get("http://localhost:8321/email")
+        email = payload.get(f"{ACTION_NAMESPACE}/email")
 
         if not email:
             logging.warning("Token is valid but is missing the required email claim.")
@@ -128,7 +131,7 @@ app = FastAPI()
 # Allow all origins (unsafe for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all domains
+    allow_origins=[FRONTEND_URL],  # Allow all domains
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -295,7 +298,11 @@ def generate_restcall_cache_key(request: RESTCallRequest) -> str:
 
 
 @app.post("/restcall")
-async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
+async def rest_call(
+    request: RESTCallRequest,
+    api_key: str = Security(get_api_key),
+    current_user: dict = Depends(get_current_user),
+):
     """Make a REST call to a specified endpoint, with caching based on freshness."""
 
     # Validate endpoint configuration
@@ -315,19 +322,20 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
         )
 
     is_public = allowed_roles == []
-    # if not is_public:
-
-    #     if not current_user:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_401_UNAUTHORIZED,
-    #             detail="Authentication is required for this path.",
-    #         )
-
-    #     if current_user.role not in allowed_roles:
-    #         raise HTTPException(
-    #             status_code=status.HTTP_403_FORBIDDEN,
-    #             detail=f"User with role '{current_user.role}' is not authorized for this path.",
-    #         )
+    if not is_public:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication is required for this path.",
+            )
+        else:
+            current_user_email = current_user.get("email")
+            current_role = user_roles.get(current_user_email)
+            if current_role not in allowed_roles:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"User with role '{current_role}' is not authorized for this path.",
+                )
 
     # Construct URL
     host = current_endpoint.get("host")
@@ -656,12 +664,10 @@ async def logout():
     """
     Logs the user out by clearing the cookie and redirecting to Auth0's logout endpoint.
     """
-    response = RedirectResponse(url=FRONTEND_URL)
-    response.delete_cookie("access_token")
 
-    # Optionally, you can also log the user out of their Auth0 session
-    # auth0_logout_url = f"https://{AUTH0_DOMAIN}/v2/logout?client_id={AUTH0_CLIENT_ID}&returnTo={FRONTEND_URL}"
-    # response = RedirectResponse(url=auth0_logout_url)
+    auth0_logout_url = f"https://{AUTH0_DOMAIN}/v2/logout?client_id={AUTH0_CLIENT_ID}&returnTo={FRONTEND_URL}"
+    response = RedirectResponse(url=auth0_logout_url)
+    response.delete_cookie("access_token")
 
     return response
 

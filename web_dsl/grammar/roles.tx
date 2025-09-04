@@ -4,6 +4,6 @@ Role:
 ;
 
 User:
-    'User' name=ID
+    'User' name=STRING
     'role:' role=[Role]
 ;
