@@ -8,3 +8,5 @@ httpx
 dotenv
 pymysql
 pymongo
+pyjwt
+cryptography

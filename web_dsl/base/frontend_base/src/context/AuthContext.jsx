@@ -1,16 +1,47 @@
-import { createContext, useContext, useState } from "react";
+// src/context/AuthContext.js
 
-const AuthContext = createContext(null);
+import React, { createContext, useState, useEffect, useContext } from "react";
+import { userInfo } from "../api/userInfo";
+// 1. Create the Context
+const AuthContext = createContext();
 
+// 2. Create the AuthProvider Component
 export const AuthProvider = ({ children }) => {
-    // Example state (in real app, fetch from API or localStorage)
     const [user, setUser] = useState(null);
-    // user = { username: "john", role: "admin" } or null if not signed in
+    const [isLoading, setIsLoading] = useState(true);
 
-    const login = (username, role) => setUser({ username, role });
-    const logout = () => setUser(null);
+    const checkLoggedIn = async () => {
+        try {
+            // The `withCredentials: true` option is essential.
+            // It tells axios to send the HttpOnly cookie with the request.
+            const response = await userInfo();
+            console.log("User info response:", response);
 
-    return <AuthContext.Provider value={{ user, login, logout }}>{children}</AuthContext.Provider>;
+            // If the request is successful (2xx status), the user is logged in.
+            setUser(response);
+        } catch (error) {
+            // If the request fails (e.g., 401 Unauthorized), the user is not logged in.
+            console.log("User is not authenticated.");
+            setUser(null);
+        } finally {
+            // We are done loading, whether we found a user or not.
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        checkLoggedIn();
+    }, []);
+
+    const value = {
+        user,
+        isLoading
+    };
+
+    return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-export const useAuth = () => useContext(AuthContext);
+// 3. Create a custom hook for easy access to the context
+export const useAuth = () => {
+    return useContext(AuthContext);
+};

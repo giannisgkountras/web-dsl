@@ -18,6 +18,13 @@ const api = {
         } catch (error) {
             toast.error(error.message);
         }
+    },
+    get: async (path) => {
+        try {
+            return await rootApi.get(path).json();
+        } catch (error) {
+            toast.error(error.message);
+        }
     }
 };
 

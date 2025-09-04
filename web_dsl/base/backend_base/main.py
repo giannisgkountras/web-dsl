@@ -10,10 +10,15 @@ import time
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Optional, Any, Dict, Tuple
-from fastapi import FastAPI, HTTPException, Security, status
+from fastapi.responses import RedirectResponse
+from urllib.parse import urlencode
+from fastapi import FastAPI, HTTPException, Security, status, Depends, Request
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
+import jwt
+from jwt import PyJWKClient
+
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from db_connector import DBConnector
@@ -49,6 +54,57 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or missing API Key"
     )
+
+
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
+AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
+AUTH0_API_AUDIENCE = os.environ.get("AUTH0_API_AUDIENCE")  # Your API Audience
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8321")
+jwks_client = PyJWKClient(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
+
+
+async def get_token_from_cookie(request: Request) -> Optional[str]:
+    token = request.cookies.get("access_token")
+    return token
+
+
+async def get_current_user(token: Optional[str] = Depends(get_token_from_cookie)):
+    if token is None:
+        return None
+
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token).key
+
+        payload = jwt.decode(
+            token,
+            signing_key,
+            algorithms=["RS256"],
+            audience=AUTH0_API_AUDIENCE,
+            issuer=f"https://{AUTH0_DOMAIN}/",
+        )
+
+        # Look for the custom claim we created in the Auth0 Action.
+        # The namespace must match exactly what you put in the JavaScript code.
+        email = payload.get("http://localhost:8321/email")
+
+        if not email:
+            logging.warning("Token is valid but is missing the required email claim.")
+            return None
+
+        # Instead of returning the whole payload, just return the essential info.
+        return {"email": email}
+
+    except jwt.ExpiredSignatureError:
+        logging.warning("Login attempt with expired token.")
+        return None
+    except jwt.InvalidTokenError as e:
+        logging.warning(f"Login attempt with invalid token: {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Error fetching signing key or validating token: {e}")
+        return None
 
 
 # Configure logging
@@ -249,28 +305,29 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
             status_code=404, detail=f"Endpoint '{request.name}' not found"
         )
 
-    allowed_roles_for_this_request = current_endpoint.get(
-        "related_endpoints_roles", {}
-    ).get(request.path, None)
-    if allowed_roles_for_this_request is None:
+    allowed_roles = current_endpoint.get("related_endpoints_roles", {}).get(
+        request.path
+    )
+    if allowed_roles is None:
         raise HTTPException(
             status_code=403,
-            detail=f"Access to path '{request.path}' is not allowed for endpoint '{request.name}'",
+            detail=f"Access to path '{request.path}' is not configured.",
         )
 
-    # Find user email from oAuth0 token
+    is_public = allowed_roles == []
+    # if not is_public:
 
-    # Use email to check local ruleset of emails and their roles
+    #     if not current_user:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_401_UNAUTHORIZED,
+    #             detail="Authentication is required for this path.",
+    #         )
 
-    # Check if user's role allows them access to the endpoint
-
-    # (if allowed_roles_for_this_request is [] then every role is allowed)
-
-    # if allowed_roles_for_this_request and current_user_role not in allowed_roles_for_this_request:
-    #     raise HTTPException(
-    #         status_code=403,
-    #         detail="User does not have the required role for this endpoint",
-    #     )
+    #     if current_user.role not in allowed_roles:
+    #         raise HTTPException(
+    #             status_code=status.HTTP_403_FORBIDDEN,
+    #             detail=f"User with role '{current_user.role}' is not authorized for this path.",
+    #         )
 
     # Construct URL
     host = current_endpoint.get("host")
@@ -516,6 +573,116 @@ async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_ke
             status_code=400,
             detail="Invalid request: 'query' and 'database' or 'collection' must be specified",
         )
+
+
+# AUTHENTICATION ROUTES
+
+# --- Authentication Flow Endpoints ---
+
+
+@app.get("/auth/login")
+async def login(request: Request):
+    """
+    Initiates the Auth0 login flow by redirecting the user.
+    """
+    # We use a state parameter to prevent CSRF attacks.
+    # It's stored in a cookie that is checked on the way back.
+    state = "some_random_string"  # In production, generate a random value
+
+    params = {
+        "response_type": "code",
+        "client_id": AUTH0_CLIENT_ID,
+        "redirect_uri": f"{BACKEND_URL}/auth/callback",
+        "scope": "openid profile email",
+        "audience": AUTH0_API_AUDIENCE,
+        "state": state,
+    }
+    auth0_url = f"https://{AUTH0_DOMAIN}/authorize?{urlencode(params)}"
+
+    response = RedirectResponse(url=auth0_url)
+    response.set_cookie(key="state", value=state, httponly=True, samesite="lax")
+    return response
+
+
+@app.get("/auth/callback")
+async def callback(request: Request):
+    """
+    Handles the redirect from Auth0 after successful login.
+    Exchanges the authorization code for an access token and sets it as a cookie.
+    """
+    code = request.query_params.get("code")
+    state = request.query_params.get("state")
+
+    # CSRF check
+    if state != request.cookies.get("state"):
+        raise HTTPException(status_code=403, detail="Invalid state parameter")
+
+    # Exchange code for token
+    token_payload = {
+        "grant_type": "authorization_code",
+        "client_id": AUTH0_CLIENT_ID,
+        "client_secret": AUTH0_CLIENT_SECRET,
+        "code": code,
+        "redirect_uri": f"{BACKEND_URL}/auth/callback",
+    }
+    token_url = f"https://{AUTH0_DOMAIN}/oauth/token"
+
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(token_url, json=token_payload)
+
+    if token_response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Could not exchange code for token")
+
+    token_data = token_response.json()
+    access_token = token_data.get("access_token")
+
+    # Redirect user back to the frontend and set the secure cookie
+    response = RedirectResponse(url=f"{FRONTEND_URL}")
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,  # Essential: Prevents JS access
+        secure=False,  # Essential: Only send over HTTPS in production
+        samesite="lax",  # CSRF protection
+        max_age=token_data.get("expires_in", 3600),  # Sets cookie expiration
+    )
+    # Clean up the state cookie
+    response.delete_cookie("state")
+    return response
+
+
+@app.get("/auth/logout")
+async def logout():
+    """
+    Logs the user out by clearing the cookie and redirecting to Auth0's logout endpoint.
+    """
+    response = RedirectResponse(url=FRONTEND_URL)
+    response.delete_cookie("access_token")
+
+    # Optionally, you can also log the user out of their Auth0 session
+    # auth0_logout_url = f"https://{AUTH0_DOMAIN}/v2/logout?client_id={AUTH0_CLIENT_ID}&returnTo={FRONTEND_URL}"
+    # response = RedirectResponse(url=auth0_logout_url)
+
+    return response
+
+
+@app.get("/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """
+    Returns the authenticated user's email.
+    e.g., {"email": "user@example.com"}
+    """
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    current_user_email = current_user.get("email")
+    current_role = user_roles.get(current_user_email)
+    user_info = {
+        "email": current_user_email,
+        "role": current_role,
+    }
+    return user_info
 
 
 if __name__ == "__main__":
