@@ -9,7 +9,8 @@ const rootApi = ky.extend({
     prefixUrl: `${apiUrl}`,
     headers: {
         "X-API-Key": apiKey
-    }
+    },
+    credentials: "include"
 });
 const api = {
     post: async (path, json) => {

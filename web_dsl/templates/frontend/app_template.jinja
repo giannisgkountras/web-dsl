@@ -38,7 +38,15 @@ const App = () => {
                   {% for screen in webpage.navbar_screens %}
                   {url: "{{screen.url}}", title: "{{screen.title}}" },
                   {% endfor %}
-                ]}/>
+                ]},
+                includeLogin={
+                {% if screen.allowed_roles | length > 0 %}
+                  true
+                {% else %}
+                  false
+                {% endif %}
+                }
+                />
             {% endif %}
             
             <Routes>
