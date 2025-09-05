@@ -1,5 +1,6 @@
 import types
 import auth
+import roles
 
 MessageBroker:
     AMQPBroker | MQTTBroker | RedisBroker
@@ -79,6 +80,7 @@ MySQL:
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
         ('database:' database=STRING)
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;
@@ -90,6 +92,7 @@ MongoDB:
         ('port:' port=INT)
         ('auth:' auth=AuthPlain)
         ('database:' database=STRING)
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;
