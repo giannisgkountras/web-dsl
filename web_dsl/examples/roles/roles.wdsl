@@ -155,11 +155,13 @@ Webpage CarMonitor
     Component PostsJSON
         entity: posts
         type: JsonViewer
+        allowed_roles: admin
     end
 
     Component CommentsJSON
         entity: comments
         type: JsonViewer
+        allowed_roles: viewer, admin
     end
 
     //============ Screens ============//

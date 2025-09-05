@@ -245,8 +245,7 @@ def generate(model_path, gen_path):
 
     # Generate rest api config file
     # all_rest_apis = get_children_of_type("RESTApi", model)
-    for item in model.aggregated_endpoints:
-        print(item.__dict__)
+
     endpoint_config_dir = os.path.join(gen_path, "backend")
     endpoint_config_output_file = os.path.join(
         endpoint_config_dir, "endpoint_config.yaml"

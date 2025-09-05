@@ -1,10 +1,13 @@
 class Component:
-    def __init__(self, parent=None, name=None, entity=None, type=None):
+    def __init__(
+        self, parent=None, name=None, entity=None, type=None, allowed_roles=None
+    ):
         self.isComponent = True
         self.parent = parent
         self.name = name
         self.entity = entity  # This should point to an Entity
         self.type = type  # This could be Gauge, etc.
+        self.allowed_roles = allowed_roles if allowed_roles is not None else []
 
         try:
             entityRef = entity.source.connection.__class__.__name__
