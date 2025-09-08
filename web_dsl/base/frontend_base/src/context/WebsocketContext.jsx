@@ -1,79 +1,71 @@
-import { createContext, useEffect, useRef, useState } from "react";
+import { createContext, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import config from "./websocketConfig.json";
+import { useAuth } from "./AuthContext";
 
-// Create a context for the WebSocket
 export const WebsocketContext = createContext(null);
 
-// Provider component to establish and provide the WebSocket connection
 export const WebsocketProvider = ({ children }) => {
-    const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
-    const [ws, setWs] = useState(null);
-    const retryCountRef = useRef(0); // Use useRef to persist retry count across re-renders
-    const maxRetries = 5; // Max retry attempts
-    const baseDelay = 5000; // 5 second delay between attempts
+    // Get both ws_token and isLoading from the AuthContext
+    const { ws_token, isLoading } = useAuth();
+    const ws = useRef(null);
+    const retryCountRef = useRef(0);
+    const maxRetries = 5;
+    const baseDelay = 5000;
 
-    const connectWebSocket = () => {
-        if (retryCountRef.current >= maxRetries) {
-            console.log("Max retries reached. Stopping reconnection attempts.");
-            toast.error("Error connecting to WebSocket!");
+    useEffect(() => {
+        // Do not attempt to connect if auth is loading or if there is no token.
+        if (isLoading || !ws_token) {
             return;
         }
 
-        console.log(
-            `Attempting WebSocket connection... (Attempt ${
-                retryCountRef.current + 1
-            })`
-        );
+        const connectWebSocket = () => {
+            if (retryCountRef.current >= maxRetries) {
+                console.log("Max retries reached. Stopping reconnection attempts.");
+                toast.error("Error connecting to WebSocket!");
+                return;
+            }
 
-        const websocket = new WebSocket(`ws://${config.host}:${config.port}`);
+            console.log(`Attempting WebSocket connection... (Attempt ${retryCountRef.current + 1})`);
 
-        websocket.onopen = () => {
-            console.log("WebSocket is connected");
-            toast.success("WebSocket is connected!");
-            retryCountRef.current = 0; // Reset retry count on successful connection
+            const websocket = new WebSocket(`ws://${config.host}:${config.port}`);
+            ws.current = websocket;
 
-            // Send the secret key immediately after connection is established.
-            if (SECRET_KEY) {
+            websocket.onopen = () => {
                 console.log("Sending secret key for authentication...");
-                websocket.send(SECRET_KEY);
-            } else {
-                console.warn(
-                    "No secret key configured to send over WebSocket."
-                );
-            }
+                websocket.send(ws_token);
+                console.log("WebSocket is connected");
+                toast.success("WebSocket is connected!");
+                retryCountRef.current = 0;
+            };
+
+            websocket.onclose = () => {
+                console.log("WebSocket is closed.");
+                if (retryCountRef.current < maxRetries) {
+                    retryCountRef.current += 1;
+                    console.log(`Reconnecting in ${baseDelay / 1000} seconds...`);
+                    toast.warn("Reconnecting to WebSocket...");
+                    setTimeout(connectWebSocket, baseDelay);
+                }
+            };
+
+            websocket.onerror = (error) => {
+                console.log("WebSocket error:", error);
+                websocket.close();
+            };
         };
 
-        websocket.onclose = () => {
-            console.log("WebSocket is closed.");
-            if (retryCountRef.current < maxRetries) {
-                retryCountRef.current += 1;
-
-                console.log(`Reconnecting in ${baseDelay / 1000} seconds...`);
-                toast.warn("Reconnecting to WebSocket...");
-                setTimeout(connectWebSocket, baseDelay);
-            }
-        };
-
-        websocket.onerror = (error) => {
-            console.log("WebSocket error:", error);
-            websocket.close(); // Ensure the connection is properly closed before retrying
-        };
-
-        setWs(websocket);
-    };
-
-    useEffect(() => {
         connectWebSocket();
 
+        // Cleanup function to close the WebSocket connection when the component unmounts
+        // or when the dependencies (isLoading, ws_token) change.
         return () => {
-            if (ws) ws.close();
+            if (ws.current) {
+                console.log("Closing WebSocket connection.");
+                ws.current.close();
+            }
         };
-    }, []);
+    }, [ws_token, isLoading]);
 
-    return (
-        <WebsocketContext.Provider value={ws}>
-            {children}
-        </WebsocketContext.Provider>
-    );
+    return <WebsocketContext.Provider value={ws.current}>{children}</WebsocketContext.Provider>;
 };

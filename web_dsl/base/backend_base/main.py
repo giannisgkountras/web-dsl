@@ -186,6 +186,7 @@ async def main():
         host=ws_config.get("host", "0.0.0.0"),
         port=ws_config.get("port", 8765),
         secret_key=SECRET_KEY,
+        user_roles=user_roles,
     )
 
     # Extract multiple broker connection settings
@@ -211,7 +212,13 @@ async def main():
             for topic_info in raw_topics
             if topic_info.get("attributes") is not None
         }
+        allowed_roles = {
+            topic_info.get("topic"): topic_info.get("allowed_roles", [])
+            for topic_info in raw_topics
+            if topic_info.get("attributes") is not None
+        }
         print(f"Allowed attributes: {allowed_attributes}")
+        print(f"Allowed roles: {allowed_roles}")
         if not topics:
             continue
 
@@ -225,6 +232,7 @@ async def main():
                 type=broker_info.get("type"),
                 topics=topics,
                 strict_modes=strict_modes,
+                allowed_roles=allowed_roles,
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
                 allowed_topic_attributes=allowed_attributes,
@@ -717,6 +725,36 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "role": current_role,
     }
     return user_info
+
+
+@app.get("/ws-login")
+async def ws_login(request: Request, current_user: dict = Depends(get_current_user)):
+    """
+    Endpoint to provide WebSocket authentication token.
+    """
+    current_user_email = current_user.get("email") if current_user else None
+    current_user_role = (
+        user_roles.get(current_user_email) if current_user_email else None
+    )
+
+    if not current_user_email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    if not current_user_role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User role not found"
+        )
+
+    # Generate a token for WebSocket authentication
+    payload = {
+        "email": current_user_email,
+        "role": current_user_role,
+        "exp": time.time() + 24 * 60 * 60,  # Token valid for 24 hours
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+    return {"ws_token": token}
 
 
 if __name__ == "__main__":
