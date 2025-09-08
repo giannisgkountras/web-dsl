@@ -34,6 +34,16 @@ Webpage CarMonitor
         headers: {"Content-Type": "application/json"}
     end
 
+    Database<MySQL> WarehouseSQL
+        host: "localhost"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "ShelfMasterDB"
+        allowed_roles: admin
+    end
+
     //============ Specific endpoints / topics / queries =============//
 
     BrokerTopic cameraTopic
@@ -57,6 +67,11 @@ Webpage CarMonitor
         connection: DummyAPI
         path: "/comments?postId=1"
         allowed_roles: viewer, admin
+    end
+
+    MySQLQuery allProducts
+        connection: WarehouseSQL
+        query: "SELECT * from Product"
     end
     //============ Entities ============//
     
@@ -93,6 +108,17 @@ Webpage CarMonitor
             - name: str
             - email: str
             - body: str
+    end
+
+    Entity products
+        source: allProducts
+        attributes:
+            - id: int
+            - name: str
+            - manufacturer: str
+            - price: float
+            - description: str
+            - product_category: str
     end
 
     //============ Components ============//
@@ -164,6 +190,11 @@ Webpage CarMonitor
         allowed_roles: viewer, admin
     end
 
+    Component ProductsJson
+        entity: products
+        type: JsonViewer
+    end
+
     //============ Screens ============//
     Screen Home
         title: "Home"
@@ -175,6 +206,11 @@ Webpage CarMonitor
         endcol
         col
             use PostsJSON
+        endcol
+       endrow
+       row
+        col
+            use ProductsJson
         endcol
        endrow
 

@@ -32,7 +32,11 @@ class DBConnector:
             )
             # Use the connection name directly as the key
             conn_name = cfg.get("name")
-            self.connections[conn_name] = connection
+            conn_roles = cfg.get("allowed_roles", [])
+            self.connections[conn_name] = {
+                "connection": connection,
+                "allowed_roles": conn_roles,
+            }
             print(f"MySQL connected to {conn_name}")
         except Exception as e:
             print(f"MySQL connection error for {cfg.get('name')}: {e}")
@@ -48,7 +52,11 @@ class DBConnector:
             # Here the connection name is used as the name for the MongoDB database
             conn_name = cfg.get("name")
             db = client[cfg.get("database")]
-            self.connections[conn_name] = db
+            conn_roles = cfg.get("allowed_roles", [])
+            self.connections[conn_name] = {
+                "database": db,
+                "allowed_roles": conn_roles,
+            }
             print(f"MongoDB connected to {conn_name}")
         except Exception as e:
             print(f"MongoDB connection error for {cfg.get('name')}: {e}")
@@ -68,7 +76,7 @@ class DBConnector:
         Example:
             query = "SELECT * FROM {table} WHERE id = %s"
         """
-        connection = self.connections.get(connection_name)
+        connection = self.connections.get(connection_name).get("connection")
         if connection is None:
             print(f"No MySQL connection for {connection_name}")
             return None
@@ -101,7 +109,7 @@ class DBConnector:
         Returns:
             bool: True if execution and commit succeeded, False otherwise.
         """
-        connection = self.connections.get(connection_name)
+        connection = self.connections.get(connection_name).get("connection")
         if connection is None:
             print(f"No MySQL connection for {connection_name}")
             return None
@@ -126,7 +134,7 @@ class DBConnector:
         Executes a find operation on the MongoDB connection identified by connection_name.
         'collection' here is analogous to a table in SQL.
         """
-        db = self.connections.get(connection_name)
+        db = self.connections.get(connection_name).get("connection")
         if db is None:
             print(f"No MongoDB connection for {connection_name}")
             return None
@@ -139,7 +147,7 @@ class DBConnector:
             return None
 
     def mongo_insert(self, connection_name, collection, document):
-        db = self.connections.get(connection_name)
+        db = self.connections.get(connection_name).get("connection")
         if db is None:
             print(f"No MongoDB connection for {connection_name}")
             return None
@@ -152,7 +160,7 @@ class DBConnector:
             return None
 
     def mongo_update(self, connection_name, collection, filter, update):
-        db = self.connections.get(connection_name)
+        db = self.connections.get(connection_name).get("connection")
         if db is None:
             print(f"No MongoDB connection for {connection_name}")
             return None
@@ -166,7 +174,7 @@ class DBConnector:
             return None
 
     def mongo_delete(self, connection_name, collection, filter):
-        db = self.connections.get(connection_name)
+        db = self.connections.get(connection_name).get("connection")
         if db is None:
             print(f"No MongoDB connection for {connection_name}")
             return None

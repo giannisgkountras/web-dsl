@@ -418,7 +418,11 @@ def generate_query_cache_key(request: QueryRequest) -> str:
 
 
 @app.post("/queryDB")
-async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
+async def query(
+    request: QueryRequest,
+    api_key: str = Security(get_api_key),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Endpoint to run MySQL or MongoDB queries based on the provided request.
     - For MySQL: returns results in the form {column1: [...], column2: [...], ...}
@@ -426,6 +430,30 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     - Caches results for 1 second to reduce database load
     """
     logging.info(f"Received /queryDB request: {request}")
+
+    # Validate user roles
+    conn_info = db_connector.connections.get(request.connection_name)
+    if not conn_info:
+        raise HTTPException(status_code=404, detail="Connection not found")
+
+    allowed_roles = conn_info.get("allowed_roles", [])
+
+    current_user_role = (
+        user_roles.get(current_user.get("email")) if current_user else None
+    )
+    is_public = allowed_roles == []
+    if not is_public:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication is required for this connection.",
+            )
+        elif current_user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User with role '{current_user_role}' is not authorized for this connection.",
+            )
+
     # Generate cache key
     cache_key = generate_query_cache_key(request)
     now = time.time()
