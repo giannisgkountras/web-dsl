@@ -1,0 +1,38 @@
+import sources.wdsl
+
+Entity temperature
+    source: temperatureTopic
+    attributes:
+        - room: str
+        - value: float
+        - unit: str
+end
+
+Entity lights
+    source: lightsTopic
+    attributes:
+        - room: str
+        - status: str
+end
+
+Entity weather
+    source: currentWeather
+    attributes:
+        - current: dict
+end
+
+Entity energy
+    source: energyUsage
+    attributes:
+        - timestamp: str
+        - consumption_kWh: float
+        - cost: float
+end
+
+Entity camera
+    source: cameraTopic
+    attributes:
+        - timestamp: str
+        - camera_1: str
+        - camera_2: str
+end

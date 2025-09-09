@@ -127,6 +127,12 @@ def get_metamodel(debug: bool = False, global_repo: bool = True):
             "Entity.overloads": FQNImportURI(),
             "WebPage.navbar_screens": FQNImportURI(),
             "User.role": FQNImportURI(),
+            "Screen.allowed_roles": FQNImportURI(),
+            "Component.allowed_roles": FQNImportURI(),
+            "MySQL.allowed_roles": FQNImportURI(),
+            "MongoDB.allowed_roles": FQNImportURI(),
+            "RestEndpoint.allowed_roles": FQNImportURI(),
+            "BrokerTopic.allowed_roles": FQNImportURI(),
         }
     )
 

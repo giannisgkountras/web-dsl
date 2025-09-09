@@ -1,0 +1,62 @@
+import components.wdsl
+import users.wdsl
+
+Webpage SmartBuilding
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A smart building monitoring and control dashboard"
+    navbar: Overview, Management
+
+    Screen Overview
+        title: "Overview"
+        url: "/"
+        
+        row
+           col
+                col
+                    use WeatherWidget
+                endcol
+                col
+                    use RoomTemperature
+                endcol
+           endcol
+           col
+                use TemperatureTable
+           endcol
+        endrow
+        row
+            col
+                use AliveLights
+            endcol
+            col
+                use LightsStatus
+            endcol
+        endrow
+    end
+
+    Screen Management
+        title: "Management"
+        url: "/management"
+        allowed_roles: admin, technician
+
+        row
+            col
+                use EnergyChart
+            endcol
+            col
+                use EnergyCostChart
+            endcol
+        endrow
+        row
+            col
+                use LightsControl
+            endcol
+            col
+                use Camera_1_Image
+            endcol
+            col
+                use Camera_2_Image
+            endcol
+        endrow
+    end
+end

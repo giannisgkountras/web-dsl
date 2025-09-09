@@ -1,0 +1,31 @@
+import users.wdsl
+
+API backendAPI
+    host: "0.0.0.0"
+    port: 8321
+end
+
+Websocket backendWebsocket
+    host: "0.0.0.0"
+    port: 8080
+end
+
+Broker<MQTT> IoTBroker
+    host: "192.168.1.108"
+    port: 1883
+end
+
+RESTApi WeatherAPI
+    host: "https://api.open-meteo.com/v1/"
+    headers: {"Content-Type": "application/json"}
+end
+
+Database<MySQL> EnergyDB
+    host: "192.168.1.108"
+    port: 3306
+    auth:
+        username: "thesis"
+        password: "password"
+    database: "EnergyManagement"
+    allowed_roles: admin, technician
+end
