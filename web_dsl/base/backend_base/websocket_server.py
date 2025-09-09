@@ -39,10 +39,9 @@ class WebSocketServer:
     async def broadcast(self, message: str):
         """Send a message to every single connected client, regardless of role."""
         all_connections = [
-            ws
-            for role_ws_set in self.connected_clients_by_role.values()
-            for ws in role_ws_set
+            ws for conns in self.connected_clients_by_role.values() for ws in conns
         ]
+        print("Broadcasting message to all connected clients.", all_connections)
         if all_connections:
             print(f"Broadcasting message to {len(all_connections)} total clients.")
             await asyncio.gather(*[ws.send(message) for ws in all_connections])
@@ -70,56 +69,83 @@ class WebSocketServer:
                 )
 
     async def websocket_handler(self, websocket: WebSocketServerProtocol):
-        """Handle new WebSocket connections, authorize their role, and track them."""
-        user_id = None
+        """
+        Handle new WebSocket connections.
+        Authenticates users with a JWT and assigns a role.
+        If authentication fails or is skipped, assigns an 'unauthorized' role.
+        """
+        # Set default identifiers for logging purposes before authentication.
+        user_id = f"anonymous_{websocket.remote_address}"
         user_role = None
+
         try:
-            # 1. AUTHENTICATE: Verify the user's identity via JWT
-            user_token = await asyncio.wait_for(websocket.recv(), timeout=10)
-            payload = jwt.decode(user_token, self.secret_key, algorithms=["HS256"])
-            user_id = payload.get("email")
+            # --- Block for Authentication and Authorization ---
+            try:
+                # 1. ATTEMPT AUTHENTICATION: Wait for a token.
+                user_token = await asyncio.wait_for(websocket.recv(), timeout=10)
+                payload = jwt.decode(user_token, self.secret_key, algorithms=["HS256"])
+                email = payload.get("email")
 
-            if not user_id:
-                raise ValueError("JWT payload does not contain an 'email' identifier.")
+                # 2. ATTEMPT AUTHORIZATION: Check if the user and their role exist.
+                role = self.user_roles.get(email)
 
-            # 2. AUTHORIZE: Look up the user's role
-            user_role = self.user_roles.get(user_id)
-            if not user_role:
-                # This user is authenticated but not assigned a role. Disconnect them.
-                raise ValueError(f"User '{user_id}' does not have an assigned role.")
+                if email and role:
+                    # Case A: Success - User is authenticated and authorized.
+                    user_id = email
+                    user_role = role
+                    await websocket.send(
+                        f"Authentication successful. Connected as role: {user_role}."
+                    )
+                else:
+                    # Case B: Valid JWT, but user/role not found in our system.
+                    user_id = email or user_id  # Keep email for logging if it exists
+                    user_role = "unauthorized"
+                    await websocket.send(
+                        "JWT valid, but role not assigned. Connected as unauthorized."
+                    )
 
-            # 3. REGISTER: Add the connection to the correct role group
+            except (asyncio.TimeoutError, jwt.PyJWTError) as auth_error:
+                # Case C: No token sent or token is invalid. Assign 'unauthorized'.
+                print(
+                    f"Authentication failed for {websocket.remote_address}: {auth_error}. Assigning 'unauthorized' role."
+                )
+                user_role = "unauthorized"
+                await websocket.send(
+                    "Could not authenticate. Connected as unauthorized."
+                )
+
+            # --- At this point, every connection has a role (either real or 'unauthorized') ---
+
+            # 3. REGISTER: Add the connection to the correct role group.
             await self._register_client(user_role, websocket)
-            await websocket.send(
-                f"Authentication successful. Connected as role: {user_role}."
-            )
 
-            # 4. MESSAGE HANDLING: Keep connection alive
+            # 4. MESSAGE HANDLING: Keep the connection alive.
             async for message in websocket:
                 print(
                     f"Received message from '{user_id}' (role: {user_role}): {message}"
                 )
-                # You could add logic here, e.g., only allow admins to broadcast
-                # if user_role == "admin" and message.startswith("/broadcast"):
-                #     await self.broadcast(message.split(" ", 1)[1])
+
+                # Example of role-based permissions:
+                if user_role == "unauthorized":
+                    await websocket.send(
+                        "Action denied. Please log in to perform this action."
+                    )
+                    continue
+
+                # Add other message processing for authorized users here...
 
         except websockets.exceptions.ConnectionClosed:
-            print(f"Connection for user '{user_id}' closed normally.")
-        except asyncio.TimeoutError:
-            await websocket.send("Authentication timeout. Disconnecting.")
-            await websocket.close()
-        except jwt.PyJWTError as e:
-            await websocket.send(f"Authentication failed: {e}. Disconnecting.")
-            await websocket.close()
+            print(f"Connection for '{user_id}' (role: {user_role}) closed normally.")
         except Exception as e:
-            print(f"An error occurred for user '{user_id}': {e}")
+            print(
+                f"An unexpected error occurred for '{user_id}' (role: {user_role}): {e}"
+            )
             if not websocket.closed:
                 await websocket.close()
         finally:
-            # 5. UNREGISTER: Clean up the connection from its role group
-            if user_role and websocket in self.connected_clients_by_role.get(
-                user_role, set()
-            ):
+            # 5. UNREGISTER: Clean up the connection from its role group.
+            # This will run for both authorized and unauthorized users.
+            if user_role:
                 await self._unregister_client(user_role, websocket)
 
     async def start_server(self):

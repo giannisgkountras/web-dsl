@@ -1,5 +1,3 @@
-// src/context/AuthContext.js
-
 import React, { createContext, useState, useEffect, useContext, useMemo } from "react";
 import { userInfo, websocketAuth } from "../api/userInfo";
 
@@ -8,7 +6,7 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [ws_token, setWsToken] = useState(null);
+    const [ws_token, setWsToken] = useState("");
 
     useEffect(() => {
         const initializeAuth = async () => {
@@ -17,11 +15,11 @@ export const AuthProvider = ({ children }) => {
                 const [userResponse, wsTokenResponse] = await Promise.all([userInfo(), websocketAuth()]);
 
                 setUser(userResponse);
-                setWsToken(wsTokenResponse.ws_token);
+                setWsToken(wsTokenResponse?.ws_token || "");
             } catch (error) {
                 console.log("User is not authenticated or WebSocket auth failed.", error);
                 setUser(null);
-                setWsToken(null);
+                setWsToken("");
             } finally {
                 setIsLoading(false);
             }
@@ -32,7 +30,6 @@ export const AuthProvider = ({ children }) => {
 
     // By using useMemo, this 'value' object will only be recreated if
     // user, isLoading, or ws_token actually change.
-    // This prevents consumers of the context from re-rendering unnecessarily.
     const value = useMemo(
         () => ({
             user,
