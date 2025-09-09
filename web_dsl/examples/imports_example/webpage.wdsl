@@ -22,4 +22,5 @@ Webpage WarehouseManagement
             - date: str
             - amount: float
     end
+end
    

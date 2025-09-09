@@ -275,3 +275,4 @@ Webpage WarehouseManagement
             use ChartDebug
         endrow
     end
+end
