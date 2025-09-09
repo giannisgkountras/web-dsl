@@ -1,0 +1,7 @@
+Role admin
+Role technician
+Role guest
+
+User "johngreece10@gmail.com" role: admin
+User "oustapodo10@gmail.com" role: technician
+User "bluecactusgr@gmail.com" role: guest

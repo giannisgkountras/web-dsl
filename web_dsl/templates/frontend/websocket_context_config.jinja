@@ -1,4 +1,4 @@
 {
-  "host": "{{websocket.host | default('localhost')}}",
-  "port": {{websocket.port | default(8080)}}
+  "host": "{% if websocket.host == '0.0.0.0' %}localhost{% else %}{{ websocket.host }}{% endif %}",
+  "port": {{ websocket.port | default(8080) }}
 }

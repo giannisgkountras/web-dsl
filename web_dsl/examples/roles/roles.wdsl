@@ -1,0 +1,258 @@
+Webpage CarMonitor
+    author: "Giannis Gkountras"
+    version: "1.0"
+    description: "A car monitoring dashboard"
+    navbar: Home, Debug
+
+    //============ Roles / Users ============//
+
+    Role admin
+    Role viewer
+
+    User "johngreece10@gmail.com" role: admin
+    User "oustapodo10@gmail.com" role: viewer
+
+    //============ Connections =============//
+    
+    API backendAPI
+        host: "0.0.0.0"
+        port: 8321
+    end
+
+    Websocket backendWebsocket
+        host: "0.0.0.0"
+        port: 8080
+    end
+    
+    Broker<MQTT> CarBroker
+        host: "localhost"
+        port: 1883
+    end
+
+    RESTApi DummyAPI
+        host: "https://jsonplaceholder.typicode.com/"
+        headers: {"Content-Type": "application/json"}
+    end
+
+    Database<MySQL> WarehouseSQL
+        host: "192.168.1.108"
+        port: 3306
+        auth:
+            username: "thesis"
+            password: "password"
+        database: "ShelfMasterDB"
+        allowed_roles: admin
+    end
+
+    //============ Specific endpoints / topics / queries =============//
+
+    BrokerTopic cameraTopic
+        connection: CarBroker
+        topic: "camera"
+        allowed_roles: admin
+    end
+
+    BrokerTopic telemetryTopic
+        connection: CarBroker
+        topic: "telemetry"
+    end
+
+    RESTEndpoint postsEndpoint
+        connection: DummyAPI
+        path: "/posts"
+        allowed_roles: admin
+    end
+
+    RESTEndpoint commentsEndpoint
+        connection: DummyAPI
+        path: "/comments?postId=1"
+        allowed_roles: viewer, admin
+    end
+
+    MySQLQuery allProducts
+        connection: WarehouseSQL
+        query: "SELECT * from Product"
+    end
+    //============ Entities ============//
+    
+    Entity camera
+        source: cameraTopic
+        attributes:
+            - frames: dict
+    end
+
+    Entity telemetry
+        source: telemetryTopic
+        strict: true
+        attributes:
+            - fps: dict
+            - carInfo: dict
+            - hardware: list
+            - notifications: list
+    end
+
+    Entity posts
+        source: postsEndpoint
+        attributes:
+            - userId: int
+            - id: int
+            - title: str
+            - body: str
+    end
+
+    Entity comments
+        source: commentsEndpoint
+        attributes:
+            - postId: int
+            - id: int
+            - name: str
+            - email: str
+            - body: str
+    end
+
+    Entity products
+        source: allProducts
+        attributes:
+            - id: int
+            - name: str
+            - manufacturer: str
+            - price: float
+            - description: str
+            - product_category: str
+    end
+
+    //============ Components ============//
+
+    Component CameraFront
+        entity: camera
+        type: Image
+            source: this.frames.front
+    end
+
+    Component CameraBack
+        entity: camera
+        type: Image
+            source: this.frames.back
+    end
+
+    Component CameraAlive
+        entity: camera
+        type: Alive
+            timeout: 5000
+            description: "Camera Topic"
+    end
+
+    Component TelemetryAlive
+        entity: telemetry
+        type: Alive
+            timeout: 5000
+            description: "Telemetry Topic"
+    end
+
+    Component LiveFPS
+        entity: telemetry
+        type: LineChart
+            xLabel: "Time"
+            yLabel: "FPS"
+            xValue: this.fps.time
+            yValues: this.fps.ped, this.fps.veh, this.fps.lane
+    end
+
+    Component CarInfoTable
+        entity: telemetry
+        type: LiveTable
+            columns: this.carInfo.speed, this.carInfo.steer, this.carInfo.yaw
+    end
+
+    Component CPUUsage
+        entity: telemetry
+        type: Gauge
+            value: this.hardware[0]
+            description: "CPU Usage"
+    end
+
+    Component GPUUsage
+        entity: telemetry
+        type: Gauge
+            value: this.hardware[1]
+            description: "GPU Usage"
+    end
+
+    Component PostsJSON
+        entity: posts
+        type: JsonViewer
+        allowed_roles: admin
+    end
+
+    Component CommentsJSON
+        entity: comments
+        type: JsonViewer
+        allowed_roles: viewer, admin
+    end
+
+    Component ProductsJson
+        entity: products
+        type: JsonViewer
+    end
+
+    Component TelemetryJson
+        entity: telemetry
+        type: JsonViewer
+    end
+
+    Component CameraJson
+        entity: camera
+        type: JsonViewer
+    end
+
+    //============ Screens ============//
+    Screen Home
+        title: "Home"
+        url: "/"
+        
+       row
+        col
+         use CommentsJSON
+        endcol
+        col
+            use PostsJSON
+        endcol
+       endrow
+       row
+        col
+            use ProductsJson
+        endcol
+        col
+            use TelemetryJson
+        endcol
+        col
+            use CameraJson
+        endcol
+       endrow
+
+
+    end
+
+    //============ For Debugging ============//
+
+    Screen Debug
+        title: "Debug"
+        url: "/debug"
+        allowed_roles: admin, viewer
+
+        row
+            col
+                Component cameraPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+            col 
+                Component telemetryPublisher
+                    type: Publish
+                        broker: CarBroker
+                end
+            endcol
+        endrow
+    end
+end

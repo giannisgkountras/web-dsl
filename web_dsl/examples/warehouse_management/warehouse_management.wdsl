@@ -78,6 +78,8 @@ Webpage WarehouseManagement
         topic: "notifications"
     end
 
+
+     //============ Entities ============//
     Entity Products
         source: allProducts
         strict: true
@@ -129,6 +131,9 @@ Webpage WarehouseManagement
             - error: str
     end
 
+
+    //============ Components ============//
+    
     Component ProductsTable
         entity: Products
         type: Table
@@ -251,3 +256,5 @@ Webpage WarehouseManagement
             endcol
         endrow
     end
+end
+

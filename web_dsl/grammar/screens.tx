@@ -3,12 +3,14 @@ import entity
 import conditions
 import connections
 import repetition
+import roles
 
 // Each screen has a name, title, URL, optional description, and nested structure
 Screen:
     'Screen' name=ID
     'title:' title=STRING
     'url:' url=STRING
+    ('allowed_roles:' allowed_roles+=[Role][','])?
     ('description:' description=STRING)?
     (
         (localEntities*=Entity)?    // Screen-specific entities

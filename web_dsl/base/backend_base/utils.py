@@ -24,6 +24,13 @@ def load_db_config(config_path="db_config.yaml"):
         return yaml.safe_load(file)
 
 
+def load_user_config(config_path="user_roles.yaml"):
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    full_path = os.path.join(base_dir, config_path)
+    with open(full_path, "r") as file:
+        return yaml.safe_load(file)
+
+
 def convert_object_ids(documents):
     """Recursively convert ObjectId to str in dicts or lists."""
     if isinstance(documents, list):

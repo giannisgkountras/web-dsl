@@ -1,0 +1,28 @@
+import connections.wdsl
+import users.wdsl
+
+BrokerTopic temperatureTopic
+    connection: IoTBroker
+    topic: "building/temperature"
+end
+
+BrokerTopic lightsTopic
+    connection: IoTBroker
+    topic: "building/lights"
+end
+
+BrokerTopic cameraTopic
+    connection: IoTBroker
+    topic: "building/camera"
+    allowed_roles: admin
+end
+
+RESTEndpoint currentWeather
+    connection: WeatherAPI
+    path: "/forecast?latitude=40.64&longitude=22.94&current=temperature_2m"
+end
+
+MySQLQuery energyUsage
+    connection: EnergyDB
+    query: "SELECT * FROM EnergyConsumption ORDER BY timestamp DESC LIMIT 50"
+end

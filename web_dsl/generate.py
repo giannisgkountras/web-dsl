@@ -45,6 +45,7 @@ config_template = backend_env.get_template("config_template.jinja")
 endpoint_config_template = backend_env.get_template("endpoint_config.jinja")
 db_config_template = backend_env.get_template("db_config.jinja")
 dockerfile_template = backend_env.get_template("dockerfile_template.jinja")
+user_roles_template = backend_env.get_template("user_roles_template.jinja")
 
 docker_compose_template = backend_env.get_template("docker_compose_template.jinja")
 
@@ -173,6 +174,14 @@ def generate(model_path, gen_path):
         f.write(env_backend_content)
     print(f"Generated {env_backend_output_file}")
 
+    # Generate users roles config file
+    users = model.aggregated_users
+    user_roles_config_file = os.path.join(gen_path, "backend", "user_roles.yaml")
+    user_roles_config_content = user_roles_template.render(users=users)
+    with open(user_roles_config_file, "w", encoding="utf-8") as f:
+        f.write(user_roles_config_content)
+    print(f"Generated: {user_roles_config_file}")
+
     # # Collect all components from the model to get what attributes of entities are actually used
     # components = get_children_of_type("Component", model)
     # for component in components:
@@ -210,6 +219,10 @@ def generate(model_path, gen_path):
                             if hasattr(entity_obj, "strict")
                             else False
                         ),  # Default if strict not present
+                        # gather all roles as strings
+                        "allowed_roles": [
+                            role.name for role in entity_obj.source.allowed_roles
+                        ],
                     }
                 )
 
@@ -218,7 +231,6 @@ def generate(model_path, gen_path):
     for broker in model.aggregated_brokers:
         all_brokers.add(broker)
     all_brokers = list(all_brokers)
-
     config_dir = os.path.join(gen_path, "backend")
     config_output_file = os.path.join(config_dir, "config.yaml")
     config_content = config_template.render(
@@ -233,12 +245,14 @@ def generate(model_path, gen_path):
 
     # Generate rest api config file
     # all_rest_apis = get_children_of_type("RESTApi", model)
+
     endpoint_config_dir = os.path.join(gen_path, "backend")
     endpoint_config_output_file = os.path.join(
         endpoint_config_dir, "endpoint_config.yaml"
     )
     endpoint_config_content = endpoint_config_template.render(
         all_rest_apis=model.aggregated_restapis,
+        all_rest_endpoints=model.aggregated_endpoints,
     )
     with open(endpoint_config_output_file, "w", encoding="utf-8") as f:
         f.write(endpoint_config_content)

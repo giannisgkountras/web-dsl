@@ -33,7 +33,13 @@
             {% set type = element %}
         {% endif %}
 
-
+        {% if element.allowed_roles and element.allowed_roles|length > 0 %}
+        <ProtectedComponent allowedRoles={[ 
+            {% for role in element.allowed_roles %}
+                  "{{role.name}}",
+            {% endfor %}
+        ]}>
+        {% endif %}
         {% if type.name=="Gauge"%}
             <Gauge 
                 {% if entity %}
@@ -388,6 +394,10 @@
             orientation={"{{element.orientation}}" }
    
         />
+    {% endif %}
+
+    {% if element.allowed_roles and element.allowed_roles|length > 0 %}
+    </ProtectedComponent>
     {% endif %}
 
 

@@ -282,6 +282,7 @@ Webpage RepetitionsTest
             endcol
         endrow
     end
+end
     // data to test
 
 //     {

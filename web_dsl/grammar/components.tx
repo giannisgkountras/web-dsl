@@ -4,12 +4,14 @@ import types
 import accessors
 import sources
 import utils
+import roles
 
 Component:
     'Component' name=ID
     (
         ('entity:'  entity=[Entity])?
         ('type:' type=ComponentType)
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;

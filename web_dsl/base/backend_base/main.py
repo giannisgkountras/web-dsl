@@ -10,10 +10,15 @@ import time
 from dotenv import load_dotenv
 from pydantic import BaseModel
 from typing import Optional, Any, Dict, Tuple
-from fastapi import FastAPI, HTTPException, Security, status
+from fastapi.responses import RedirectResponse
+from urllib.parse import urlencode
+from fastapi import FastAPI, HTTPException, Security, status, Depends, Request
 from bson import ObjectId
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import APIKeyHeader
+import jwt
+from jwt import PyJWKClient
+
 from websocket_server import WebSocketServer
 from commlib_client import BrokerCommlibClient
 from db_connector import DBConnector
@@ -22,6 +27,7 @@ from utils import (
     load_endpoint_config,
     load_db_config,
     convert_object_ids,
+    load_user_config,
     transform_list_of_dicts_to_dict_of_lists,
 )
 
@@ -50,6 +56,60 @@ def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
     )
 
 
+AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
+AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
+AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
+AUTH0_API_AUDIENCE = os.environ.get("AUTH0_API_AUDIENCE")  # Your API Audience
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:3000")
+BACKEND_URL = os.environ.get("BACKEND_URL", "http://localhost:8321")
+jwks_client = PyJWKClient(f"https://{AUTH0_DOMAIN}/.well-known/jwks.json")
+ACTION_NAMESPACE = os.environ.get(
+    "ACTION_NAMESPACE", "https://example.com"
+)  # Custom namespace for Auth0 Action
+
+
+async def get_token_from_cookie(request: Request) -> Optional[str]:
+    token = request.cookies.get("access_token")
+    return token
+
+
+async def get_current_user(token: Optional[str] = Depends(get_token_from_cookie)):
+    if token is None:
+        return None
+
+    try:
+        signing_key = jwks_client.get_signing_key_from_jwt(token).key
+
+        payload = jwt.decode(
+            token,
+            signing_key,
+            algorithms=["RS256"],
+            audience=AUTH0_API_AUDIENCE,
+            issuer=f"https://{AUTH0_DOMAIN}/",
+        )
+
+        # Look for the custom claim we created in the Auth0 Action.
+        # The namespace must match exactly what you put in the JavaScript code.
+        email = payload.get(f"{ACTION_NAMESPACE}/email")
+
+        if not email:
+            logging.warning("Token is valid but is missing the required email claim.")
+            return None
+
+        # Instead of returning the whole payload, just return the essential info.
+        return {"email": email}
+
+    except jwt.ExpiredSignatureError:
+        logging.warning("Login attempt with expired token.")
+        return None
+    except jwt.InvalidTokenError as e:
+        logging.warning(f"Login attempt with invalid token: {e}")
+        return None
+    except Exception as e:
+        logging.error(f"Error fetching signing key or validating token: {e}")
+        return None
+
+
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 
@@ -57,18 +117,21 @@ logging.basicConfig(level=logging.INFO)
 config = load_config() or {}
 endpoint_config = load_endpoint_config()
 db_config = load_db_config()
+user_roles = load_user_config()
+
 
 # Global variable to hold the main event loop
 global_event_loop = None
 
 broker_clients = []  # Store broker clients for access in FastAPI
 
+
 app = FastAPI()
 
 # Allow all origins (unsafe for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all domains
+    allow_origins=[FRONTEND_URL],  # Allow all domains
     allow_credentials=True,
     allow_methods=["*"],  # Allow all HTTP methods (GET, POST, etc.)
     allow_headers=["*"],  # Allow all headers
@@ -123,6 +186,7 @@ async def main():
         host=ws_config.get("host", "0.0.0.0"),
         port=ws_config.get("port", 8765),
         secret_key=SECRET_KEY,
+        user_roles=user_roles,
     )
 
     # Extract multiple broker connection settings
@@ -148,7 +212,13 @@ async def main():
             for topic_info in raw_topics
             if topic_info.get("attributes") is not None
         }
+        allowed_roles = {
+            topic_info.get("topic"): topic_info.get("allowed_roles", [])
+            for topic_info in raw_topics
+            if topic_info.get("attributes") is not None
+        }
         print(f"Allowed attributes: {allowed_attributes}")
+        print(f"Allowed roles: {allowed_roles}")
         if not topics:
             continue
 
@@ -162,6 +232,7 @@ async def main():
                 type=broker_info.get("type"),
                 topics=topics,
                 strict_modes=strict_modes,
+                allowed_roles=allowed_roles,
                 ws_server=ws_server,
                 global_event_loop=global_event_loop,
                 allowed_topic_attributes=allowed_attributes,
@@ -235,7 +306,11 @@ def generate_restcall_cache_key(request: RESTCallRequest) -> str:
 
 
 @app.post("/restcall")
-async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_key)):
+async def rest_call(
+    request: RESTCallRequest,
+    api_key: str = Security(get_api_key),
+    current_user: dict = Depends(get_current_user),
+):
     """Make a REST call to a specified endpoint, with caching based on freshness."""
 
     # Validate endpoint configuration
@@ -244,6 +319,31 @@ async def rest_call(request: RESTCallRequest, api_key: str = Security(get_api_ke
         raise HTTPException(
             status_code=404, detail=f"Endpoint '{request.name}' not found"
         )
+
+    allowed_roles = current_endpoint.get("related_endpoints_roles", {}).get(
+        request.path
+    )
+    if allowed_roles is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Access to path '{request.path}' is not configured.",
+        )
+
+    is_public = allowed_roles == []
+    if not is_public:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication is required for this path.",
+            )
+        else:
+            current_user_email = current_user.get("email")
+            current_role = user_roles.get(current_user_email)
+            if current_role not in allowed_roles:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"User with role '{current_role}' is not authorized for this path.",
+                )
 
     # Construct URL
     host = current_endpoint.get("host")
@@ -326,7 +426,11 @@ def generate_query_cache_key(request: QueryRequest) -> str:
 
 
 @app.post("/queryDB")
-async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
+async def query(
+    request: QueryRequest,
+    api_key: str = Security(get_api_key),
+    current_user: dict = Depends(get_current_user),
+):
     """
     Endpoint to run MySQL or MongoDB queries based on the provided request.
     - For MySQL: returns results in the form {column1: [...], column2: [...], ...}
@@ -334,6 +438,30 @@ async def query(request: QueryRequest, api_key: str = Security(get_api_key)):
     - Caches results for 1 second to reduce database load
     """
     logging.info(f"Received /queryDB request: {request}")
+
+    # Validate user roles
+    conn_info = db_connector.connections.get(request.connection_name)
+    if not conn_info:
+        raise HTTPException(status_code=404, detail="Connection not found")
+
+    allowed_roles = conn_info.get("allowed_roles", [])
+
+    current_user_role = (
+        user_roles.get(current_user.get("email")) if current_user else None
+    )
+    is_public = allowed_roles == []
+    if not is_public:
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication is required for this connection.",
+            )
+        elif current_user_role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User with role '{current_user_role}' is not authorized for this connection.",
+            )
+
     # Generate cache key
     cache_key = generate_query_cache_key(request)
     now = time.time()
@@ -489,6 +617,144 @@ async def modify_db(request: ModifyDBRequest, api_key: str = Security(get_api_ke
             status_code=400,
             detail="Invalid request: 'query' and 'database' or 'collection' must be specified",
         )
+
+
+# AUTHENTICATION ROUTES
+
+# --- Authentication Flow Endpoints ---
+
+
+@app.get("/auth/login")
+async def login(request: Request):
+    """
+    Initiates the Auth0 login flow by redirecting the user.
+    """
+    # We use a state parameter to prevent CSRF attacks.
+    # It's stored in a cookie that is checked on the way back.
+    state = "some_random_string"  # In production, generate a random value
+
+    params = {
+        "response_type": "code",
+        "client_id": AUTH0_CLIENT_ID,
+        "redirect_uri": f"{BACKEND_URL}/auth/callback",
+        "scope": "openid profile email",
+        "audience": AUTH0_API_AUDIENCE,
+        "state": state,
+    }
+    auth0_url = f"https://{AUTH0_DOMAIN}/authorize?{urlencode(params)}"
+
+    response = RedirectResponse(url=auth0_url)
+    response.set_cookie(key="state", value=state, httponly=True, samesite="lax")
+    return response
+
+
+@app.get("/auth/callback")
+async def callback(request: Request):
+    """
+    Handles the redirect from Auth0 after successful login.
+    Exchanges the authorization code for an access token and sets it as a cookie.
+    """
+    code = request.query_params.get("code")
+    state = request.query_params.get("state")
+
+    # CSRF check
+    if state != request.cookies.get("state"):
+        raise HTTPException(status_code=403, detail="Invalid state parameter")
+
+    # Exchange code for token
+    token_payload = {
+        "grant_type": "authorization_code",
+        "client_id": AUTH0_CLIENT_ID,
+        "client_secret": AUTH0_CLIENT_SECRET,
+        "code": code,
+        "redirect_uri": f"{BACKEND_URL}/auth/callback",
+    }
+    token_url = f"https://{AUTH0_DOMAIN}/oauth/token"
+
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(token_url, json=token_payload)
+
+    if token_response.status_code != 200:
+        raise HTTPException(status_code=400, detail="Could not exchange code for token")
+
+    token_data = token_response.json()
+    access_token = token_data.get("access_token")
+
+    # Redirect user back to the frontend and set the secure cookie
+    response = RedirectResponse(url=f"{FRONTEND_URL}")
+    response.set_cookie(
+        key="access_token",
+        value=access_token,
+        httponly=True,  # Essential: Prevents JS access
+        secure=False,  # Essential: Only send over HTTPS in production
+        samesite="lax",  # CSRF protection
+        max_age=token_data.get("expires_in", 3600),  # Sets cookie expiration
+    )
+    # Clean up the state cookie
+    response.delete_cookie("state")
+    return response
+
+
+@app.get("/auth/logout")
+async def logout():
+    """
+    Logs the user out by clearing the cookie and redirecting to Auth0's logout endpoint.
+    """
+
+    auth0_logout_url = f"https://{AUTH0_DOMAIN}/v2/logout?client_id={AUTH0_CLIENT_ID}&returnTo={FRONTEND_URL}"
+    response = RedirectResponse(url=auth0_logout_url)
+    response.delete_cookie("access_token")
+
+    return response
+
+
+@app.get("/me")
+async def get_me(current_user: dict = Depends(get_current_user)):
+    """
+    Returns the authenticated user's email.
+    e.g., {"email": "user@example.com"}
+    """
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    current_user_email = current_user.get("email")
+    current_role = user_roles.get(current_user_email)
+    user_info = {
+        "email": current_user_email,
+        "role": current_role,
+    }
+    return user_info
+
+
+@app.get("/ws-login")
+async def ws_login(request: Request, current_user: dict = Depends(get_current_user)):
+    """
+    Endpoint to provide WebSocket authentication token.
+    """
+    current_user_email = current_user.get("email") if current_user else None
+    current_user_role = (
+        user_roles.get(current_user_email) if current_user_email else None
+    )
+
+    if not current_user_email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+        )
+    if not current_user_role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="User role not found"
+        )
+
+    # Generate a token for WebSocket authentication
+    payload = {
+        "email": current_user_email,
+        "role": current_user_role,
+        "exp": time.time() + 24 * 60 * 60,  # Token valid for 24 hours
+    }
+    token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
+    return {"ws_token": token}
 
 
 if __name__ == "__main__":

@@ -1,0 +1,78 @@
+import entities.wdsl
+import connections.wdsl
+import users.wdsl
+
+Component TemperatureTable
+    entity: temperature
+    type: LiveTable
+        columns: this.room, this.value, this.unit
+end
+
+Component LightsStatus
+    entity: lights
+    type: LiveTable
+        columns: this.room, this.status
+end
+
+Component WeatherWidget
+    entity: weather
+    type: Gauge
+        value: this.current.temperature_2m
+        description: "Outside Temperature (°C)"
+end
+
+Component RoomTemperature
+    entity: temperature
+    type: Gauge
+        value: this.value
+        description: "Room Temperature (°C)"
+end
+
+Component AliveLights
+    entity: lights
+    type: Alive
+        timeout: 5000
+        description: "Live Lights Info"
+end
+
+Component EnergyChart
+    entity: energy
+    type: LineChart
+        xLabel: "Time"
+        yLabel: "kWh"
+        xValue: this.timestamp
+        yValues: this.consumption_kWh
+    allowed_roles: admin, technician
+end
+
+Component EnergyCostChart
+    entity: energy
+    type: BarChart
+        xLabel: "Time"
+        yLabel: "Cost"
+        xValue: this.timestamp
+        yValues: this.cost
+    allowed_roles: admin, technician
+end
+
+Component LightsControl
+    entity: lights
+    type: Publish
+        broker: IoTBroker
+    allowed_roles: technician, admin
+end
+
+Component Camera_1_Image
+    entity: camera
+    type: Image
+    source: this.camera_1
+    allowed_roles: admin
+end
+
+Component Camera_2_Image
+    entity: camera
+    type: Image
+    source: this.camera_2
+    allowed_roles: admin
+end
+

@@ -1,11 +1,13 @@
 import connections
 import types
+import roles
 
 MySQLQuery:
     'MySQLQuery' name=ID
     (
         ( 'connection:' connection=[MySQL] )
         ( 'query:' query=STRING )
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;
@@ -16,18 +18,20 @@ MongoDBQuery:
         ('connection:' connection=[MongoDB] )
         ('collection:' collection=STRING )
         ('filter:' filter=STRING)?
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;
 
 RESTEndpoint:
     'RESTEndpoint' name=ID
-    'connection:' connection=[RESTApi]
     (
+        'connection:' connection=[RESTApi]
         ('path:' path=STRING)?
         ('method:' method=RESTVerb)?
         ('body:' body=Dict)?
         ('params:' params=Dict)?
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;
@@ -44,6 +48,7 @@ BrokerTopic:
     (
         ('connection:' connection=[MessageBroker] )
         ('topic:' topic=STRING )
+        ('allowed_roles:' allowed_roles+=[Role][','])?
     )#
     'end'
 ;

@@ -10,6 +10,7 @@ import accessors
 import conditions
 import repetition
 import computed
+import roles
 
 Model:
     (imports+=Import)?
@@ -26,6 +27,8 @@ Model:
         (components+=Component)*
         (entities+=Entity)*
         (screens+=Screen)*
+        (users*=User)*
+        (roles*=Role)*
         (webpage=WebPage)?
     )#
 ;

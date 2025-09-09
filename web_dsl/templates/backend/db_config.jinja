@@ -5,6 +5,11 @@ mysql:
     port: {{ db.port }}
     user: {{ db.auth.username }}
     password: {{ db.auth.password }}
+    allowed_roles: [
+      {% for role in db.allowed_roles %}
+      "{{role.name}}",
+      {% endfor %}
+    ]
 {% endfor %}
 
 mongo:
@@ -15,4 +20,9 @@ mongo:
     user: {{ db.auth.username }}
     password: {{ db.auth.password }}
     database: {{ db.database }}
+    allowed_roles: [
+      {% for role in db.allowed_roles %}
+      "{{role.name}}",
+      {% endfor %}
+    ]
 {% endfor %}

@@ -9,12 +9,20 @@ const rootApi = ky.extend({
     prefixUrl: `${apiUrl}`,
     headers: {
         "X-API-Key": apiKey
-    }
+    },
+    credentials: "include"
 });
 const api = {
     post: async (path, json) => {
         try {
             return await rootApi.post(path, { json }).json();
+        } catch (error) {
+            toast.error(error.message);
+        }
+    },
+    get: async (path) => {
+        try {
+            return await rootApi.get(path).json();
         } catch (error) {
             toast.error(error.message);
         }
