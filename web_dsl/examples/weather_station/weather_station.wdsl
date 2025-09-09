@@ -2,9 +2,7 @@ Webpage WeatherStation
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A weather station app"
-    navbar: Home, Debug
-
-     //============ Connections =============//
+    navbar: Home
     
     API backendAPI
         host: "0.0.0.0"
@@ -26,8 +24,6 @@ Webpage WeatherStation
         port: 1883
     end
 
-    //============ Specific endpoints / queries =============//
-
     RESTEndpoint WeatherEnpoint
         connection: OpenMeteo
         path: "/v1/forecast?latitude=40.6436&longitude=22.9309&current=temperature_2m,relative_humidity_2m,is_day,weather_code&hourly=temperature_2m,relative_humidity_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_hours=24&models=best_match"
@@ -38,8 +34,6 @@ Webpage WeatherStation
         topic: "espdata"
     end
 
-     //============ Entities ============//
-    
     Entity weatherData
         source: WeatherEnpoint
         attributes:
@@ -53,8 +47,6 @@ Webpage WeatherStation
         attributes:
             - current: list
     end
-
-    //============ Components ============//
 
     Component ESPLiveData
         entity: espData
@@ -164,7 +156,6 @@ Webpage WeatherStation
             ]
     end
 
-    //============ Screens ============//
     Screen Home
         title: "Home"
         url: "/"
@@ -216,23 +207,5 @@ Webpage WeatherStation
                 use solarRadiationData
             endcol
         endrow
-    end
-
-
-     //============ For Debugging ============//
-
-    Screen Debug
-        title: "Debug"
-        url: "/debug"
-
-        row
-            col
-                Component espPublisher
-                    type: Publish
-                        broker: SensorBroker
-                end
-            endcol     
-        endrow
-
     end
 end

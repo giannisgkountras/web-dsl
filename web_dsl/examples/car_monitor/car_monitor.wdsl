@@ -4,8 +4,6 @@ Webpage CarMonitor
     description: "A car monitoring dashboard"
     navbar: Home
 
-    //============ Connections =============//
-    
     API backendAPI
         host: "0.0.0.0"
         port: 8321
@@ -31,8 +29,6 @@ Webpage CarMonitor
         port: 6379
     end
 
-    //============ Specific endpoints / topics / queries =============//
-
     BrokerTopic cameraTopic
         connection: CarBroker
         topic: "camera"
@@ -53,8 +49,6 @@ Webpage CarMonitor
         path: "/api/signal"
     end
 
-    //============ Entities ============//
-    
     Entity camera
         source: cameraTopic
         attributes:
@@ -76,8 +70,6 @@ Webpage CarMonitor
         attributes:
             - traffic_lights: list
     end
-
-    //============ Components ============//
 
     Component CameraFront
         entity: camera
@@ -160,7 +152,6 @@ Webpage CarMonitor
         type: JsonViewer
     end
 
-    //============ Screens ============//
     Screen Home
         title: "Home"
         url: "/"
@@ -199,42 +190,6 @@ Webpage CarMonitor
             col
                 use CPUUsage
                 use GPUUsage
-            endcol
-        endrow
-
-
-    end
-
-    //============ For Debugging ============//
-
-    Screen Debug
-        title: "Debug"
-        url: "/debug"
-
-        row
-            col
-                Component cameraPublisher
-                    type: Publish
-                        broker: CarBroker
-                end
-            endcol
-            col 
-                Component telemetryPublisher
-                    type: Publish
-                        broker: CarBroker
-                end
-            endcol
-        endrow
-        row
-            col
-                Component trafficLightsPublisher
-                    type: Publish
-                        broker: TLServer
-                end
-            endcol
-            col
-                if telemetry.hardware[0] > 10
-                    use StartButton
             endcol
         endrow
     end

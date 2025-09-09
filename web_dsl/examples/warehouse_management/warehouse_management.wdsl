@@ -2,9 +2,7 @@ Webpage WarehouseManagement
     author: "Giannis Gkountras"
     version: "1.0"
     description: "A dashboard for managing warehouses"
-    navbar: Home, Debug
-
-    //============ Connections =============//
+    navbar: Home
 
     API backendAPI
         host: "0.0.0.0"
@@ -38,8 +36,6 @@ Webpage WarehouseManagement
         host: "192.168.1.6"
         port: 1883
     end
-
-    //============ Specific endpoints/queries/ topics =============//
 
     MySQLQuery allProducts
         connection: WarehouseSQL
@@ -81,6 +77,7 @@ Webpage WarehouseManagement
         connection: NotificationsBroker
         topic: "notifications"
     end
+
 
      //============ Entities ============//
     Entity Products
@@ -134,7 +131,9 @@ Webpage WarehouseManagement
             - error: str
     end
 
+
     //============ Components ============//
+    
     Component ProductsTable
         entity: Products
         type: Table
@@ -223,7 +222,6 @@ Webpage WarehouseManagement
             max: this.capacity[2]
             description: "Central warehouse capacity"
     end
-    //============ Screens ============//
 
     Screen Home
         title: "Home"
@@ -258,21 +256,5 @@ Webpage WarehouseManagement
             endcol
         endrow
     end
-
-    Screen Debug
-        title: "Debug"
-        url: "/debug"
-
-        row
-            col
-                Component NotificationsPublisher
-                    type: Publish
-                        broker: NotificationsBroker
-                end
-            endcol
-        endrow
-        row
-            use ChartDebug
-        endrow
-    end
 end
+
