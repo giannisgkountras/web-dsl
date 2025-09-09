@@ -12,6 +12,7 @@ class BrokerCommlibClient:
         topics: list,
         allowed_topic_attributes: dict,
         strict_modes: list,
+        allowed_roles: dict,
         ws_server,
         global_event_loop,
     ):
@@ -39,6 +40,7 @@ class BrokerCommlibClient:
         self.pub = self.node.create_mpublisher()
         self.allowed_topic_attributes = allowed_topic_attributes or {}
         self.strict_modes = strict_modes
+        self.allowed_roles = allowed_roles
 
     def on_message_callback(self, topic: str, strict: bool):
         """Generate a callback for a specific topic."""
@@ -77,10 +79,20 @@ class BrokerCommlibClient:
                     f"Failed to convert filtered message to JSON for topic '{topic}': {e}"
                 )
                 return
-            asyncio.run_coroutine_threadsafe(
-                self.ws_server.send_message(json_msg_with_prefix),
-                self.global_event_loop,
-            )
+
+            # Find allowed roles to send the message to
+            roles = self.allowed_roles.get(topic, [])
+            if roles == []:
+                asyncio.run_coroutine_threadsafe(
+                    self.ws_server.broadcast(json_msg_with_prefix),
+                    self.global_event_loop,
+                )
+            else:
+                for role in roles:
+                    asyncio.run_coroutine_threadsafe(
+                        self.ws_server.send_to_role(role, json_msg_with_prefix),
+                        self.global_event_loop,
+                    )
 
         return callback
 

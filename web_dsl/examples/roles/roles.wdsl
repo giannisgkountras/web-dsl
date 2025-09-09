@@ -35,7 +35,7 @@ Webpage CarMonitor
     end
 
     Database<MySQL> WarehouseSQL
-        host: "localhost"
+        host: "192.168.1.108"
         port: 3306
         auth:
             username: "thesis"
@@ -195,6 +195,16 @@ Webpage CarMonitor
         type: JsonViewer
     end
 
+    Component TelemetryJson
+        entity: telemetry
+        type: JsonViewer
+    end
+
+    Component CameraJson
+        entity: camera
+        type: JsonViewer
+    end
+
     //============ Screens ============//
     Screen Home
         title: "Home"
@@ -211,6 +221,12 @@ Webpage CarMonitor
        row
         col
             use ProductsJson
+        endcol
+        col
+            use TelemetryJson
+        endcol
+        col
+            use CameraJson
         endcol
        endrow
 

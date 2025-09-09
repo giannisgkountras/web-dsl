@@ -10,3 +10,13 @@ export const userInfo = async () => {
         return { status: "error", message: error.message };
     }
 };
+
+export const websocketAuth = async () => {
+    try {
+        const response = await api.get("ws-login");
+        return response;
+    } catch (error) {
+        toast.error(error.message);
+        return { status: "error", message: error.message };
+    }
+};

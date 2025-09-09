@@ -1,47 +1,47 @@
-// src/context/AuthContext.js
+import React, { createContext, useState, useEffect, useContext, useMemo } from "react";
+import { userInfo, websocketAuth } from "../api/userInfo";
 
-import React, { createContext, useState, useEffect, useContext } from "react";
-import { userInfo } from "../api/userInfo";
-// 1. Create the Context
 const AuthContext = createContext();
 
-// 2. Create the AuthProvider Component
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-
-    const checkLoggedIn = async () => {
-        try {
-            // The `withCredentials: true` option is essential.
-            // It tells axios to send the HttpOnly cookie with the request.
-            const response = await userInfo();
-            console.log("User info response:", response);
-
-            // If the request is successful (2xx status), the user is logged in.
-            setUser(response);
-        } catch (error) {
-            // If the request fails (e.g., 401 Unauthorized), the user is not logged in.
-            console.log("User is not authenticated.");
-            setUser(null);
-        } finally {
-            // We are done loading, whether we found a user or not.
-            setIsLoading(false);
-        }
-    };
+    const [ws_token, setWsToken] = useState("");
 
     useEffect(() => {
-        checkLoggedIn();
+        const initializeAuth = async () => {
+            try {
+                // Fetch user and ws_token in parallel for efficiency
+                const [userResponse, wsTokenResponse] = await Promise.all([userInfo(), websocketAuth()]);
+
+                setUser(userResponse);
+                setWsToken(wsTokenResponse?.ws_token || "");
+            } catch (error) {
+                console.log("User is not authenticated or WebSocket auth failed.", error);
+                setUser(null);
+                setWsToken("");
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initializeAuth();
     }, []);
 
-    const value = {
-        user,
-        isLoading
-    };
+    // By using useMemo, this 'value' object will only be recreated if
+    // user, isLoading, or ws_token actually change.
+    const value = useMemo(
+        () => ({
+            user,
+            isLoading,
+            ws_token
+        }),
+        [user, isLoading, ws_token]
+    );
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
-// 3. Create a custom hook for easy access to the context
 export const useAuth = () => {
     return useContext(AuthContext);
 };
