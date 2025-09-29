@@ -1,4 +1,5 @@
 import os
+import io
 import traceback
 import subprocess
 from typing import List, Optional
@@ -22,6 +23,7 @@ from ..utils import (
     save_upload_file,
     postprocess_generation_for_deployment,
     run_remote_ssh_command_capture,
+    generate_credentials,
     CapturedSSHResult,
 )
 from ..database import (
@@ -48,19 +50,169 @@ from ..models import (
     # DeploymentActionBody,  # May not be needed if deployment_uid is in path
     DockerStatsResponse,
     format_deployment_response,
+    DeploymentStringModel
     # DeploymentCreateBody,  # New model for creation
     # StartDeploymentBody,  # New model for start action requiring user_id
 )
 
-router = APIRouter(prefix="/deployments")
+router = APIRouter(prefix="/deploy")
+
+async def run_deployment(
+    conn: aiosqlite.Connection,
+    uid: str,
+    model_str: str,
+    model_dir_local: str,
+    gen_dir_local: str,
+    remote_dir_vm: str,
+    docker_project_name: str,
+    is_public: bool,
+    app_username: str,
+    app_password: str,
+):
+    """
+    This function contains the long-running deployment logic and will be run as a background task.
+    """
+    try:
+        main_model_path = os.path.join(model_dir_local, f"model-{uid}.wdsl")
+
+        with open(main_model_path, "w", encoding="utf-8") as f:
+            f.write(model_str)
+
+        generated_app_path = await run_in_threadpool(
+            generate, main_model_path, gen_dir_local
+        )
+
+        await run_in_threadpool(
+            postprocess_generation_for_deployment,
+            generation_dir=generated_app_path,
+            uid=uid,
+            VM_MACHINE_IP=VM_MACHINE_IP,
+            VM_MACHINE_USER=VM_MACHINE_USER,
+            username=app_username,
+            password=app_password,
+            public_deployment=is_public,
+        )
+
+        mkdir_result: CapturedSSHResult = await run_in_threadpool(
+            run_remote_ssh_command_capture, f"mkdir -p {remote_dir_vm}"
+        )
+        if mkdir_result.returncode != 0:
+            err_msg = f"Mkdir fail. Code:{mkdir_result.returncode}. Err:{mkdir_result.stderr}"
+            await db_update_deployment_status(conn, uid, "failed", error_message=err_msg)
+            return
+
+        scp_cmd_list = [
+            "scp", "-P", str(VM_MACHINE_SSH_PORT),
+            "-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
+            "-o", "BatchMode=yes", "-o", "LogLevel=ERROR",
+            "-i", SSH_KEY_PATH, "-r",
+            f"{generated_app_path}/.", f"{VM_MACHINE_USER}@{VM_MACHINE_IP}:{remote_dir_vm}/",
+        ]
+        scp_res = await run_in_threadpool(
+            subprocess.run, scp_cmd_list, check=False,
+            capture_output=True, text=True, timeout=120,
+        )
+        if scp_res.returncode != 0:
+            err_msg = f"SCP fail. Code:{scp_res.returncode}. Err:{scp_res.stderr}"
+            await db_update_deployment_status(conn, uid, "failed", error_message=err_msg)
+            return
+
+        deploy_cmd = f"cd {remote_dir_vm} && docker compose -p {docker_project_name} up --build -d"
+        ssh_deploy_res: CapturedSSHResult = await run_in_threadpool(
+            run_remote_ssh_command_capture, deploy_cmd, timeout=300
+        )
+
+        if ssh_deploy_res.returncode != 0:
+            logs_cmd = f"cd {remote_dir_vm} && docker compose -p {docker_project_name} logs --tail=50"
+            logs_res: CapturedSSHResult = await run_in_threadpool(
+                run_remote_ssh_command_capture, logs_cmd, timeout=30
+            )
+            err_detail = (
+                f"Compose fail! Code:{ssh_deploy_res.returncode}. Err:{ssh_deploy_res.stderr}. "
+                f"Out:{ssh_deploy_res.stdout}. Logs:{logs_res.stdout} {logs_res.stderr}"
+            )
+            await db_update_deployment_status(conn, uid, "failed", error_message=err_detail)
+            return
+
+        dep_url = f"http://{VM_MACHINE_IP}/apps/{uid}/"
+        await db_update_deployment_status(
+            conn, uid, "running", url=dep_url,
+            app_username=app_username, app_password=app_password,
+        )
+
+    except Exception as e:
+        traceback.print_exc()
+        err_msg = f"Deploy fail in background: {str(e)}"
+        await db_update_deployment_status(conn, uid, "failed", error_message=err_msg)
 
 
 @router.post(
     "",
-    status_code=201,
+    status_code=202,  # Use 202 Accepted for background tasks
     tags=["Deployments - Lifecycle"],
 )
 async def create_new_deployment(
+    background_tasks: BackgroundTasks,
+    api_key: str = Security(get_api_key),
+    deployment: DeploymentStringModel = Body(...),
+    conn: aiosqlite.Connection = Depends(get_db_connection),
+):
+    uid = get_unique_id()
+    model_dir_local = os.path.join(TMP_DIR, f"models-{uid}")
+    gen_dir_local = os.path.join(TMP_DIR, f"gen-{uid}")
+    remote_dir_vm = f"/tmp/webapp-{uid}"
+    docker_project_name = f"webapp-{uid}"
+    is_public = deployment.is_public
+
+    await run_in_threadpool(os.makedirs, model_dir_local, exist_ok=True)
+    await run_in_threadpool(os.makedirs, gen_dir_local, exist_ok=True)
+
+    # 1. Generate credentials immediately
+    app_username, app_password = generate_credentials(public=is_public)
+
+    # 2. Create the initial database record with a "pending" status
+    await db_create_deployment_record(
+        conn=conn,
+        deployment_uid=uid,
+        user_id=deployment.user_id,
+        is_public=is_public,
+        model_dir_local=model_dir_local,
+        gen_dir_local=gen_dir_local,
+        remote_dir_vm=remote_dir_vm,
+        docker_project_name=docker_project_name,
+    )
+
+    # 3. Add the long-running deployment process as a background task
+    background_tasks.add_task(
+        run_deployment,
+        conn=conn,
+        uid=uid,
+        model_str=deployment.model_str,
+        model_dir_local=model_dir_local,
+        gen_dir_local=gen_dir_local,
+        remote_dir_vm=remote_dir_vm,
+        docker_project_name=docker_project_name,
+        is_public=is_public,
+        app_username=app_username,
+        app_password=app_password,
+    )
+
+    # 4. Immediately return the response to the client
+    return {
+        "deployment_uid": uid,
+        "status": "pending",
+        "username": app_username,
+        "password": app_password,
+        "url": f"http://{VM_MACHINE_IP}/apps/{uid}/",
+        "message": "Deployment has been initiated and is running in the background.",
+    }
+
+@router.post(
+    "/file",
+    status_code=201,
+    tags=["Deployments - Lifecycle"],
+)
+async def create_new_deployment_file(
     background_tasks: BackgroundTasks,
     api_key: str = Security(get_api_key),
     user_id: str = Form(...),

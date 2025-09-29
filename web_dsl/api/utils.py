@@ -18,16 +18,15 @@ from typing import List
 def inject_traefik_labels_and_network(
     compose_path: str,
     uid: str,
+    username: str = "admin",
+    password: str = None,
     backend_api_internal_port: int = 7070,
     backend_ws_internal_port: int = 8765,
     frontend_internal_port: int = 80,
     public: bool = False,
 ):
 
-    username = "admin"
-    password = None
-    if not public:
-        password = secrets.token_urlsafe(16)
+    if not public and password:
         # Call htpasswd -nb to generate the hash
         result = subprocess.run(
             ["htpasswd", "-nb", username, password],
@@ -36,7 +35,6 @@ def inject_traefik_labels_and_network(
             check=True,
         )
         hashed_result = result.stdout.strip()
-
         escaped_hashed_result = hashed_result.replace("$", "$$")
     else:
         escaped_hashed_result = None
@@ -135,6 +133,14 @@ def inject_traefik_labels_and_network(
     with open(compose_path, "w") as f:
         yaml.dump(compose, f, sort_keys=False)
 
+def generate_credentials(public: bool = False):
+    """
+    Generates a username and password if the deployment is not public.
+    """
+    username = "admin"
+    password = None
+    if not public:
+        password = secrets.token_urlsafe(16)
     return username, password
 
 
@@ -294,7 +300,10 @@ def postprocess_generation_for_deployment(
     VM_MACHINE_IP: str,
     VM_MACHINE_USER: str,
     public_deployment: bool = False,
+    username: str = "admin",
+    password: str = None,
 ):
+    print(f"Postprocessing generation at {generation_dir} for deployment...")
     backend_api_internal_port = 7070
     backend_ws_internal_port = 8765
 
@@ -360,8 +369,7 @@ def postprocess_generation_for_deployment(
 
     # Inject traefik labels into docker-compose.yml
     compose_path = os.path.join(generation_dir, "docker-compose.yml")
-    username, password = inject_traefik_labels_and_network(
-        compose_path, uid, public=public_deployment
+    inject_traefik_labels_and_network(
+        compose_path, uid, public=public_deployment, username=username, password=password
     )
 
-    return username, password
