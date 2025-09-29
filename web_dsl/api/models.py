@@ -12,6 +12,10 @@ class TransformationModel(BaseModel):
     name: str
     model: str
 
+class DeploymentStringModel(BaseModel):
+    model_str: str
+    is_public: bool = False
+    user_id: str
 
 class DeploymentInfoBase(BaseModel):
     deployment_uid: str
