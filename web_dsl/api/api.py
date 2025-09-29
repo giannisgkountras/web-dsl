@@ -2,11 +2,14 @@ import os
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
 from .database import init_db
 from .config import TMP_DIR
 from .routers import validation, generation, deployment, transformations
 
+load_dotenv()
+ROOT_PATH = os.getenv("ROOT_PATH", "")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,7 +23,7 @@ async def lifespan(app: FastAPI):
     print("Application shutdown: Cleaning up...")
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, root_path=ROOT_PATH)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

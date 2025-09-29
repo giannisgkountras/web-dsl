@@ -77,7 +77,7 @@ Component {{ component.name }}
         content: {{ component.content }}
 {% elif component.type == "Gauge" and component.value %}
         value: {{ component.value }}
-{% elif component.type == "ProgressBar" and component.value %}
+{% elif component.type == "Progressbar" and component.value %}
         value: {{ component.value }}
         max: 100
 {% elif component.type == "Image" and component.source %}

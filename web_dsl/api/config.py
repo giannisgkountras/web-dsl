@@ -14,7 +14,7 @@ VM_MACHINE_IP = os.getenv("VM_MACHINE_IP", "")
 VM_MACHINE_USER = os.getenv("VM_MACHINE_USER", "")
 VM_MACHINE_SSH_PORT = os.getenv("VM_MACHINE_SSH_PORT", "22")
 # SSH_KEY_PATH = "/root/.ssh/id_ed25519"  # Path to the private key in the container
-SSH_KEY_PATH = "/home/ankel/.ssh/id_ed25519"
+SSH_KEY_PATH = os.getenv("VM_MACHINE_SSH_KEY_PATH")
 
 
 def get_api_key(api_key_header: str = Security(api_key_header)) -> str:
