@@ -10,7 +10,7 @@ import secrets
 import subprocess
 import json
 from fastapi import UploadFile
-from .config import VM_MACHINE_IP, VM_MACHINE_USER, VM_MACHINE_SSH_PORT, SSH_KEY_PATH
+from .config import VM_MACHINE_IP, VM_MACHINE_USER, VM_MACHINE_SSH_PORT, SSH_KEY_PATH, VM_MACHINE_DOMAIN
 from .models import CapturedSSHResult
 from typing import List
 
@@ -72,10 +72,12 @@ def inject_traefik_labels_and_network(
         if svc_name == "frontend":
             labels = [
                 "traefik.enable=true",
+                f"traefik.http.routers.default.rule=Host(`{VM_MACHINE_DOMAIN}`)",
                 # --- Frontend Router ---
                 # Rule: Matches /apps/{uid}/ but NOT /apps/{uid}/api/ AND NOT /apps/{uid}/ws/
                 f"traefik.http.routers.{frontend_router_name}.rule=PathPrefix(`{app_base_path_prefix}`) && !PathPrefix(`{api_full_path_prefix}`) && !PathPrefix(`{ws_full_path_prefix}`)",
-                f"traefik.http.routers.{frontend_router_name}.entrypoints=web",
+                f"traefik.http.routers.{frontend_router_name}.entrypoints=websecure",
+                f"traefik.http.routers.{frontend_router_name}.tls.certresolver=letsencrypt",
                 f"traefik.http.routers.{frontend_router_name}.priority=10",  # Lower priority for general path
                 f"traefik.http.routers.{frontend_router_name}.service={frontend_service_name}",
                 # --- Frontend Service ---
@@ -98,17 +100,21 @@ def inject_traefik_labels_and_network(
         elif svc_name == "backend":
             labels = [
                 "traefik.enable=true",
+                f"traefik.http.routers.default.rule=Host(`{VM_MACHINE_DOMAIN}`)",
+
                 # --- API Router ---
                 f"traefik.http.routers.{api_router_name}.rule=PathPrefix(`{api_full_path_prefix}`)",
                 f"traefik.http.routers.{api_router_name}.priority=20",
-                f"traefik.http.routers.{api_router_name}.entrypoints=web",
+                f"traefik.http.routers.{api_router_name}.entrypoints=websecure",
+                f"traefik.http.routers.{api_router_name}.tls.certresolver=letsencrypt",
                 f"traefik.http.routers.{api_router_name}.service={api_service_name}",
                 # --- API Service ---
                 f"traefik.http.services.{api_service_name}.loadbalancer.server.port={backend_api_internal_port}",
                 # --- WebSocket Router ---
                 f"traefik.http.routers.{ws_router_name}.rule=PathPrefix(`{ws_full_path_prefix}`)",
                 f"traefik.http.routers.{ws_router_name}.priority=25",  # Highest priority
-                f"traefik.http.routers.{ws_router_name}.entrypoints=web",
+                f"traefik.http.routers.{ws_router_name}.entrypoints=websecure",
+                f"traefik.http.routers.{ws_router_name}.tls.certresolver=letsencrypt",
                 f"traefik.http.routers.{ws_router_name}.service={ws_service_name}",
                 # --- WebSocket Service ---
                 f"traefik.http.services.{ws_service_name}.loadbalancer.server.port={backend_ws_internal_port}",
