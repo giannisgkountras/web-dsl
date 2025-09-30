@@ -43,6 +43,7 @@ from ..config import (
     VM_MACHINE_USER,
     VM_MACHINE_SSH_PORT,
     SSH_KEY_PATH,
+    VM_MACHINE_DOMAIN
 )
 from ..models import (
     DeploymentDetailResponse,
@@ -203,7 +204,7 @@ async def create_new_deployment(
         "status": "pending",
         "username": app_username,
         "password": app_password,
-        "url": f"http://{VM_MACHINE_IP}/apps/{uid}/",
+        "url": f"https://{VM_MACHINE_DOMAIN}/apps/{uid}/",
         "message": "Deployment has been initiated and is running in the background.",
     }
 
