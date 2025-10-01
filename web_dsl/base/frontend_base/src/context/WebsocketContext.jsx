@@ -29,10 +29,10 @@ export const WebsocketProvider = ({ children }) => {
             let websocket
             if (config?.secure === "enabled") {
                 console.log("Using secure WebSocket connection (wss)...");
-                websocket = new WebSocket(`wss://${config.host}:${config.port}`);
+                websocket = new WebSocket(`https://${config.host}${config.port}`);
             } else {
                 console.log("Using insecure WebSocket connection (ws)...");
-                websocket = new WebSocket(`ws://${config.host}:${config.port}`);
+                websocket = new WebSocket(`{ws://${config.host}:${config.port}}`);
             }
 
             websocket.onopen = () => {

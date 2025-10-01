@@ -120,14 +120,7 @@ def inject_traefik_labels_and_network(
                 # 1. Define StripPrefix middleware for WS
                 f"traefik.http.middlewares.{ws_strip_prefix_middleware_name}.stripprefix.prefixes={ws_full_path_prefix}",
             ]
-            if not public:
-                # Add auth for not public deployments
-                labels.extend(
-                    [
-                        f"traefik.http.routers.{api_router_name}.middlewares={auth_middleware_name}",
-                        f"traefik.http.routers.{ws_router_name}.middlewares={auth_middleware_name},{ws_strip_prefix_middleware_name}",
-                    ]
-                )
+            
             # Traefik labels for Backend API
             svc_config["labels"] = labels
         else:
@@ -351,7 +344,7 @@ def postprocess_generation_for_deployment(
         generation_dir, "frontend", "src", "context", "websocketConfig.json"
     )
     with open(ws_path, "r+", encoding="utf8") as f:
-        updated_data = {"host": VM_MACHINE_DOMAIN, "port": f"{traefik_port}/apps/{uid}/ws/", "secure": "enabled"}
+        updated_data = {"host": VM_MACHINE_DOMAIN, "port": f"/apps/{uid}/ws/", "secure": "enabled"}
         updated = json.dumps(updated_data, indent=4)
         # Write the new content
         f.seek(0)
