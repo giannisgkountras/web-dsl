@@ -26,8 +26,14 @@ export const WebsocketProvider = ({ children }) => {
                 toast.error("Error connecting to WebSocket!");
                 return;
             }
-
-            const websocket = new WebSocket(`ws://${config.host}:${config.port}`);
+            let websocket
+            if (config?.secure === "enabled") {
+                console.log("Using secure WebSocket connection (wss)...");
+                websocket = new WebSocket(`wss://${config.host}:${config.port}`);
+            } else {
+                console.log("Using insecure WebSocket connection (ws)...");
+                websocket = new WebSocket(`ws://${config.host}:${config.port}`);
+            }
 
             websocket.onopen = () => {
                 console.log("WebSocket is connected, updating context...");

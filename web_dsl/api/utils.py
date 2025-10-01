@@ -71,11 +71,10 @@ def inject_traefik_labels_and_network(
 
         if svc_name == "frontend":
             labels = [
-                "traefik.enable=true",
-                f"traefik.http.routers.default.rule=Host(`{VM_MACHINE_DOMAIN}`)",
+                "traefik.enable=true",                
                 # --- Frontend Router ---
                 # Rule: Matches /apps/{uid}/ but NOT /apps/{uid}/api/ AND NOT /apps/{uid}/ws/
-                f"traefik.http.routers.{frontend_router_name}.rule=PathPrefix(`{app_base_path_prefix}`) && !PathPrefix(`{api_full_path_prefix}`) && !PathPrefix(`{ws_full_path_prefix}`)",
+                f"traefik.http.routers.{frontend_router_name}.rule=Host(`{VM_MACHINE_DOMAIN}`) && PathPrefix(`{app_base_path_prefix}`) && !PathPrefix(`{api_full_path_prefix}`) && !PathPrefix(`{ws_full_path_prefix}`)",
                 f"traefik.http.routers.{frontend_router_name}.entrypoints=websecure",
                 f"traefik.http.routers.{frontend_router_name}.tls.certresolver=letsencrypt",
                 f"traefik.http.routers.{frontend_router_name}.priority=10",  # Lower priority for general path
@@ -100,10 +99,9 @@ def inject_traefik_labels_and_network(
         elif svc_name == "backend":
             labels = [
                 "traefik.enable=true",
-                f"traefik.http.routers.default.rule=Host(`{VM_MACHINE_DOMAIN}`)",
 
                 # --- API Router ---
-                f"traefik.http.routers.{api_router_name}.rule=PathPrefix(`{api_full_path_prefix}`)",
+                f"traefik.http.routers.{api_router_name}.rule=Host(`{VM_MACHINE_DOMAIN}`) && PathPrefix(`{api_full_path_prefix}`)",
                 f"traefik.http.routers.{api_router_name}.priority=20",
                 f"traefik.http.routers.{api_router_name}.entrypoints=websecure",
                 f"traefik.http.routers.{api_router_name}.tls.certresolver=letsencrypt",
@@ -111,7 +109,7 @@ def inject_traefik_labels_and_network(
                 # --- API Service ---
                 f"traefik.http.services.{api_service_name}.loadbalancer.server.port={backend_api_internal_port}",
                 # --- WebSocket Router ---
-                f"traefik.http.routers.{ws_router_name}.rule=PathPrefix(`{ws_full_path_prefix}`)",
+                f"traefik.http.routers.{ws_router_name}.rule=Host(`{VM_MACHINE_DOMAIN}`) && PathPrefix(`{ws_full_path_prefix}`)",
                 f"traefik.http.routers.{ws_router_name}.priority=25",  # Highest priority
                 f"traefik.http.routers.{ws_router_name}.entrypoints=websecure",
                 f"traefik.http.routers.{ws_router_name}.tls.certresolver=letsencrypt",
@@ -338,7 +336,7 @@ def postprocess_generation_for_deployment(
         content = f.read()
         updated = re.sub(
             r"^VITE_API_BASE_URL\s*=\s*.*$",
-            f"VITE_API_BASE_URL=http://{VM_MACHINE_IP}/apps/{uid}/api/",
+            f"VITE_API_BASE_URL=https://{VM_MACHINE_DOMAIN}/apps/{uid}/api/",
             content,
             flags=re.MULTILINE,
         )
@@ -353,7 +351,7 @@ def postprocess_generation_for_deployment(
         generation_dir, "frontend", "src", "context", "websocketConfig.json"
     )
     with open(ws_path, "r+", encoding="utf8") as f:
-        updated_data = {"host": VM_MACHINE_IP, "port": f"{traefik_port}/apps/{uid}/ws/"}
+        updated_data = {"host": VM_MACHINE_DOMAIN, "port": f"{traefik_port}/apps/{uid}/ws/", "secure": "enabled"}
         updated = json.dumps(updated_data, indent=4)
         # Write the new content
         f.seek(0)
